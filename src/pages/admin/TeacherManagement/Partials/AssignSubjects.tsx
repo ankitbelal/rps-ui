@@ -15,6 +15,7 @@ import {
   useAssignSubjectMutation
 } from "../../../../features/admin/teacher/teacherApi";
 import { SubjectList } from "../../../../features/admin/teacher/utils";
+import { useGetProgramsQuery, useGetStudentsQuery } from "../../../../features/admin/students/studentApi";
 
 interface AssignSubjectsModalProps {
   show: boolean;
@@ -32,6 +33,9 @@ const AssignSubjectsModal: React.FC<AssignSubjectsModalProps> = ({
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [programFilter, setProgramFilter] = useState<number>();
+  const [semesterFilter, setSemesterFilter] = useState<string>("");
+  const [subjectType,setSubjectType] = useState<string>("");
   const [alreadyAssignedSubject, setAlreadyAssignedSubject] = useState<{
     subjectId: number;
     subjectName: string;
@@ -59,8 +63,11 @@ const AssignSubjectsModal: React.FC<AssignSubjectsModalProps> = ({
     () => ({
       teacherId,
       search: debouncedSearch || undefined,
+      programId:programFilter,
+      semester:semesterFilter,
+      assignmentType:subjectType
     }),
-    [teacherId, debouncedSearch]
+    [teacherId, debouncedSearch,programFilter,semesterFilter,subjectType]
   );
 
   const { 
@@ -71,7 +78,7 @@ const AssignSubjectsModal: React.FC<AssignSubjectsModalProps> = ({
     refetchOnMountOrArgChange: true,
     skip: !teacherId || !show
   });
-
+  const { data: programData } = useGetProgramsQuery();
   const [assignSubject, { isLoading: isAssigning }] = useAssignSubjectMutation();
 
   const subjects = subjectsResponse?.data || [];
@@ -212,7 +219,7 @@ const AssignSubjectsModal: React.FC<AssignSubjectsModalProps> = ({
         <Modal.Body>
           {/* Search Section */}
           <Row className="mb-4">
-            <Col md={8}>
+            <Col md={4}>
               <div className="input-group">
                 <span className="input-group-text bg-light border">
                   <i className="fas fa-search"></i>
@@ -228,13 +235,38 @@ const AssignSubjectsModal: React.FC<AssignSubjectsModalProps> = ({
             </Col>
             <Col md={4}>
               {/* Static Dropdown - For UI demonstration */}
-              <Form.Select className="border" disabled>
-                <option>Filter by Program (Coming Soon)</option>
-                <option>Computer Science</option>
-                <option>Information Technology</option>
-                <option>Electrical Engineering</option>
+              <Form.Select className="border" onChange={(e)=>setProgramFilter(Number(e.target.value))}>
+                  <option value="">All Programs</option>
+                  {programData?.data.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.code}
+                    </option>
+                  ))}
               </Form.Select>
             </Col>
+              {/* Semester Filter */}
+              <Col md={2}>
+                <Form.Select
+                  value={semesterFilter}
+                  onChange={(e) => setSemesterFilter(e.target.value)}
+                  className="bg-light border-0"
+                  disabled={isLoading || isFetching}
+                >
+                  <option value="">All Semesters</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+                    <option key={sem} value={sem}>
+                      Semester {sem}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={2}>
+                <Form.Select className="border" onChange={(e)=>setSubjectType(e.target.value)}>
+                    <option value="">Select Subject Type</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="unassigned">Unassigned</option>
+                </Form.Select>
+              </Col>
           </Row>
 
           {/* Action Buttons */}
