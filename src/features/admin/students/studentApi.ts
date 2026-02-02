@@ -9,13 +9,15 @@ import {
   FacultyListApiResponse,
   TeacherList,
   StudentSubjectResponse,
-  Param
+  Param,
+  ResultParam,
+  StudentMarksResponse
 } from "./utils";
 
 export const adminStudentApi = createApi({
   reducerPath: "adminStudentApi",
   baseQuery,
-  tagTypes: ["Students"],
+  tagTypes: ["Students","Marks"],
   endpoints: (builder) => ({
     getStudents: builder.query<StudentListApiReponse, studentListParams>({
       query: (params = {}) => {
@@ -118,6 +120,22 @@ export const adminStudentApi = createApi({
         method:"GET",
         params:param
       })
+    }),
+    getStudentMarks: builder.query<StudentMarksResponse,ResultParam>({
+      query:(param)=>({
+        url:AdminStudentEndpoints.STUDENT_MARKS,
+        method:"GET",
+        params:param
+      }),
+      providesTags:["Marks"]
+    }),
+    addStudentMarks:builder.mutation({
+      query:(data)=>({
+        url:AdminStudentEndpoints.ADD_MARKS,
+        method:"POST",
+        body:data
+      }),
+      invalidatesTags:(result)=>result?.success ? ["Marks"]:[]
     })
   }),
 });
@@ -131,5 +149,7 @@ export const {
   useEditStudentMutation,
   useGetFacultiesQuery,
   useGetTeacherListQuery,
-  useGetStudentSubjectListQuery
+  useGetStudentSubjectListQuery,
+  useGetStudentMarksQuery,
+  useAddStudentMarksMutation
 } = adminStudentApi;

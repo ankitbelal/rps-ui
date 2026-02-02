@@ -4,12 +4,16 @@ import { Save } from 'lucide-react';
 import CommonBreadCrumb from '../common/BreadCrumb';
 import { FaTachometerAlt, FaUserGraduate } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { useGetStudentSubjectListQuery } from '../../features/admin/students/studentApi';
+import { 
+  useGetStudentSubjectListQuery,
+  useGetStudentMarksQuery,
+  useAddStudentMarksMutation 
+} from '../../features/admin/students/studentApi';
 import { StudentSubjectData } from '../../features/admin/students/utils';
 import { useLocation } from 'react-router-dom';
 import { Student } from '../../features/admin/students/utils';
 
-interface MarksData {
+interface SubjectMarks {
   theory: string;
   [key: string]: string; // For dynamic evaluation parameters
 }
@@ -20,38 +24,78 @@ interface MarkField {
   label: string;
   maxMarks: number;
   isEvaluationParam: boolean;
-  paramCode?: string; 
-  paramId?: number;   
+  paramCode?: string;
+  paramId?: number;
+}
+
+interface SubmissionParameter {
+  parameterId: number;
+  mark: number;
+}
+
+interface SubmissionSubject {
+  subjectId: number;
+  obtainedMarks: number;
+  parameters: SubmissionParameter[];
+}
+
+interface SubmissionData {
+  studentId: number;
+  semester: number;
+  examTerm: string;
+  marks: SubmissionSubject[];
 }
 
 const MarksEntryPage: React.FC = () => {
-  const [selectedTerminal, setSelectedTerminal] = useState('');
+  const [selectedTerminal, setSelectedTerminal] = useState('F');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const [marksData, setMarksData] = useState<Record<number, MarksData>>({});
+  const [marksData, setMarksData] = useState<Record<number, SubjectMarks>>({});
   const location = useLocation();
-  const studentId = location.state.id;
   const studentData = location.state.item as Student;
 
+  const params = useMemo(() => ({
+    examTerm: selectedTerminal,
+    semester: studentData.currentSemester!,
+    studentId: studentData.id!
+  }), [studentData.id, studentData.currentSemester, selectedTerminal]);
+
   const { data: subjectsResponse, isLoading } = useGetStudentSubjectListQuery(
-    { studentId: studentId || 0 },
-    { skip: !studentId }
+    {
+      programId: studentData.program.id!,
+      semester: studentData.currentSemester,
+      studentId: 0
+    },
+    { skip: !studentData, refetchOnMountOrArgChange: true }
   );
-
-
+  
+  const { data: studentMarksResponse } = useGetStudentMarksQuery(params);
+  const [addStudentMarks,{isLoading:isAddingMarks}] = useAddStudentMarksMutation();
+  
   const subjects = useMemo(() => subjectsResponse?.data || [], [subjectsResponse?.data]);
+  const existingMarks = useMemo(() => studentMarksResponse?.data || [], [studentMarksResponse?.data]);
 
-
-  // Initialize marks data when subjects are loaded
+  // Initialize marks data when subjects are loaded and existing marks are available
   useEffect(() => {
     if (subjects.length > 0) {
-      const initialMarks: Record<number, MarksData> = {};
+      const initialMarks: Record<number, SubjectMarks> = {};
       
       subjects.forEach(subject => {
+        // Find existing marks for this subject
+        const subjectExistingMarks = existingMarks.find(mark => mark.subjectId === subject.id);
+        
         // Initialize with theory field
-        const subjectMarks: MarksData = { theory: '' };
+        const subjectMarks: SubjectMarks = { 
+          theory: subjectExistingMarks?.obtainedMarks?.toString() || '' 
+        };
+        
+        // Initialize evaluation parameters
         subject.evaluationParameters.forEach(param => {
-          subjectMarks[`param_${param.id}`] = '';
+          const paramKey = `param_${param.id}`;
+          const paramMarks = subjectExistingMarks?.extraParametersMarks?.find(
+            ep => ep.evaluationParameterId === param.id
+          );
+          subjectMarks[paramKey] = paramMarks?.obtainedMarks?.toString() || '';
         });
         
         initialMarks[subject.id] = subjectMarks;
@@ -59,69 +103,157 @@ const MarksEntryPage: React.FC = () => {
       
       setMarksData(initialMarks);
     }
-  }, [subjects]);
+  }, [subjects, existingMarks]);
 
   const handleMarkChange = (subjectId: number, field: string, value: string) => {
-    setMarksData(prev => ({
-      ...prev,
-      [subjectId]: {
-        ...prev[subjectId],
-        [field]: value
-      }
-    }));
-  };
+    // Get the subject to find max marks for validation
+    const subject = subjects.find(s => s.id === subjectId);
+    if (!subject) return;
 
-  const handleSaveSubject = (subjectId: number, subjectName: string) => {
-    const subjectMarks = marksData[subjectId];
-    if (subjectMarks) {
-      const hasMarks = Object.values(subjectMarks).some(value => value.trim() !== '');
-      
-      if (hasMarks) {
-        console.log('Saving marks for subject:', subjectName, subjectMarks);
-        toast.success(`Saved marks for ${subjectName}`);
+    // Get the field configuration
+    const fieldConfig = getMarkFieldsForSubject(subject).find(f => f.name === field);
+    if (!fieldConfig) return;
+
+    // Validate the input
+    const numericValue = parseFloat(value);
+
+    if (value === '') {
+      // Allow empty input
+      setMarksData(prev => ({
+        ...prev,
+        [subjectId]: {
+          ...prev[subjectId],
+          [field]: value
+        }
+      }));
+    } else if (!isNaN(numericValue) && numericValue >= 0) {
+      // Check if value exceeds max marks
+      if (numericValue > fieldConfig.maxMarks) {
+        toast.error(`Marks cannot exceed ${fieldConfig.maxMarks} for ${fieldConfig.label}`);
+        // Set to max marks
+        setMarksData(prev => ({
+          ...prev,
+          [subjectId]: {
+            ...prev[subjectId],
+            [field]: fieldConfig.maxMarks.toString()
+          }
+        }));
       } else {
-        toast.error(`No marks entered for ${subjectName}`);
+        setMarksData(prev => ({
+          ...prev,
+          [subjectId]: {
+            ...prev[subjectId],
+            [field]: value
+          }
+        }));
       }
-    } else {
-      toast.error(`No marks data found for ${subjectName}`);
     }
   };
 
-  const handleSaveAll = () => {
-    // Check if any marks are entered
-    const hasAnyMarks = Object.values(marksData).some(subjectMarks => 
-      Object.values(subjectMarks).some(value => value.trim() !== '')
-    );
+  const handleSaveSubject = async (subjectId: number, subjectName: string) => {
+    const subject = subjects.find(s => s.id === subjectId);
+    if (!subject) return;
+
+    const subjectMarks = marksData[subjectId];
+    if (!subjectMarks) {
+      toast.error(`No marks data found for ${subjectName}`);
+      return;
+    }
+
+    const markFields = getMarkFieldsForSubject(subject);
+    let hasErrors = false;
+
+    markFields.forEach(field => {
+      const value = subjectMarks[field.name];
+      if (value.trim() !== '') {
+        const numericValue = parseFloat(value);
+        if (numericValue > field.maxMarks) {
+          hasErrors = true;
+          toast.error(`${field.label} exceeds maximum allowed marks of ${field.maxMarks}`);
+        }
+      }
+    });
+
+    if (hasErrors) {
+      toast.error(`Cannot save ${subjectName} - some marks exceed maximum allowed`);
+      return;
+    }
+
+    const submissionData = prepareSubmissionDataForSubject(subjectId);
     
-    if (!hasAnyMarks) {
+    if (submissionData && submissionData.marks.length > 0) {
+      console.log('Transformed submission data for subject:', submissionData);
+      try {
+        const response = await toast.promise(
+          addStudentMarks(submissionData).unwrap(),
+          {
+            loading: "Adding Marks..."
+          }
+        );
+        if(response.success){
+          toast.success(response.message);
+        }
+      } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to save marks');
+      }
+    } else {
+      toast.error(`No valid marks to save for ${subjectName}`);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    const submissionData = prepareSubmissionDataForAll();
+    
+    if (submissionData.marks.length === 0) {
       toast.error('No marks entered to save');
       return;
     }
+
+    let hasErrors = false;
     
-    console.log('Saving all marks:', marksData);
-    
-    const submissionData = Object.entries(marksData).map(([subjectId, marks]) => {
-      const subject = subjects.find(s => s.id === parseInt(subjectId));
-      const transformedMarks: Record<string, any> = {
-        subjectId: parseInt(subjectId),
-        theory: marks.theory || 0
-      };
-      
+    submissionData.marks.forEach(subjectMark => {
+      const subject = subjects.find(s => s.id === subjectMark.subjectId);
       if (subject) {
-        subject.evaluationParameters.forEach(param => {
-          const paramKey = `param_${param.id}`;
-          transformedMarks[`param_${param.id}`] = marks[paramKey] || 0;
+        const markFields = getMarkFieldsForSubject(subject);
+        markFields.forEach(field => {
+          if (field.name === 'theory') {
+            if (subjectMark.obtainedMarks > field.maxMarks) {
+              hasErrors = true;
+              toast.error(`${subject.name}: Theory marks exceed maximum of ${field.maxMarks}`);
+            }
+          } else if (field.paramId) {
+            const param = subjectMark.parameters.find(p => p.parameterId === field.paramId);
+            if (param && param.mark > field.maxMarks) {
+              hasErrors = true;
+              toast.error(`${subject.name}: ${field.label} exceeds maximum of ${field.maxMarks}`);
+            }
+          }
         });
       }
-      
-      return transformedMarks;
     });
-    
-    console.log('Transformed submission data:', submissionData);
-    toast.success('All marks saved successfully!');
+
+    if (hasErrors) {
+      toast.error('Cannot save - some marks exceed maximum allowed');
+      return;
+    }
+
+    console.log('Transformed submission data for all:', submissionData);
+    try {
+      const response = await toast.promise(
+        addStudentMarks(submissionData).unwrap(),
+        {
+          loading: "Adding Marks..."
+        }
+      );
+      if(response.success){
+        toast.success(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to save marks');
+    }
   };
 
-  const getSubjectMarks = (subjectId: number): MarksData => {
+  const getSubjectMarks = (subjectId: number): SubjectMarks => {
     return marksData[subjectId] || { theory: '' };
   };
 
@@ -131,7 +263,7 @@ const MarksEntryPage: React.FC = () => {
         id: 'theory',
         name: 'theory',
         label: 'Theory',
-        maxMarks: 40,
+        maxMarks: 100,
         isEvaluationParam: false
       }
     ];
@@ -141,15 +273,104 @@ const MarksEntryPage: React.FC = () => {
         id: `param_${param.id}`,
         name: `param_${param.id}`,
         label: param.name,
-        maxMarks: param.weight,
+        maxMarks: param.weight, 
         isEvaluationParam: true,
-        paramCode: param.code, 
+        paramCode: param.code,
         paramId: param.id
       });
     });
 
     return fields;
   };
+
+  const prepareSubmissionDataForSubject = (subjectId: number): SubmissionData | null => {
+    const subjectMarks = marksData[subjectId];
+    if (!subjectMarks) return null;
+
+    const subject = subjects.find(s => s.id === subjectId);
+    if (!subject) return null;
+
+    const theoryMarks = parseFloat(subjectMarks.theory) || 0;
+    const parameters: SubmissionParameter[] = [];
+
+    subject.evaluationParameters.forEach(param => {
+      const paramKey = `param_${param.id}`;
+      const paramValue = parseFloat(subjectMarks[paramKey]) || 0;
+      
+      if (paramValue > 0) {
+        parameters.push({
+          parameterId: param.id,
+          mark: paramValue
+        });
+      }
+    });
+
+    if (theoryMarks > 0 || parameters.length > 0) {
+      return {
+        studentId: studentData.id,
+        semester: studentData.currentSemester,
+        examTerm: selectedTerminal,
+        marks: [
+          {
+            subjectId,
+            obtainedMarks: theoryMarks,
+            parameters
+          }
+        ]
+      };
+    }
+
+    return null;
+  };
+
+  const prepareSubmissionDataForAll = (): SubmissionData => {
+    const marks: SubmissionSubject[] = [];
+
+    Object.keys(marksData).forEach(subjectIdStr => {
+      const subjectId = parseInt(subjectIdStr);
+      const subjectMarks = marksData[subjectId];
+      const subject = subjects.find(s => s.id === subjectId);
+      
+      if (subject && subjectMarks) {
+        const theoryMarks = parseFloat(subjectMarks.theory) || 0;
+        const parameters: SubmissionParameter[] = [];
+
+        subject.evaluationParameters.forEach(param => {
+          const paramKey = `param_${param.id}`;
+          const paramValue = parseFloat(subjectMarks[paramKey]) || 0;
+          
+          if (paramValue > 0) {
+            parameters.push({
+              parameterId: param.id,
+              mark: paramValue
+            });
+          }
+        });
+
+        if (theoryMarks > 0 || parameters.length > 0) {
+          marks.push({
+            subjectId,
+            obtainedMarks: theoryMarks,
+            parameters
+          });
+        }
+      }
+    });
+
+    return {
+      studentId: studentData.id,
+      semester: studentData.currentSemester,
+      examTerm: selectedTerminal,
+      marks
+    };
+  };
+
+  const filteredSubjects = useMemo(() => {
+    if (!selectedSubject || selectedSubject === '') {
+      return subjects;
+    }
+    return subjects.filter(subject => subject.id.toString() === selectedSubject);
+  }, [subjects, selectedSubject]);
 
   return (
     <>
@@ -221,10 +442,8 @@ const MarksEntryPage: React.FC = () => {
                     className="bg-light border-0"
                   >
                     <option value="">Select Terminal</option>
-                    <option value="terminal1">Terminal 1</option>
-                    <option value="terminal2">Terminal 2</option>
-                    <option value="terminal3">Terminal 3</option>
-                    <option value="final">Final Term</option>
+                    <option value="F">Terminal 1</option>
+                    <option value="S">Terminal 2</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -237,10 +456,11 @@ const MarksEntryPage: React.FC = () => {
                     className="bg-light border-0"
                   >
                     <option value="">All Subjects</option>
-                    <option value="math">Mathematics</option>
-                    <option value="physics">Physics</option>
-                    <option value="chemistry">Chemistry</option>
-                    <option value="english">English</option>
+                    {subjects.map(subject => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name} ({subject.code})
+                      </option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -258,7 +478,7 @@ const MarksEntryPage: React.FC = () => {
               <p className="mt-3">Loading subjects...</p>
             </Card.Body>
           </Card>
-        ) : subjects.length === 0 ? (
+        ) : filteredSubjects.length === 0 ? (
           <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="text-center py-5">
               <i className="fas fa-book fa-2x text-muted mb-3"></i>
@@ -269,7 +489,7 @@ const MarksEntryPage: React.FC = () => {
           <>
             {/* Subject Cards */}
             <Accordion activeKey={activeKey} onSelect={(key) => setActiveKey(key as string)} className="mb-4">
-              {subjects.map((subject: StudentSubjectData) => {
+              {filteredSubjects.map((subject: StudentSubjectData) => {
                 const subjectMarks = getSubjectMarks(subject.id);
                 const markFields = getMarkFieldsForSubject(subject);
                 
@@ -354,9 +574,19 @@ const MarksEntryPage: React.FC = () => {
                             variant="success"
                             onClick={() => handleSaveSubject(subject.id, subject.name)}
                             className="d-flex align-items-center gap-2"
+                            disabled={isAddingMarks}
                           >
-                            <Save size={18} />
-                            Save {subject.name} Marks
+                            {isAddingMarks ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2"></span>
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save size={18} />
+                                Save {subject.name} Marks
+                              </>
+                            )}
                           </Button>
                         </div>
                       </Accordion.Body>
@@ -366,18 +596,30 @@ const MarksEntryPage: React.FC = () => {
               })}
             </Accordion>
 
-            {/* Save All Button */}
-            <div className="d-flex justify-content-end">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleSaveAll}
-                className="d-flex align-items-center gap-2"
-              >
-                <i className="fas fa-save"></i>
-                Save All Marks
-              </Button>
-            </div>
+            {/* Save All Button - Only show when viewing all subjects */}
+            {(!selectedSubject || selectedSubject === '') && (
+              <div className="d-flex justify-content-end">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleSaveAll}
+                  className="d-flex align-items-center gap-2"
+                  disabled={isAddingMarks}
+                >
+                  {isAddingMarks ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Saving All Marks...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save"></i>
+                      Save All Marks
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

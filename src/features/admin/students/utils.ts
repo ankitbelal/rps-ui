@@ -126,5 +126,39 @@ export interface StudentSubjectResponse{
 }
 
 export interface Param{
+  programId:number;
+  semester:number;
+  studentId?:number;
+}
+
+export interface ResultParam{
+  semester:number;
+  examTerm:string;
   studentId:number;
+}
+
+export interface ExtraParameter{
+  id:number;
+  subjectId:number;
+  evaluationParameterId:number;
+  obtainedMarks:number;
+  fullMarks:number;
+}
+export interface MarksData{
+  id:number;
+  studentId:number;
+  subjectId:number;
+  examTerm:string;
+  semester:number;
+  obtainedMarks:number;
+  fullMarks:number;
+  extraParametersMarks:ExtraParameter[];
+  createdAt:string;
+}
+
+export interface StudentMarksResponse{
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: MarksData[];
 }
