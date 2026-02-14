@@ -49,7 +49,6 @@ interface SubmissionData {
 const MarksEntryPage: React.FC = () => {
   const [selectedTerminal, setSelectedTerminal] = useState('F');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [activeKey, setActiveKey] = useState<string | null>(null);
   const [marksData, setMarksData] = useState<Record<number, SubjectMarks>>({});
   const location = useLocation();
   const studentData = location.state.item as Student;
@@ -487,121 +486,116 @@ const MarksEntryPage: React.FC = () => {
           </Card>
         ) : (
           <>
-            {/* Subject Cards */}
-            <Accordion activeKey={activeKey} onSelect={(key) => setActiveKey(key as string)} className="mb-4">
+            {/* Subject Cards - Each Accordion operates independently */}
+            <div className="mb-4">
               {filteredSubjects.map((subject: StudentSubjectData) => {
                 const subjectMarks = getSubjectMarks(subject.id);
                 const markFields = getMarkFieldsForSubject(subject);
                 
                 return (
-                  <Card
-                    key={subject.id}
-                    className="mb-3 border-0 shadow-sm"
-                  >
-                    <Accordion.Item eventKey={subject.id.toString()} className="border-0">
-                      <Accordion.Header className="bg-white">
-                        <div className="w-100 d-flex justify-content-between align-items-center pe-3">
-                          <div>
-                            <span className="fw-semibold">
-                              {subject.name}
-                            </span>
-                            <span className="text-muted ms-2">
-                              {subject.code}
-                            </span>
-                            <span className="badge bg-secondary ms-2">
-                              Semester {subject.semester}
-                            </span>
-                            <span className="badge bg-light text-dark ms-2">
-                              {subject.type}
-                            </span>
-                            {subject.subjectTeacher === null && (
-                              <span className="badge bg-warning ms-2">
-                                <i className="fas fa-exclamation-triangle me-1"></i>
-                                No Teacher Assigned
+                  // Each subject has its own independent Accordion
+                  <Accordion key={subject.id} className="mb-3" defaultActiveKey="">
+                    <Card className="border-0 shadow-sm">
+                      <Accordion.Item eventKey={subject.id.toString()} className="border-0">
+                        <Accordion.Header className="bg-white">
+                          <div className="w-100 d-flex justify-content-between align-items-center pe-3">
+                            <div>
+                              <span className="fw-semibold">
+                                {subject.name}
                               </span>
-                            )}
-                          </div>
-                          <div className="text-muted small">
-                            {subject.evaluationParameters.length > 0 && (
-                              <span>
-                                <i className="fas fa-sliders-h me-1"></i>
-                                {subject.evaluationParameters.length} Evaluation Parameters
+                              <span className="text-muted ms-2">
+                                {subject.code}
                               </span>
-                            )}
+                              <span className="badge bg-secondary ms-2">
+                                Semester {subject.semester}
+                              </span>
+                              <span className="badge bg-light text-dark ms-2">
+                                {subject.type}
+                              </span>
+                              {subject.subjectTeacher === null && (
+                                <span className="badge bg-warning ms-2">
+                                  <i className="fas fa-exclamation-triangle me-1"></i>
+                                  No Teacher Assigned
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-muted small">
+                              {subject.evaluationParameters.length > 0 && (
+                                <span>
+                                  <i className="fas fa-sliders-h me-1"></i>
+                                  {subject.evaluationParameters.length} Evaluation Parameters
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Accordion.Header>
-                      <Accordion.Body className="bg-light">
-                        <Row className="g-4">
-                          {markFields.map((field) => (
-                            <Col md={6} lg={4} key={field.id}>
-                              <Form.Group>
-                                <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
-                                  <span>
-                                    {field.label}
-                                    {field.isEvaluationParam && field.paramCode && (
-                                      <span className="text-muted small ms-1">
-                                        ({field.paramCode})
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className="badge bg-info">
-                                    Max: {field.maxMarks}
-                                  </span>
-                                </Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  placeholder="Enter marks"
-                                  value={subjectMarks[field.name] || ''}
-                                  onChange={(e) => handleMarkChange(subject.id, field.name, e.target.value)}
-                                  className="bg-white"
-                                  min="0"
-                                  max={field.maxMarks}
-                                  step="0.01"
-                                />
-                                {field.isEvaluationParam && (
-                                  <Form.Text className="text-muted small">
-                                    Weight: {field.maxMarks}%
-                                  </Form.Text>
-                                )}
-                              </Form.Group>
-                            </Col>
-                          ))}
-                        </Row>
-                        
-                        <div className="d-flex justify-content-end mt-4">
-                          <Button
-                            variant="success"
-                            onClick={() => handleSaveSubject(subject.id, subject.name)}
-                            className="d-flex align-items-center gap-2"
-                            disabled={isAddingMarks}
-                          >
-                            {isAddingMarks ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm me-2"></span>
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <Save size={18} />
-                                Save {subject.name} Marks
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </Accordion.Body>
-                    </Accordion.Item>
-                  </Card>
+                        </Accordion.Header>
+                        <Accordion.Body className="bg-light">
+                          <Row className="g-4">
+                            {markFields.map((field) => (
+                              <Col md={6} lg={4} key={field.id}>
+                                <Form.Group>
+                                  <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
+                                    <span>
+                                      {field.label}
+                                      {field.isEvaluationParam && field.paramCode && (
+                                        <span className="text-muted small ms-1">
+                                          ({field.paramCode})
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="badge bg-info">
+                                      Max: {field.maxMarks}
+                                    </span>
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Enter marks"
+                                    value={subjectMarks[field.name] || ''}
+                                    onChange={(e) => handleMarkChange(subject.id, field.name, e.target.value)}
+                                    className="bg-white"
+                                    min="0"
+                                    max={field.maxMarks}
+                                    step="0.01"
+                                  />
+                                </Form.Group>
+                              </Col>
+                            ))}
+                          </Row>
+                          
+                          <div className="d-flex justify-content-end mt-4">
+                            <Button
+                              variant="success"
+                              onClick={() => handleSaveSubject(subject.id, subject.name)}
+                              className="d-flex align-items-center gap-2"
+                              disabled={isAddingMarks}
+                            >
+                              {isAddingMarks ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2"></span>
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save size={18} />
+                                  Save {subject.name} Marks
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </Accordion.Body>
+                      </Accordion.Item>
+                    </Card>
+                  </Accordion>
                 );
               })}
-            </Accordion>
+            </div>
 
             {/* Save All Button - Only show when viewing all subjects */}
             {(!selectedSubject || selectedSubject === '') && (
               <div className="d-flex justify-content-end">
                 <Button
                   variant="primary"
-                  size="lg"
+                  size="md"
                   onClick={handleSaveAll}
                   className="d-flex align-items-center gap-2"
                   disabled={isAddingMarks}
