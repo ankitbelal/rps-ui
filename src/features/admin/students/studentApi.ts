@@ -11,13 +11,13 @@ import {
   StudentSubjectResponse,
   Param,
   ResultParam,
-  StudentMarksResponse
+  StudentMarksResponse,
 } from "./utils";
 
 export const adminStudentApi = createApi({
   reducerPath: "adminStudentApi",
   baseQuery,
-  tagTypes: ["Students","Marks"],
+  tagTypes: ["Students", "Marks"],
   endpoints: (builder) => ({
     getStudents: builder.query<StudentListApiReponse, studentListParams>({
       query: (params = {}) => {
@@ -33,7 +33,7 @@ export const adminStudentApi = createApi({
         if (params.currentSemester) {
           queryParams.append(
             "currentSemester",
-            params.currentSemester.toString()
+            params.currentSemester.toString(),
           );
         }
 
@@ -108,35 +108,85 @@ export const adminStudentApi = createApi({
       }),
       providesTags: (result, error, id) => [{ type: "Students", id }],
     }),
-    getTeacherList:builder.query<TeacherList,void>({
-      query:()=>({
-        url:AdminStudentEndpoints.TEACHER_LIST,
-        method:"GET"
-      })
-    }),
-    getStudentSubjectList: builder.query<StudentSubjectResponse,Param>({
-      query:(param)=>({
-        url:AdminStudentEndpoints.SUBJECT_LIST,
-        method:"GET",
-        params:param
-      })
-    }),
-    getStudentMarks: builder.query<StudentMarksResponse,ResultParam>({
-      query:(param)=>({
-        url:AdminStudentEndpoints.STUDENT_MARKS,
-        method:"GET",
-        params:param
+    getTeacherList: builder.query<TeacherList, void>({
+      query: () => ({
+        url: AdminStudentEndpoints.TEACHER_LIST,
+        method: "GET",
       }),
-      providesTags:["Marks"]
     }),
-    addStudentMarks:builder.mutation({
-      query:(data)=>({
-        url:AdminStudentEndpoints.ADD_MARKS,
-        method:"POST",
-        body:data
+    getStudentSubjectList: builder.query<StudentSubjectResponse, Param>({
+      query: (param) => ({
+        url: AdminStudentEndpoints.SUBJECT_LIST,
+        method: "GET",
+        params: param,
       }),
-      invalidatesTags:(result)=>result?.success ? ["Marks"]:[]
-    })
+    }),
+    getStudentMarks: builder.query<StudentMarksResponse, ResultParam>({
+      query: (param) => ({
+        url: AdminStudentEndpoints.STUDENT_MARKS,
+        method: "GET",
+        params: param,
+      }),
+      providesTags: ["Marks"],
+    }),
+
+    addStudentMarks: builder.mutation({
+      query: (data) => ({
+        url: AdminStudentEndpoints.ADD_MARKS,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result) => (result?.success ? ["Marks"] : []),
+    }),
+
+    // student report
+    studentReport: builder.query<Blob, studentListParams>({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.search && params.search.trim()) {
+          queryParams.append("search", params.search.trim());
+        }
+
+        if (params.programId) {
+          queryParams.append("programId", params.programId.toString());
+        }
+
+        if (params.currentSemester) {
+          queryParams.append(
+            "currentSemester",
+            params.currentSemester.toString(),
+          );
+        }
+
+        if (params.status && params.status.trim()) {
+          queryParams.append("status", params.status);
+        }
+
+        const queryString = queryParams.toString();
+
+        return {
+          url: `${AdminStudentEndpoints.GET_STUDENTS_REPORT}${
+            queryString ? `?${queryString}` : ""
+          }`,
+          method: "GET",
+          responseHandler: async (response) => {
+            if (!response.ok) {
+              const contentType = response.headers.get("content-type");
+              if (contentType && contentType.includes("application/json")) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Export failed");
+              } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+            return response.blob();
+          },
+        };
+      },
+      keepUnusedDataFor: 0,
+      transformResponse: (response: Blob) => response,
+      providesTags: [],
+    }),
   }),
 });
 
@@ -151,5 +201,6 @@ export const {
   useGetTeacherListQuery,
   useGetStudentSubjectListQuery,
   useGetStudentMarksQuery,
-  useAddStudentMarksMutation
+  useAddStudentMarksMutation,
+  useLazyStudentReportQuery,
 } = adminStudentApi;

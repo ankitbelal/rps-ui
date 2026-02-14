@@ -14,6 +14,7 @@ import {
   useAddStudentMutation,
   useGetStudentByIdQuery,
   useEditStudentMutation,
+  useLazyStudentReportQuery,
 } from "../../../features/admin/students/studentApi";
 import { Student } from "../../../features/admin/students/utils";
 import toast from "react-hot-toast";
@@ -38,6 +39,7 @@ const StudentManagement: React.FC = () => {
       }),
     );
   }, [dispatch]);
+
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -51,6 +53,7 @@ const StudentManagement: React.FC = () => {
   const [semesterFilter, setSemesterFilter] = useState<string>("");
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -97,6 +100,8 @@ const StudentManagement: React.FC = () => {
   } = useGetStudentByIdQuery(viewingStudentId!, {
     skip: !viewingStudentId,
   });
+
+  const [exportStudentReport] = useLazyStudentReportQuery();
 
   // Calculate pagination
   let startIndex = 0;
@@ -239,7 +244,6 @@ const StudentManagement: React.FC = () => {
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setItemsPerPage(Number(event.target.value));
-    console.log("query params: ", queryParams);
   };
 
   const clearFilters = () => {
@@ -324,14 +328,69 @@ const StudentManagement: React.FC = () => {
               },
             ]}
           />
-          <Button
-            variant="primary"
-            onClick={handleAddNew}
-            className="d-flex align-items-center gap-2 mb-4"
-          >
-            <i className="fas fa-plus"></i>
-            Add Student
-          </Button>
+
+          <div className="d-flex gap-2">
+            {/* Export Button */}
+            <Button
+              variant="success"
+              disabled={isExporting}
+              className="d-flex align-items-center gap-2 mb-4"
+              style={{ backgroundColor: "#198754", borderColor: "#198754" }}
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const blob = await exportStudentReport({
+                    search: debouncedSearch,
+                    programId: programFilter
+                      ? Number(programFilter)
+                      : undefined,
+                    currentSemester: semesterFilter
+                      ? Number(semesterFilter)
+                      : undefined,
+                    status: statusFilter || undefined,
+                  }).unwrap();
+
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = "StudentReport.xlsx"; // dynamic filename if needed
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+
+                  toast.success("Report downloaded!");
+                } catch (err: any) {
+                  const errorMsg = err?.data?.message;
+                  toast.error(errorMsg || "Failed to export report.");
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+            >
+              {isExporting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-export"></i>
+                  Export Data
+                </>
+              )}
+            </Button>
+
+            {/* Add Student Button */}
+            <Button
+              variant="primary"
+              onClick={handleAddNew}
+              className="d-flex align-items-center gap-2 mb-4"
+            >
+              <i className="fas fa-plus"></i>
+              Add Student
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters Section */}
@@ -561,7 +620,11 @@ const StudentManagement: React.FC = () => {
                                   <Button
                                     variant="outline-success"
                                     size="sm"
-                                    onClick={() => navigate('/admin/students/marks-entry',{state:{id:item.id,item}})}
+                                    onClick={() =>
+                                      navigate("/admin/students/marks-entry", {
+                                        state: { id: item.id, item },
+                                      })
+                                    }
                                     title="Marks Entry"
                                   >
                                     <i className="fas fa-file-alt"></i>
