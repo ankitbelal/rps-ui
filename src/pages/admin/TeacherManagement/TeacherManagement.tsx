@@ -312,24 +312,29 @@ const TeacherManagement: React.FC = () => {
             ]}
           />
 
-          {/* Buttons container - exactly like previous style */}
-          {/* Buttons container - matching Student component style */}
           <div className="d-flex gap-2">
-            {/* Export Button - with mb-4 to match Add button height */}
+            {/* Export Button */}
+            {/* Export Button - Fixed with correct Teacher filters */}
             <Button
               variant="success"
-              size="sm"
               disabled={isExporting}
-              className="d-flex align-items-center gap-2 mb-4" // Added mb-4
-              style={{ backgroundColor: "#198754", borderColor: "#198754" }} // Added dark green style
+              className="d-flex align-items-center gap-2 mb-4"
+              style={{ backgroundColor: "#198754", borderColor: "#198754" }}
               onClick={async () => {
                 setIsExporting(true);
                 try {
-                  const blob = await exportTeacherReport(queryParams).unwrap();
+                  // Use the correct Teacher query params
+                  const blob = await exportTeacherReport({
+                    search: debouncedSearch,
+                    gender: genderFilter !== "all" ? genderFilter : undefined, // Fix: Use genderFilter
+                    page: currentPage, // Optional: include current pagination
+                    limit: itemsPerPage, // Optional: include current limit
+                  }).unwrap();
+
                   const url = window.URL.createObjectURL(blob);
                   const link = document.createElement("a");
                   link.href = url;
-                  link.download = "TeacherReport.xlsx";
+                  link.download = `TeacherReport_${new Date().toISOString().split("T")[0]}.xlsx`;
                   document.body.appendChild(link);
                   link.click();
                   link.remove();
@@ -356,12 +361,11 @@ const TeacherManagement: React.FC = () => {
               )}
             </Button>
 
-            {/* Add Teacher Button - with mb-4 */}
+            {/* Add Student Button */}
             <Button
               variant="primary"
-              size="sm"
               onClick={handleAddNew}
-              className="d-flex align-items-center gap-2 mb-4" // Keep mb-4
+              className="d-flex align-items-center gap-2 mb-4"
             >
               <i className="fas fa-plus"></i>
               Add Teacher

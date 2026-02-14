@@ -113,7 +113,7 @@ export const adminTeacherApi = createApi({
         const queryString = queryParams.toString();
 
         return {
-          url: `${AdminTeacherEndpoints.GET_STUDENTS_REPORT}${
+          url: `${AdminTeacherEndpoints.GET_TEACHER_REPORT}${
             queryString ? `?${queryString}` : ""
           }`,
           method: "GET",
