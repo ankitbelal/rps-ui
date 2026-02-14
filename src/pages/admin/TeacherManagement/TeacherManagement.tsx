@@ -11,6 +11,7 @@ import {
   useAddTeacherMutation,
   useDeleteTeacherMutation,
   useEditTeacherMutation,
+  useLazyTeacherReportQuery,
 } from "../../../features/admin/teacher/teacherApi";
 import { Teacher } from "../../../features/admin/teacher/utils";
 import ViewTeacherDetailsModal from "./Partials/TeacherDetailsModal";
@@ -52,6 +53,8 @@ const TeacherManagement: React.FC = () => {
     name: string;
   } | null>(null);
 
+  const [isExporting, setIsExporting] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -78,6 +81,7 @@ const TeacherManagement: React.FC = () => {
   const [deleteTeacher, { isLoading: isDeleting }] = useDeleteTeacherMutation();
   const [editTeacher, { isLoading: isUpdatingTeacher }] =
     useEditTeacherMutation();
+  const [exportTeacherReport] = useLazyTeacherReportQuery();
 
   // Fetch teacher details for view modal
   const {
@@ -307,14 +311,62 @@ const TeacherManagement: React.FC = () => {
               },
             ]}
           />
-          <Button
-            variant="primary"
-            onClick={handleAddNew}
-            className="d-flex align-items-center gap-2 mb-4"
-          >
-            <i className="fas fa-plus"></i>
-            Add Teacher
-          </Button>
+
+          {/* Buttons container - exactly like previous style */}
+          {/* Buttons container - matching Student component style */}
+          <div className="d-flex gap-2">
+            {/* Export Button - with mb-4 to match Add button height */}
+            <Button
+              variant="success"
+              size="sm"
+              disabled={isExporting}
+              className="d-flex align-items-center gap-2 mb-4" // Added mb-4
+              style={{ backgroundColor: "#198754", borderColor: "#198754" }} // Added dark green style
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const blob = await exportTeacherReport(queryParams).unwrap();
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = "TeacherReport.xlsx";
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+                  toast.success("Report downloaded!");
+                } catch (err: any) {
+                  const errorMsg = err?.data?.message;
+                  toast.error(errorMsg || "Failed to export report.");
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+            >
+              {isExporting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-export"></i>
+                  Export Data
+                </>
+              )}
+            </Button>
+
+            {/* Add Teacher Button - with mb-4 */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleAddNew}
+              className="d-flex align-items-center gap-2 mb-4" // Keep mb-4
+            >
+              <i className="fas fa-plus"></i>
+              Add Teacher
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters Section */}
@@ -464,7 +516,12 @@ const TeacherManagement: React.FC = () => {
                                   <Button
                                     variant="outline-primary"
                                     size="sm"
-                                    onClick={() => handleAssignClick(item.id, `${item.firstName} ${item.lastName}`)}
+                                    onClick={() =>
+                                      handleAssignClick(
+                                        item.id,
+                                        `${item.firstName} ${item.lastName}`,
+                                      )
+                                    }
                                     title="Assign Subjects"
                                   >
                                     <i className="fas fa-book"></i>
