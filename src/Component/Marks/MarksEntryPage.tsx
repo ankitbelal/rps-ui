@@ -577,7 +577,7 @@ const MarksEntryPage: React.FC = () => {
                               ) : (
                                 <>
                                   <Save size={18} />
-                                  Save {subject.name} Marks
+                                  Save Marks
                                 </>
                               )}
                             </Button>
@@ -595,7 +595,6 @@ const MarksEntryPage: React.FC = () => {
               <div className="d-flex justify-content-end">
                 <Button
                   variant="primary"
-                  size="md"
                   onClick={handleSaveAll}
                   className="d-flex align-items-center gap-2"
                   disabled={isAddingMarks}
