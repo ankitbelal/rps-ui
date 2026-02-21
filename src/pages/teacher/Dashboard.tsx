@@ -4,7 +4,6 @@ import { Container, Row, Col, Alert, Button } from "react-bootstrap";
 import WelcomeSection from "./WelcomeSection";
 import StatCards from "./StatsCards";
 import SubjectsList from "./SubjectList";
-import { TeacherDashboardSkeleton } from "./SkeletonLoader";
 import { Subject, DashboardStats } from "./types";
 
 const TeacherDashboard: React.FC = () => {
@@ -98,10 +97,6 @@ const TeacherDashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) {
-    return <TeacherDashboardSkeleton />;
-  }
-
   if (error) {
     return (
       <Container className="py-5">
@@ -130,12 +125,6 @@ const TeacherDashboard: React.FC = () => {
       className="py-4 px-lg-4"
       style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
     >
-      {/* Welcome Section */}
-      <WelcomeSection
-        teacherName="Professor John"
-        date="Monday, March 15, 2024"
-      />
-
       {/* Stats Cards */}
       {stats && (
         <Row className="g-4 mb-4">
@@ -161,7 +150,7 @@ const TeacherDashboard: React.FC = () => {
       )}
 
       {/* Subjects List */}
-      {/* <SubjectsList subjects={subjects} /> */}
+      <SubjectsList subjects={subjects} />
     </Container>
   );
 };
