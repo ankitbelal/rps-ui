@@ -1,110 +1,168 @@
 // src/pages/teacher/Dashboard.tsx
-import React from 'react';
-import { Row, Col, Card } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Alert, Button } from "react-bootstrap";
+import WelcomeSection from "./WelcomeSection";
+import StatCards from "./StatsCards";
+import SubjectsList from "./SubjectList";
+import { TeacherDashboardSkeleton } from "./SkeletonLoader";
+import { Subject, DashboardStats } from "./types";
 
 const TeacherDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const stats = [
-    { title: 'Total Courses', value: '8', icon: '📚', color: 'primary' },
-    { title: 'Students', value: '240', icon: '👨‍🎓', color: 'success' },
-    { title: 'Pending Marks', value: '45', icon: '📝', color: 'warning' },
-    { title: 'Average Rating', value: '4.8', icon: '⭐', color: 'info' },
-  ];
-  
-  const enterMarks = () => {
-    navigate('/teacher/marks');
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Mock data fetch
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Mock data
+        setStats({
+          activeCourses: 12,
+          totalStudents: 384,
+          activeCoursesTrend: "+2",
+          totalStudentsTrend: "+24",
+        });
+
+        setSubjects([
+          {
+            id: "1",
+            name: "Data Structures & Algorithms",
+            code: "CS-201",
+            program: "BSCS",
+            semester: "4th",
+            studentsCount: 45,
+            schedule: "Mon/Wed 09:00-10:30",
+          },
+          {
+            id: "2",
+            name: "Linear Algebra",
+            code: "MATH-301",
+            program: "BS Mathematics",
+            semester: "5th",
+            studentsCount: 32,
+            schedule: "Tue/Thu 11:30-13:00",
+          },
+          {
+            id: "3",
+            name: "Database Systems",
+            code: "CS-301",
+            program: "BSCS",
+            semester: "5th",
+            studentsCount: 38,
+            schedule: "Mon/Wed 14:00-15:30",
+          },
+          {
+            id: "4",
+            name: "Computer Architecture",
+            code: "CS-202",
+            program: "BSCS",
+            semester: "4th",
+            studentsCount: 42,
+            schedule: "Tue/Thu 09:00-10:30",
+          },
+          {
+            id: "5",
+            name: "Probability & Statistics",
+            code: "STAT-201",
+            program: "BS Statistics",
+            semester: "3rd",
+            studentsCount: 28,
+            schedule: "Wed/Fri 13:00-14:30",
+          },
+          {
+            id: "6",
+            name: "Quantum Physics",
+            code: "PHY-401",
+            program: "BS Physics",
+            semester: "7th",
+            studentsCount: 18,
+            schedule: "Mon/Thu 15:00-16:30",
+          },
+        ]);
+
+        setError(null);
+      } catch (err) {
+        setError("Failed to load dashboard data");
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <TeacherDashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={6}>
+            <Alert variant="danger" className="text-center p-4">
+              <Alert.Heading>Error Loading Dashboard</Alert.Heading>
+              <p>{error}</p>
+              <Button
+                variant="primary"
+                onClick={() => window.location.reload()}
+                className="mt-3"
+              >
+                Retry
+              </Button>
+            </Alert>
+          </Col>
+        </Row>
+      </Container>
+    );
   }
 
   return (
-    <DashboardLayout>
-      <div className="mb-4">
-        <h2 className="fw-bold">Teacher Dashboard</h2>
-        <p className="text-muted">Welcome back, Dr. Smith</p>
-      </div>
+    <Container
+      fluid
+      className="py-4 px-lg-4"
+      style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
+    >
+      {/* Welcome Section */}
+      <WelcomeSection
+        teacherName="Professor John"
+        date="Monday, March 15, 2024"
+      />
 
-      <Row className="g-3 mb-4">
-        {stats.map((stat, index) => (
-          <Col xs={12} sm={6} lg={3} key={index}>
-            <Card className={`border-0 bg-${stat.color} text-white`}>
-              <Card.Body>
-                <div className="d-flex justify-content-between">
-                  <div>
-                    <h4 className="fw-bold">{stat.value}</h4>
-                    <p className="mb-0">{stat.title}</p>
-                  </div>
-                  <div className="display-4">{stat.icon}</div>
-                </div>
-              </Card.Body>
-            </Card>
+      {/* Stats Cards */}
+      {stats && (
+        <Row className="g-4 mb-4">
+          <Col xs={12} sm={6} xl={3}>
+            <StatCards
+              title="ACTIVE COURSES"
+              value={stats.activeCourses}
+              trend={stats.activeCoursesTrend}
+              variant="primary"
+              icon="book"
+            />
           </Col>
-        ))}
-      </Row>
+          <Col xs={12} sm={6} xl={3}>
+            <StatCards
+              title="TOTAL STUDENTS"
+              value={stats.totalStudents}
+              trend={stats.totalStudentsTrend}
+              variant="info"
+              icon="people"
+            />
+          </Col>
+        </Row>
+      )}
 
-      <Row>
-        <Col lg={8}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white">
-              <h5 className="mb-0">Recent Activities</h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Course</th>
-                      <th>Activity</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>CS101</td>
-                      <td>Marks entry completed</td>
-                      <td>2 hours ago</td>
-                    </tr>
-                    <tr>
-                      <td>CS102</td>
-                      <td>New assignment uploaded</td>
-                      <td>1 day ago</td>
-                    </tr>
-                    <tr>
-                      <td>CS101</td>
-                      <td>Student feedback received</td>
-                      <td>2 days ago</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={4}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white">
-              <h5 className="mb-0">Quick Actions</h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="d-grid gap-2">
-                <button className="btn btn-outline-primary text-start" onClick={enterMarks}>
-                  📝 Enter Marks
-                </button>
-                <button className="btn btn-outline-success text-start">
-                  📁 Upload Resources
-                </button>
-                <button className="btn btn-outline-info text-start">
-                  💬 View Feedback
-                </button>
-                <button className="btn btn-outline-warning text-start">
-                  📊 View Reports
-                </button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </DashboardLayout>
+      {/* Subjects List */}
+      {/* <SubjectsList subjects={subjects} /> */}
+    </Container>
   );
 };
 
