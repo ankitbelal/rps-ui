@@ -14,6 +14,7 @@ import {
   FaBuilding,
   FaBook,
   FaGraduationCap,
+  FaSlidersH
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -66,9 +67,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           { id: 6, label: "Subjects", icon: <FaBook />, path: "/admin/subjects" },
           {
             id: 7,
-            label: "Schedule",
-            icon: <FaCalendarAlt />,
-            path: "/schedule",
+            label: "Evaluation Param",
+            icon: <FaSlidersH />,
+            path: "/admin/eval-param",
           },
           {
             id: 8,
