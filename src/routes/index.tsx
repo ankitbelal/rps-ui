@@ -18,7 +18,7 @@ import MarksEntryPage from "../Component/Marks/MarksEntryPage";
 import Parameter from "../pages/admin/EvaluationParameter/Parameter";
 import { RootState } from "../app/store";
 const AppRouter = () => {
-  const { user } = useAppSelector((state:RootState) => state.auth);
+  const { user } = useAppSelector((state: RootState) => state.auth);
 
   const isAuthenticated = !!user;
 
@@ -139,12 +139,12 @@ const AppRouter = () => {
           }
         />
 
-        <Route 
+        <Route
           path="/admin/students/marks-entry"
           element={
             <ProtectedRoute requiredRole="admin">
               <DashboardLayout>
-                <MarksEntryPage/>
+                <MarksEntryPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -161,7 +161,16 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/teacher/subjects"
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <DashboardLayout>
+                <SubjectManagement />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/teacher/marks"
           element={

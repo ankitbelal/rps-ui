@@ -14,7 +14,7 @@ import {
   FaBuilding,
   FaBook,
   FaGraduationCap,
-  FaSlidersH
+  FaSlidersH,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -64,7 +64,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaBookOpen />,
             path: "/admin/programs",
           },
-          { id: 6, label: "Subjects", icon: <FaBook />, path: "/admin/subjects" },
+          {
+            id: 6,
+            label: "Subjects",
+            icon: <FaBook />,
+            path: "/admin/subjects",
+          },
           {
             id: 7,
             label: "Evaluation Param",
@@ -98,9 +103,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 3,
-            label: "Courses",
+            label: "Subjects",
             icon: <FaBookOpen />,
-            path: "/my-courses",
+            path: "/teacher/subjects",
           },
           { id: 4, label: "Marks Entry", icon: <FaChartBar />, path: "/marks" },
           {
@@ -219,8 +224,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             {role === "admin"
               ? "Admin Portal"
               : role === "teacher"
-              ? "Teacher Portal"
-              : "Student Portal"}
+                ? "Teacher Portal"
+                : "Student Portal"}
           </div>
         </div>
       </div>
