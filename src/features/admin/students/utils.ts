@@ -162,3 +162,31 @@ export interface StudentMarksResponse{
   message: string;
   data: MarksData[];
 }
+
+
+
+// features/admin/results/utils/index.ts
+export interface Subject {
+    code: string;
+    name: string;
+    marks: number;
+    grade: string;
+}
+
+export interface Semester {
+    id: number;
+    year: number;
+    season: 'fall' | 'spring';
+    gpa: number;
+    isStarred?: boolean;
+    subjects: Subject[];
+}
+
+export interface StudentInfo {
+    name: string;
+    program: string;
+    duration: string;
+    cgpa: number;
+    totalSemesters: number;
+    status: 'Active' | 'Completed' | 'On Hold';
+}

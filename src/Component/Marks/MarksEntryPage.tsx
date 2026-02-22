@@ -1,6 +1,7 @@
+// MarksEntryPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Form, Card, Accordion, Button } from 'react-bootstrap';
-import { Save } from 'lucide-react';
+import { Row, Col, Form, Card, Accordion, Button, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { Save, Clock, Edit } from 'lucide-react';
 import CommonBreadCrumb from '../common/BreadCrumb';
 import { FaTachometerAlt, FaUserGraduate } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -12,6 +13,7 @@ import {
 import { StudentSubjectData } from '../../features/admin/students/utils';
 import { useLocation } from 'react-router-dom';
 import { Student } from '../../features/admin/students/utils';
+import StudentResultTimeline from '../../pages/admin/StudentManagement/partials/StudentResultTimeline';
 
 interface SubjectMarks {
   theory: string;
@@ -50,6 +52,7 @@ const MarksEntryPage: React.FC = () => {
   const [selectedTerminal, setSelectedTerminal] = useState('F');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [marksData, setMarksData] = useState<Record<number, SubjectMarks>>({});
+  const [viewMode, setViewMode] = useState<'entry' | 'timeline'>('entry'); // Toggle state
   const location = useLocation();
   const studentData = location.state.item as Student;
 
@@ -388,232 +391,269 @@ const MarksEntryPage: React.FC = () => {
                 icon: <FaUserGraduate />,
               },
               {
-                label: "Marks Entry",
+                label: viewMode === 'entry' ? "Marks Entry" : "Result Timeline",
                 active: true,
               },
             ]}
           />
         </div>
 
-        {/* Student Information Card */}
+        {/* Student Information Card with Toggle */}
         <Card className="border-0 shadow-sm mb-4">
           <Card.Body className="p-4">
-            <h5 className="mb-3 fw-semibold">Student Information</h5>
             <Row>
-              <Col md={3} className="mb-3 mb-md-0">
-                <div>
-                  <small className="text-muted d-block mb-1">Student Name</small>
-                  <strong>{`${studentData?.firstName} ${studentData?.lastName}`}</strong>
-                </div>
+              <Col md={8}>
+                <h5 className="mb-3 fw-semibold">Student Information</h5>
+                <Row>
+                  <Col md={3} className="mb-3 mb-md-0">
+                    <div>
+                      <small className="text-muted d-block mb-1">Student Name</small>
+                      <strong>{`${studentData?.firstName} ${studentData?.lastName}`}</strong>
+                    </div>
+                  </Col>
+                  <Col md={3} className="mb-3 mb-md-0">
+                    <div>
+                      <small className="text-muted d-block mb-1">Roll Number</small>
+                      <strong>{studentData?.rollNumber}</strong>
+                    </div>
+                  </Col>
+                  <Col md={3} className="mb-3 mb-md-0">
+                    <div>
+                      <small className="text-muted d-block mb-1">Current Semester</small>
+                      <strong>{studentData?.currentSemester}</strong>
+                    </div>
+                  </Col>
+                  <Col md={3}>
+                    <div>
+                      <small className="text-muted d-block mb-1">Registration Number</small>
+                      <strong>{studentData?.registrationNumber}</strong>
+                    </div>
+                  </Col>
+                </Row>
               </Col>
-              <Col md={3} className="mb-3 mb-md-0">
-                <div>
-                  <small className="text-muted d-block mb-1">Roll Number</small>
-                  <strong>{studentData?.rollNumber}</strong>
-                </div>
-              </Col>
-              <Col md={3} className="mb-3 mb-md-0">
-                <div>
-                  <small className="text-muted d-block mb-1">Current Semester</small>
-                  <strong>{studentData?.currentSemester}</strong>
-                </div>
-              </Col>
-              <Col md={3}>
-                <div>
-                  <small className="text-muted d-block mb-1">Registration Number</small>
-                  <strong>{studentData?.registrationNumber}</strong>
-                </div>
+              <Col md={4} className="d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+                <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={(val) => setViewMode(val)}>
+                  <ToggleButton
+                    id="toggle-entry"
+                    type="radio"
+                    variant={viewMode === 'entry' ? 'primary' : 'outline-primary'}
+                    value="entry"
+                    className="d-flex align-items-center gap-2"
+                  >
+                    <Edit size={16} />
+                    <span>Marks Entry</span>
+                  </ToggleButton>
+                  <ToggleButton
+                    id="toggle-timeline"
+                    type="radio"
+                    variant={viewMode === 'timeline' ? 'primary' : 'outline-primary'}
+                    value="timeline"
+                    className="d-flex align-items-center gap-2"
+                  >
+                    <Clock size={16} />
+                    <span>Result Timeline</span>
+                  </ToggleButton>
+                </ToggleButtonGroup>
               </Col>
             </Row>
           </Card.Body>
         </Card>
 
-        {/* Filter Section */}
-        <Card className="border-0 shadow-sm mb-4">
-          <Card.Body className="p-4">
-            <Row>
-              <Col md={6} className="mb-3 mb-md-0">
-                <Form.Group>
-                  <Form.Label className="fw-semibold">Terminal</Form.Label>
-                  <Form.Select
-                    value={selectedTerminal}
-                    onChange={(e) => setSelectedTerminal(e.target.value)}
-                    className="bg-light border-0"
-                  >
-                    <option value="">Select Terminal</option>
-                    <option value="F">Terminal 1</option>
-                    <option value="S">Terminal 2</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label className="fw-semibold">Subject</Form.Label>
-                  <Form.Select
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="bg-light border-0"
-                  >
-                    <option value="">All Subjects</option>
-                    {subjects.map(subject => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.name} ({subject.code})
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-
-        {/* Loading State */}
-        {isLoading ? (
-          <Card className="border-0 shadow-sm mb-4">
-            <Card.Body className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-3">Loading subjects...</p>
-            </Card.Body>
-          </Card>
-        ) : filteredSubjects.length === 0 ? (
-          <Card className="border-0 shadow-sm mb-4">
-            <Card.Body className="text-center py-5">
-              <i className="fas fa-book fa-2x text-muted mb-3"></i>
-              <p className="text-muted">No subjects found for this student</p>
-            </Card.Body>
-          </Card>
-        ) : (
+        {/* Conditional Rendering based on viewMode */}
+        {viewMode === 'entry' ? (
+          /* Original Marks Entry View - COMPLETELY UNCHANGED */
           <>
-            {/* Subject Cards - Each Accordion operates independently */}
-            <div className="mb-4">
-              {filteredSubjects.map((subject: StudentSubjectData) => {
-                const subjectMarks = getSubjectMarks(subject.id);
-                const markFields = getMarkFieldsForSubject(subject);
-                
-                return (
-                  // Each subject has its own independent Accordion
-                  <Accordion key={subject.id} className="mb-3" defaultActiveKey="">
-                    <Card className="border-0 shadow-sm">
-                      <Accordion.Item eventKey={subject.id.toString()} className="border-0">
-                        <Accordion.Header className="bg-white">
-                          <div className="w-100 d-flex justify-content-between align-items-center pe-3">
-                            <div>
-                              <span className="fw-semibold">
-                                {subject.name}
-                              </span>
-                              <span className="text-muted ms-2">
-                                {subject.code}
-                              </span>
-                              <span className="badge bg-secondary ms-2">
-                                Semester {subject.semester}
-                              </span>
-                              <span className="badge bg-light text-dark ms-2">
-                                {subject.type}
-                              </span>
-                              {subject.subjectTeacher === null && (
-                                <span className="badge bg-warning ms-2">
-                                  <i className="fas fa-exclamation-triangle me-1"></i>
-                                  No Teacher Assigned
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-muted small">
-                              {subject.evaluationParameters.length > 0 && (
-                                <span>
-                                  <i className="fas fa-sliders-h me-1"></i>
-                                  {subject.evaluationParameters.length} Evaluation Parameters
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Accordion.Header>
-                        <Accordion.Body className="bg-light">
-                          <Row className="g-4">
-                            {markFields.map((field) => (
-                              <Col md={6} lg={4} key={field.id}>
-                                <Form.Group>
-                                  <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
-                                    <span>
-                                      {field.label}
-                                      {field.isEvaluationParam && field.paramCode && (
-                                        <span className="text-muted small ms-1">
-                                          ({field.paramCode})
-                                        </span>
-                                      )}
-                                    </span>
-                                    <span className="badge bg-info">
-                                      Max: {field.maxMarks}
-                                    </span>
-                                  </Form.Label>
-                                  <Form.Control
-                                    type="number"
-                                    placeholder="Enter marks"
-                                    value={subjectMarks[field.name] || ''}
-                                    onChange={(e) => handleMarkChange(subject.id, field.name, e.target.value)}
-                                    className="bg-white"
-                                    min="0"
-                                    max={field.maxMarks}
-                                    step="0.01"
-                                  />
-                                </Form.Group>
-                              </Col>
-                            ))}
-                          </Row>
-                          
-                          <div className="d-flex justify-content-end mt-4">
-                            <Button
-                              variant="success"
-                              onClick={() => handleSaveSubject(subject.id, subject.name)}
-                              className="d-flex align-items-center gap-2"
-                              disabled={isAddingMarks}
-                            >
-                              {isAddingMarks ? (
-                                <>
-                                  <span className="spinner-border spinner-border-sm me-2"></span>
-                                  Saving...
-                                </>
-                              ) : (
-                                <>
-                                  <Save size={18} />
-                                  Save Marks
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </Accordion.Body>
-                      </Accordion.Item>
-                    </Card>
-                  </Accordion>
-                );
-              })}
-            </div>
+            {/* Filter Section */}
+            <Card className="border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <Row>
+                  <Col md={6} className="mb-3 mb-md-0">
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">Terminal</Form.Label>
+                      <Form.Select
+                        value={selectedTerminal}
+                        onChange={(e) => setSelectedTerminal(e.target.value)}
+                        className="bg-light border-0"
+                      >
+                        <option value="">Select Terminal</option>
+                        <option value="F">Terminal 1</option>
+                        <option value="S">Terminal 2</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">Subject</Form.Label>
+                      <Form.Select
+                        value={selectedSubject}
+                        onChange={(e) => setSelectedSubject(e.target.value)}
+                        className="bg-light border-0"
+                      >
+                        <option value="">All Subjects</option>
+                        {subjects.map(subject => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name} ({subject.code})
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
 
-            {/* Save All Button - Only show when viewing all subjects */}
-            {(!selectedSubject || selectedSubject === '') && (
-              <div className="d-flex justify-content-end">
-                <Button
-                  variant="primary"
-                  onClick={handleSaveAll}
-                  className="d-flex align-items-center gap-2"
-                  disabled={isAddingMarks}
-                >
-                  {isAddingMarks ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Saving All Marks...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save"></i>
-                      Save All Marks
-                    </>
-                  )}
-                </Button>
-              </div>
+            {/* Loading State */}
+            {isLoading ? (
+              <Card className="border-0 shadow-sm mb-4">
+                <Card.Body className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-3">Loading subjects...</p>
+                </Card.Body>
+              </Card>
+            ) : filteredSubjects.length === 0 ? (
+              <Card className="border-0 shadow-sm mb-4">
+                <Card.Body className="text-center py-5">
+                  <i className="fas fa-book fa-2x text-muted mb-3"></i>
+                  <p className="text-muted">No subjects found for this student</p>
+                </Card.Body>
+              </Card>
+            ) : (
+              <>
+                {/* Subject Cards - Each Accordion operates independently */}
+                <div className="mb-4">
+                  {filteredSubjects.map((subject: StudentSubjectData) => {
+                    const subjectMarks = getSubjectMarks(subject.id);
+                    const markFields = getMarkFieldsForSubject(subject);
+                    
+                    return (
+                      // Each subject has its own independent Accordion
+                      <Accordion key={subject.id} className="mb-3" defaultActiveKey="">
+                        <Card className="border-0 shadow-sm">
+                          <Accordion.Item eventKey={subject.id.toString()} className="border-0">
+                            <Accordion.Header className="bg-white">
+                              <div className="w-100 d-flex justify-content-between align-items-center pe-3">
+                                <div>
+                                  <span className="fw-semibold">
+                                    {subject.name}
+                                  </span>
+                                  <span className="text-muted ms-2">
+                                    {subject.code}
+                                  </span>
+                                  <span className="badge bg-secondary ms-2">
+                                    Semester {subject.semester}
+                                  </span>
+                                  <span className="badge bg-light text-dark ms-2">
+                                    {subject.type}
+                                  </span>
+                                  {subject.subjectTeacher === null && (
+                                    <span className="badge bg-warning ms-2">
+                                      <i className="fas fa-exclamation-triangle me-1"></i>
+                                      No Teacher Assigned
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-muted small">
+                                  {subject.evaluationParameters.length > 0 && (
+                                    <span>
+                                      <i className="fas fa-sliders-h me-1"></i>
+                                      {subject.evaluationParameters.length} Evaluation Parameters
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </Accordion.Header>
+                            <Accordion.Body className="bg-light">
+                              <Row className="g-4">
+                                {markFields.map((field) => (
+                                  <Col md={6} lg={4} key={field.id}>
+                                    <Form.Group>
+                                      <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
+                                        <span>
+                                          {field.label}
+                                          {field.isEvaluationParam && field.paramCode && (
+                                            <span className="text-muted small ms-1">
+                                              ({field.paramCode})
+                                            </span>
+                                          )}
+                                        </span>
+                                        <span className="badge bg-info">
+                                          Max: {field.maxMarks}
+                                        </span>
+                                      </Form.Label>
+                                      <Form.Control
+                                        type="number"
+                                        placeholder="Enter marks"
+                                        value={subjectMarks[field.name] || ''}
+                                        onChange={(e) => handleMarkChange(subject.id, field.name, e.target.value)}
+                                        className="bg-white"
+                                        min="0"
+                                        max={field.maxMarks}
+                                        step="0.01"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                ))}
+                              </Row>
+                              
+                              <div className="d-flex justify-content-end mt-4">
+                                <Button
+                                  variant="success"
+                                  onClick={() => handleSaveSubject(subject.id, subject.name)}
+                                  className="d-flex align-items-center gap-2"
+                                  disabled={isAddingMarks}
+                                >
+                                  {isAddingMarks ? (
+                                    <>
+                                      <span className="spinner-border spinner-border-sm me-2"></span>
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save size={18} />
+                                      Save Marks
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </Accordion.Body>
+                          </Accordion.Item>
+                        </Card>
+                      </Accordion>
+                    );
+                  })}
+                </div>
+
+                {/* Save All Button - Only show when viewing all subjects */}
+                {(!selectedSubject || selectedSubject === '') && (
+                  <div className="d-flex justify-content-end">
+                    <Button
+                      variant="primary"
+                      onClick={handleSaveAll}
+                      className="d-flex align-items-center gap-2"
+                      disabled={isAddingMarks}
+                    >
+                      {isAddingMarks ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Saving All Marks...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-save"></i>
+                          Save All Marks
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </>
+        ) : (
+          /* Result Timeline View */
+          <StudentResultTimeline />
         )}
       </div>
     </>

@@ -63,7 +63,7 @@ const Parameter: React.FC = () => {
   );
 
 
-  const {data:evalParamsData, isLoading:isParamLoading, isFetching}=useGetParamListQuery(queryParams);
+  const {data:evalParamsData, isLoading:isParamLoading, isFetching}=useGetParamListQuery(queryParams,{refetchOnMountOrArgChange:true});
   const [createEvalParam,{isLoading:isCreatingParams}]=useCreateEvalParamsMutation();
   const [deleteParam,{isLoading:isDeletingParam}]=useDeleteEvalParamsMutation();
 
@@ -231,6 +231,7 @@ const Parameter: React.FC = () => {
             variant="primary"
             onClick={handleAddNew}
             className="d-flex align-items-center gap-2 mb-4"
+            disabled={isParamLoading || isFetching}
           >
             <i className="fas fa-plus"></i>
             Add Param
@@ -253,6 +254,7 @@ const Parameter: React.FC = () => {
                     placeholder="Search Params by name or code..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    disabled={isParamLoading || isFetching}
                   />
                 </div>
               </Col>

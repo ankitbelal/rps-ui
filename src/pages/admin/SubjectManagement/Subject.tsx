@@ -30,15 +30,18 @@ import { params } from "./partials/EvaluationParameterModal";
 import SubjectEditModal from "./partials/SubjectEditModal";
 import { Subject } from "../../../features/admin/subjects/utils";
 import DeleteConfirmationModal from "../../../Component/DeleteModal/DeleteConfirmationModal";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setPageTitle } from "../../../features/ui/uiSlice";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { FaTachometerAlt } from "react-icons/fa";
+import { RootState } from "../../../app/store";
+import { getRoleByType } from "../../../helper";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const SubjectManagement: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     dispatch(
@@ -64,14 +67,22 @@ const SubjectManagement: React.FC = () => {
   const [programFilter, setProgramFilter] = useState<string>("");
   const [semesterFilter, setSemesterFilter] = useState<string>("");
   const [editingSubject, SetEditingSubject] = useState<Subject | null>(null);
+  const [userRole,setUserRole] = useState<string>("")
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString).toLocaleDateString("en-US", {
+  //     year: "numeric",
+  //     month: "short",
+  //     day: "numeric",
+  //   });
+  // };
+
+  useEffect(()=>{
+    if(user){
+      setUserRole(getRoleByType(user.UserType));
+    }
+  },[user])
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -94,15 +105,12 @@ const SubjectManagement: React.FC = () => {
     data: subjectData,
     isLoading: isSubjectLoading,
     isFetching,
-  } = useGetSubjectsQuery(queryParams);
+  } = useGetSubjectsQuery(queryParams,{refetchOnMountOrArgChange:true});
 
-  const { data: programData, isLoading: isProgramLoading } =
-    useGetProgramsQuery();
-  const { data: TeachersData, isLoading: isTeachersLoading } =
-    useGetTeacherListQuery();
+  const { data: programData, isLoading: isProgramLoading } = useGetProgramsQuery(undefined,{refetchOnMountOrArgChange:true});
+  const { data: TeachersData, isLoading: isTeachersLoading } = useGetTeacherListQuery(undefined,{refetchOnMountOrArgChange:true});
   const [addSubject, { isLoading: isAddingStudent }] = useAddSubjectMutation();
-  const [assignParams, { isLoading: isAssigning }] =
-    useAssignParametersMutation();
+  const [assignParams, { isLoading: isAssigning }] = useAssignParametersMutation();
   const [editSubject, { isLoading: isEditing }] = useEditSubjectMutation();
   const [deleteSubject, { isLoading: isDeleting }] = useDeleteSubjectMutation();
 
@@ -330,7 +338,7 @@ const SubjectManagement: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: "/admin/dashboard",
+                link: `${userRole==="admin"?"/admin":"/teacher"}/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
@@ -339,14 +347,16 @@ const SubjectManagement: React.FC = () => {
               },
             ]}
           />
-          <Button
-            variant="primary"
-            onClick={handleAddNew}
-            className="d-flex align-items-center gap-2 mb-4"
-          >
-            <i className="fas fa-plus"></i>
-            Add Subjects
-          </Button>
+          {(userRole==="admin")&&
+            <Button
+              variant="primary"
+              onClick={handleAddNew}
+              className="d-flex align-items-center gap-2 mb-4"
+            >
+              <i className="fas fa-plus"></i>
+              Add Subjects
+            </Button>
+          }
         </div>
 
         {/* Search and Filters Section */}
@@ -365,16 +375,17 @@ const SubjectManagement: React.FC = () => {
                     placeholder="Search subjects by name or code..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    disabled={isSubjectLoading}
                   />
                 </div>
               </Col>
 
-              <Col md={2}>
+              <Col md={3}>
                 <Form.Select
                   value={programFilter}
                   onChange={(e) => setProgramFilter(e.target.value)}
                   className="bg-light border-0"
-                  disabled={isProgramLoading || isFetching}
+                  disabled={isProgramLoading || isFetching || isSubjectLoading}
                 >
                   <option value="">
                     {isProgramLoading ? "Loading..." : "All Programs"}
@@ -388,7 +399,7 @@ const SubjectManagement: React.FC = () => {
               </Col>
 
               {/* Semester Filter */}
-              <Col md={2}>
+              <Col md={3}>
                 <Form.Select
                   value={semesterFilter}
                   onChange={(e) => setSemesterFilter(e.target.value)}
@@ -442,7 +453,7 @@ const SubjectManagement: React.FC = () => {
                         <th>SN</th>
                         <th>Subject Code</th>
                         <th>Subject Name</th>
-                        <th>Teacher</th>
+                        {(userRole==="admin")&&<th>Teacher</th>}
                         <th>Details</th>
                         <th>Actions</th>
                       </tr>
@@ -479,6 +490,7 @@ const SubjectManagement: React.FC = () => {
                                   </small>
                                 </div>
                               </td>
+                            {(userRole==="admin")&&
                               <td>
                                 {item?.subjectTeacher ? (
                                   <>
@@ -503,6 +515,7 @@ const SubjectManagement: React.FC = () => {
                                   </span>
                                 )}
                               </td>
+                            }
 
                               <td>
                                 <div>
@@ -519,6 +532,7 @@ const SubjectManagement: React.FC = () => {
                               <td>
                                 <div className="d-flex gap-2">
                                   {/* Edit Button */}
+                                {(userRole==="admin")&&
                                   <Button
                                     variant="outline-primary"
                                     size="sm"
@@ -528,7 +542,7 @@ const SubjectManagement: React.FC = () => {
                                   >
                                     <i className="fas fa-edit"></i>
                                   </Button>
-
+                                }
                                   {/* Evaluation Parameters Button */}
                                   <Button
                                     variant="outline-info"
@@ -546,6 +560,7 @@ const SubjectManagement: React.FC = () => {
                                   </Button>
 
                                   {/* Delete Button */}
+                                {(userRole==="admin")&& 
                                   <Button
                                     variant="outline-danger"
                                     size="sm"
@@ -557,6 +572,7 @@ const SubjectManagement: React.FC = () => {
                                   >
                                     <i className="fas fa-trash"></i>
                                   </Button>
+                                }
                                 </div>
                               </td>
                             </tr>

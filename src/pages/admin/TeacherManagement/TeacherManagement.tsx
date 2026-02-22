@@ -76,7 +76,7 @@ const TeacherManagement: React.FC = () => {
     data: teacherData,
     isLoading: isTeacherLoading,
     isFetching,
-  } = useGetTeacherQuery(queryParams);
+  } = useGetTeacherQuery(queryParams,{refetchOnMountOrArgChange:true});
   const [addTeacher, { isLoading: isAddingTeacher }] = useAddTeacherMutation();
   const [deleteTeacher, { isLoading: isDeleting }] = useDeleteTeacherMutation();
   const [editTeacher, { isLoading: isUpdatingTeacher }] =
@@ -249,6 +249,7 @@ const TeacherManagement: React.FC = () => {
             size="sm"
             className="w-auto"
             style={{ width: "80px" }}
+            disabled={isTeacherLoading || isFetching}
           >
             {ITEMS_PER_PAGE_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -317,7 +318,7 @@ const TeacherManagement: React.FC = () => {
             {/* Export Button - Fixed with correct Teacher filters */}
             <Button
               variant="success"
-              disabled={isExporting}
+              disabled={isExporting || isTeacherLoading || isFetching}
               className="d-flex align-items-center gap-2 mb-4"
               style={{ backgroundColor: "#198754", borderColor: "#198754" }}
               onClick={async () => {
@@ -366,6 +367,7 @@ const TeacherManagement: React.FC = () => {
               variant="primary"
               onClick={handleAddNew}
               className="d-flex align-items-center gap-2 mb-4"
+              disabled={isTeacherLoading || isFetching}
             >
               <i className="fas fa-plus"></i>
               Add Teacher
@@ -389,6 +391,7 @@ const TeacherManagement: React.FC = () => {
                     placeholder="Search teachers by name, email or phone..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    disabled={isTeacherLoading}
                   />
                 </div>
               </Col>
@@ -399,6 +402,7 @@ const TeacherManagement: React.FC = () => {
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
                   className="bg-light border-0"
+                  disabled={isTeacherLoading || isFetching}
                 >
                   <option value="all">All Gender</option>
                   <option value="M">Male</option>

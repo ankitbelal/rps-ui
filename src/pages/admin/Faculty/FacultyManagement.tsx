@@ -61,7 +61,7 @@ const FacultyManagement: React.FC = () => {
     data: facultyData,
     isLoading: isFacultyLoading,
     isFetching,
-  } = useGetFacultiesQuery(queryParams);
+  } = useGetFacultiesQuery(queryParams,{refetchOnMountOrArgChange:true});
   const [addFaculty, { isLoading: isAddingFaculty }] = useAddFacultyMutation();
   const [editFaculty, { isLoading: isUpdatingFaculty }] =
     useEditFacultyMutation();
@@ -191,6 +191,7 @@ const FacultyManagement: React.FC = () => {
             size="sm"
             className="w-auto"
             style={{ width: "80px" }}
+            disabled={isFacultyLoading || isFetching}
           >
             {ITEMS_PER_PAGE_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -266,6 +267,7 @@ const FacultyManagement: React.FC = () => {
             variant="primary"
             onClick={handleAddNew}
             className="d-flex align-items-center gap-2 mb-4"
+            disabled={isFacultyLoading || isFetching}
           >
             <i className="fas fa-plus"></i>
             Add Faculty
@@ -288,6 +290,7 @@ const FacultyManagement: React.FC = () => {
                     placeholder="Search faculties by name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    disabled={isFacultyLoading}
                   />
                 </div>
               </Col>

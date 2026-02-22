@@ -21,15 +21,18 @@ import toast from "react-hot-toast";
 import { StudentForm } from "../../../features/admin/students/utils";
 import { FaTachometerAlt, FaUserGraduate } from "react-icons/fa";
 import { EditStudentFormData } from "./validations/editStudentSchema";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setPageTitle } from "../../../features/ui/uiSlice";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
+import { RootState } from "../../../app/store";
+import { getRoleByType } from "../../../helper";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const StudentManagement: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { user } = useAppSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     dispatch(
@@ -54,6 +57,14 @@ const StudentManagement: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [userRole,setUserRole] = useState<string>("")
+  
+
+  useEffect(()=>{
+    if(user){
+      setUserRole(getRoleByType(user.UserType));
+    }
+  },[user])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,7 +96,7 @@ const StudentManagement: React.FC = () => {
     data: studentsData,
     isLoading,
     isFetching,
-  } = useGetStudentsQuery(queryParams);
+  } = useGetStudentsQuery(queryParams,{refetchOnMountOrArgChange:true});
   const { data: programData } = useGetProgramsQuery();
   const [deleteStudent, { isLoading: isDeleting }] = useDeleteStudentMutation();
   const [addStudent, { isLoading: isAddingStudent }] = useAddStudentMutation();
@@ -268,6 +279,7 @@ const StudentManagement: React.FC = () => {
             size="sm"
             className="w-auto"
             style={{ width: "80px" }}
+            disabled={isLoading || isFetching}
           >
             {ITEMS_PER_PAGE_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -319,7 +331,7 @@ const StudentManagement: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: "/admin/dashboard",
+                link: `${userRole==="admin"?"/admin":"/teacher"}/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
@@ -328,12 +340,12 @@ const StudentManagement: React.FC = () => {
               },
             ]}
           />
-
+        {(userRole==="admin") &&
           <div className="d-flex gap-2">
             {/* Export Button */}
             <Button
               variant="success"
-              disabled={isExporting}
+              disabled={isExporting || isLoading || isFetching}
               className="d-flex align-items-center gap-2 mb-4"
               style={{ backgroundColor: "#198754", borderColor: "#198754" }}
               onClick={async () => {
@@ -386,11 +398,13 @@ const StudentManagement: React.FC = () => {
               variant="primary"
               onClick={handleAddNew}
               className="d-flex align-items-center gap-2 mb-4"
+              disabled={isLoading || isFetching}
             >
               <i className="fas fa-plus"></i>
               Add Student
             </Button>
           </div>
+        }
         </div>
 
         {/* Search and Filters Section */}
@@ -593,22 +607,26 @@ const StudentManagement: React.FC = () => {
                               </td>
                               <td>
                                 <div className="d-flex gap-2">
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => handleEditModalOpen(item)}
-                                    title="Edit"
-                                  >
-                                    <i className="fas fa-edit"></i>
-                                  </Button>
-                                  <Button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    onClick={() => handleDeleteClick(item)}
-                                    title="Delete"
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </Button>
+                                  {(userRole==="admin") &&
+                                    <Button
+                                      variant="outline-primary"
+                                      size="sm"
+                                      onClick={() => handleEditModalOpen(item)}
+                                      title="Edit"
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </Button>
+                                  }
+                                  {(userRole==="admin") &&
+                                    <Button
+                                      variant="outline-danger"
+                                      size="sm"
+                                      onClick={() => handleDeleteClick(item)}
+                                      title="Delete"
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </Button>
+                                  }
                                   <Button
                                     variant="outline-info"
                                     size="sm"

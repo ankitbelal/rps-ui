@@ -72,10 +72,10 @@ const ProgramManagement: React.FC = () => {
     data: programData,
     isLoading: isProgramLoading,
     isFetching,
-  } = useGetProgramsQuery(queryParams);
+  } = useGetProgramsQuery(queryParams,{refetchOnMountOrArgChange:true});
 
-  const { data: facultyData, isLoading: isFacultyLoading } =
-    useGetFacultiesQuery();
+  const { data: facultyData, isLoading: isFacultyLoading, isFetching:isFacultyFetching } =
+    useGetFacultiesQuery(undefined,{refetchOnMountOrArgChange:true});
   const [addProgram, { isLoading: isAddingProgram }] = useAddProgramMutation();
   const [deleteProgram, { isLoading: isDeleting }] = useDeleteProgramMutation();
   const [editProgram, { isLoading: isUpdatingProgram }] =
@@ -310,15 +310,15 @@ const ProgramManagement: React.FC = () => {
                 </div>
               </Col>
 
-              <Col md={2}>
+              <Col md={3}>
                 <Form.Select
                   value={facultyFilter}
                   onChange={(e) => setFacultyFilter(e.target.value)}
                   className="bg-light border-0"
-                  disabled={isFacultyLoading || isFetching}
+                  disabled={isFacultyLoading || isFetching || isProgramLoading || isFacultyFetching}
                 >
                   <option value="">
-                    {isFacultyLoading ? "Loading..." : "All Faculties"}
+                    All Faculties
                   </option>
                   {facultyData?.data.map((faculty) => (
                     <option key={faculty.id} value={faculty.id}>
