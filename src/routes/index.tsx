@@ -21,19 +21,24 @@ const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
   const isAuthenticated = !!user;
+  const currentRole = getRoleByType(user?.UserType);
 
   const ProtectedRoute: React.FC<{
     children: React.ReactNode;
-    requiredRole?: string;
+    requiredRole?: string | string[];
   }> = ({ children, requiredRole }) => {
     if (!isAuthenticated) {
       return <Navigate to="/" replace />;
     }
 
-    if (requiredRole && getRoleByType(user?.UserType) !== requiredRole) {
-      return (
-        <Navigate to={`/${getRoleByType(user?.UserType)}/dashboard`} replace />
-      );
+    if (requiredRole) {
+      const allowed = Array.isArray(requiredRole)
+        ? requiredRole.includes(currentRole)
+        : currentRole === requiredRole;
+
+      if (!allowed) {
+        return <Navigate to={`/${currentRole}/dashboard`} replace />;
+      }
     }
     return <>{children}</>;
   };
@@ -46,10 +51,7 @@ const AppRouter = () => {
             !isAuthenticated ? (
               <AuthFlow />
             ) : (
-              <Navigate
-                to={`/${getRoleByType(user?.UserType)}/dashboard`}
-                replace
-              />
+              <Navigate to={`/${currentRole}/dashboard`} replace />
             )
           }
         />
@@ -108,6 +110,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/programs"
           element={
@@ -118,6 +121,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/faculties"
           element={
@@ -128,6 +132,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/subjects"
           element={
@@ -139,10 +144,11 @@ const AppRouter = () => {
           }
         />
 
+        {/* 🔥 Dual role example (admin + teacher allowed) */}
         <Route
           path="/admin/students/marks-entry"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "teacher"]}>
               <DashboardLayout>
                 <MarksEntryPage />
               </DashboardLayout>
@@ -161,6 +167,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/subjects"
           element={
@@ -171,6 +178,7 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/marks"
           element={
@@ -193,9 +201,7 @@ const AppRouter = () => {
           }
         />
 
-        {/* Teacher routes */}
-
-        {/* student routes */}
+        {/* Student routes */}
         <Route
           path="/student/dashboard"
           element={
@@ -206,16 +212,18 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/students/results"
           element={
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
                 <StudentResults />
-              </DashboardLayout>{" "}
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
