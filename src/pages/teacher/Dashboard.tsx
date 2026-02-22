@@ -5,6 +5,7 @@ import WelcomeSection from "./WelcomeSection";
 import StatCards from "./StatsCards";
 import SubjectsList from "./SubjectList";
 import { Subject, DashboardStats } from "./types";
+import AssignedPrograms from "./AssignedPrograms";
 
 const TeacherDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -150,7 +151,8 @@ const TeacherDashboard: React.FC = () => {
       )}
 
       {/* Subjects List */}
-      <SubjectsList subjects={subjects} />
+      {/* <SubjectsList subjects={subjects} /> */}
+      <AssignedPrograms/>
     </Container>
   );
 };
