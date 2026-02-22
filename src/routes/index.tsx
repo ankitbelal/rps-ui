@@ -181,6 +181,18 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/teachers/students"
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <DashboardLayout>
+                <StudentManagement />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Teacher routes */}
 
         {/* student routes */}

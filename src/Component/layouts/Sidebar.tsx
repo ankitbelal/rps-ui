@@ -99,11 +99,11 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             id: 2,
             label: "My Students",
             icon: <FaUsers />,
-            path: "/my-students",
+            path: "/teacher/students",
           },
           {
             id: 3,
-            label: "Subjects",
+            label: "My Subjects",
             icon: <FaBookOpen />,
             path: "/teacher/subjects",
           },
