@@ -761,7 +761,7 @@ const MarksEntryPage: React.FC = () => {
           </>
         ) : (
           /* Result Timeline View */
-          <StudentResultTimeline />
+          <StudentResultTimeline studentId={studentData.id} currentSemester={studentData.currentSemester}/>
         )}
       </div>
     </>

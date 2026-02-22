@@ -12,6 +12,8 @@ import {
   Param,
   ResultParam,
   StudentMarksResponse,
+  ResultApiResponse,
+  FinalResultParam
 } from "./utils";
 
 export const adminStudentApi = createApi({
@@ -187,6 +189,14 @@ export const adminStudentApi = createApi({
       transformResponse: (response: Blob) => response,
       providesTags: [],
     }),
+    getPublishedResult:(builder).query<ResultApiResponse,FinalResultParam>({
+      query:(queryParams)=>({
+        url:AdminStudentEndpoints.PUBLISHED_RESULT,
+        method:"GET",
+        params:queryParams
+      })
+    })
+
   }),
 });
 
@@ -203,4 +213,5 @@ export const {
   useGetStudentMarksQuery,
   useAddStudentMarksMutation,
   useLazyStudentReportQuery,
+  useGetPublishedResultQuery
 } = adminStudentApi;

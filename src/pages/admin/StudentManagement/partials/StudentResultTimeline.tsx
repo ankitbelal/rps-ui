@@ -1,133 +1,43 @@
-// components/admin/results/StudentResultTimeline.tsx
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
-import CommonBreadCrumb from '../../../../Component/common/BreadCrumb';
-import { FaTachometerAlt, FaStar, FaChevronDown } from 'react-icons/fa';
-import { Semester } from '../../../../features/admin/students/utils';
-
-// Mock data for when no props are provided
-const MOCK_STUDENT_INFO = {
-    name: "John Doe",
-    program: "B.Sc Computer Science",
-    duration: "2021 – 2024",
-    cgpa: 3.74,
-    totalSemesters: 8,
-    status: 'Active' as const
-};
-
-const MOCK_SEMESTERS: Semester[] = [
-    {
-        id: 1,
-        year: 2021,
-        season: 'fall',
-        gpa: 3.8,
-        subjects: [
-            { code: 'CS101', name: 'Programming Fundamentals', marks: 85, grade: 'A' },
-            { code: 'MATH201', name: 'Calculus II', marks: 78, grade: 'B+' },
-            { code: 'PHY101', name: 'Physics', marks: 82, grade: 'A-' }
-        ]
-    },
-    {
-        id: 2,
-        year: 2021,
-        season: 'spring',
-        gpa: 3.9,
-        isStarred: true,
-        subjects: [
-            { code: 'CS201', name: 'Data Structures', marks: 88, grade: 'A-' },
-            { code: 'MATH202', name: 'Linear Algebra', marks: 92, grade: 'A' },
-            { code: 'STAT101', name: 'Statistics', marks: 79, grade: 'B+' }
-        ]
-    },
-    {
-        id: 3,
-        year: 2022,
-        season: 'fall',
-        gpa: 3.5,
-        subjects: [
-            { code: 'CS301', name: 'Algorithms', marks: 76, grade: 'B+' },
-            { code: 'CS302', name: 'Operating Systems', marks: 81, grade: 'A-' },
-            { code: 'ENG201', name: 'Technical Writing', marks: 87, grade: 'A-' },
-            { code: 'MATH301', name: 'Discrete Mathematics', marks: 72, grade: 'B' }
-        ]
-    },
-    {
-        id: 4,
-        year: 2022,
-        season: 'spring',
-        gpa: 3.7,
-        subjects: [
-            { code: 'CS401', name: 'Database Systems', marks: 90, grade: 'A' },
-            { code: 'CS402', name: 'Computer Networks', marks: 84, grade: 'A-' },
-            { code: 'CS403', name: 'Software Engineering', marks: 77, grade: 'B+' }
-        ]
-    },
-    {
-        id: 5,
-        year: 2023,
-        season: 'fall',
-        gpa: 3.6,
-        subjects: [
-            { code: 'CS501', name: 'Machine Learning', marks: 83, grade: 'A-' },
-            { code: 'CS502', name: 'Computer Vision', marks: 75, grade: 'B+' },
-            { code: 'CS503', name: 'Distributed Systems', marks: 79, grade: 'B+' }
-        ]
-    },
-    {
-        id: 6,
-        year: 2023,
-        season: 'spring',
-        gpa: 4.0,
-        isStarred: true,
-        subjects: [
-            { code: 'CS601', name: 'Advanced AI', marks: 97, grade: 'A' },
-            { code: 'CS602', name: 'Deep Learning', marks: 94, grade: 'A' },
-            { code: 'CS603', name: 'Cloud Computing', marks: 91, grade: 'A' }
-        ]
-    },
-    {
-        id: 7,
-        year: 2024,
-        season: 'fall',
-        gpa: 3.8,
-        subjects: [
-            { code: 'CS701', name: 'Blockchain Technology', marks: 86, grade: 'A-' },
-            { code: 'CS702', name: 'Cybersecurity', marks: 88, grade: 'A-' },
-            { code: 'CS703', name: 'IoT Systems', marks: 82, grade: 'A-' },
-            { code: 'CS704', name: 'Research Methods', marks: 79, grade: 'B+' }
-        ]
-    },
-    {
-        id: 8,
-        year: 2024,
-        season: 'spring',
-        gpa: 3.9,
-        isStarred: true,
-        subjects: [
-            { code: 'CS801', name: 'Capstone Project', marks: 95, grade: 'A' },
-            { code: 'CS802', name: 'Ethics in Computing', marks: 89, grade: 'A-' },
-            { code: 'CS803', name: 'Advanced Topics in CS', marks: 91, grade: 'A' }
-        ]
-    }
-];
+import React, { useEffect, useMemo, useState } from 'react';
+import { Container, Row, Col, Card, Badge, Form, ToggleButtonGroup, ToggleButton, Button } from 'react-bootstrap';
+import { FaStar, FaChevronDown } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import { useGetPublishedResultQuery } from '../../../../features/admin/students/studentApi';
+import { ResultData } from '../../../../features/admin/students/utils';
+import { Clock, Edit } from 'lucide-react';
 
 interface StudentResultTimelineProps {
-    studentInfo?: {
-        name: string;
-        program: string;
-        duration: string;
-        cgpa: number;
-        totalSemesters: number;
-        status: 'Active' | 'Completed' | 'On Hold';
-    };
-    semesters?: Semester[];
+    studentId?: number;
+    currentSemester?: number;
 }
 
 const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
-    studentInfo = MOCK_STUDENT_INFO,
-    semesters = MOCK_SEMESTERS
+    studentId,
+    currentSemester
 }) => {
     const [openSemesterId, setOpenSemesterId] = useState<number | null>(null);
+    const [selectedTerminal, setSelectedTerminal] = useState("FINAL");
+    const [semesterFilter, setSemesterFilter] = useState<string | number>("");
+    const [viewMode, setViewMode] = useState<"all" | "current">("all");
+
+    const queryParams = useMemo(() => ({
+        studentId: studentId!,
+        examTerm: selectedTerminal,
+        semester: semesterFilter
+    }), [studentId, selectedTerminal, semesterFilter]);
+
+    const { data: resultData, isLoading, isFetching } = useGetPublishedResultQuery(queryParams, { refetchOnMountOrArgChange: true });
+
+    useEffect(() => {
+        if (viewMode === "all") {
+            setSemesterFilter("");
+            setSelectedTerminal("FINAL");
+        } else if (viewMode === "current") {
+            setSemesterFilter(currentSemester!)
+            setSelectedTerminal("");
+        }
+    }, [currentSemester, viewMode]);
 
     const toggleSemester = (id: number) => {
         setOpenSemesterId(openSemesterId === id ? null : id);
@@ -137,6 +47,7 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
         if (grade.startsWith('A')) return 'success';
         if (grade.startsWith('B')) return 'info';
         if (grade.startsWith('C')) return 'warning';
+        if (grade.startsWith('D')) return 'secondary'
         return 'danger';
     };
 
@@ -144,6 +55,7 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
         if (grade.startsWith('A')) return '#198754';
         if (grade.startsWith('B')) return '#0dcaf0';
         if (grade.startsWith('C')) return '#ffc107';
+        if (grade.startsWith('D')) return '#81807d'
         return '#dc3545';
     };
 
@@ -151,234 +63,299 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
         return ((gpa / 4.0) * 100).toFixed(0);
     };
 
-    const getSeasonColor = (season: string): string => {
-        return season === 'fall' ? 'warning' : 'info';
-    };
-
     // Group semesters by year
-    const groupedByYear: { [key: number]: Semester[] } = {};
-    semesters.forEach(sem => {
-        if (!groupedByYear[sem.year]) {
-            groupedByYear[sem.year] = [];
+    const groupedByYear: { [key: number]: ResultData[] } = {};
+    resultData?.data.forEach(sem => {
+        if (!groupedByYear[new Date(sem.publishedAt).getFullYear()]) {
+            groupedByYear[new Date(sem.publishedAt).getFullYear()] = [];
         }
-        groupedByYear[sem.year].push(sem);
+        groupedByYear[new Date(sem.publishedAt).getFullYear()].push(sem);
     });
+
+    // Skeleton loader for semester cards
+    const SkeletonSemester = () => (
+        <div className="ms-5 ps-3 mb-3 position-relative">
+            {/* Horizontal Connector line */}
+            <div className="position-absolute" style={{ left: '-28px', top: '24px', width: '24px', height: '1px', background: '#dee2e6' }}></div>
+
+            <Card className="border-0 shadow-sm">
+                <div className="bg-info rounded-top" style={{ height: '4px' }}></div>
+                
+                <div className="p-3 d-flex align-items-center gap-3">
+                    <div style={{ width: '40px', height: '40px' }}>
+                        <Skeleton circle width={40} height={40} />
+                    </div>
+                    
+                    <div className="flex-grow-1">
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                            <Skeleton width={150} height={20} />
+                        </div>
+                        <div className="small text-muted mt-1">
+                            <Skeleton width={100} height={15} />
+                        </div>
+                    </div>
+
+                    <div className="d-flex aligsetViewModen-items-center gap-3">
+                        <div className="text-end">
+                            <Skeleton width={40} height={24} />
+                            <Skeleton width={30} height={12} />
+                            <div className="mt-1">
+                                <Skeleton width={50} height={4} />
+                            </div>
+                        </div>
+                        <Skeleton circle width={24} height={24} />
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+
+    // Skeleton loader for year nodes
+    const SkeletonYearNode = () => (
+        <div className="d-flex align-items-center gap-3 py-3 position-relative">
+            <Skeleton circle width={16} height={16} style={{ marginLeft: '24px' }} />
+            <Skeleton width={60} height={16} />
+        </div>
+    );
 
     return (
         <div className="bg-light min-vh-100 py-4">
             <Container fluid className="px-4">
-                {/* Student Info Bar */}
-                {/* <Card className="border-0 shadow-sm mb-4">
-                    <Card.Body>
-                        <Row className="align-items-center">
-                            <Col md={6}>
-                                <div className="d-flex gap-2 justify-content-md-end flex-wrap">
-                                    <div className="bg-light rounded-pill px-3 py-2 d-flex align-items-center gap-2">
-                                        <span className="bg-warning rounded-circle" style={{ width: '8px', height: '8px' }}></span>
-                                        <span className="small fw-medium">CGPA {studentInfo.cgpa}</span>
-                                    </div>
-                                    <div className="bg-light rounded-pill px-3 py-2 d-flex align-items-center gap-2">
-                                        <span className="bg-secondary rounded-circle" style={{ width: '8px', height: '8px' }}></span>
-                                        <span className="small fw-medium">{studentInfo.totalSemesters} Semesters</span>
-                                    </div>
-                                    <div className="bg-light rounded-pill px-3 py-2 d-flex align-items-center gap-2">
-                                        <span className={`bg-${studentInfo.status === 'Active' ? 'success' : 'secondary'} rounded-circle`} style={{ width: '8px', height: '8px' }}></span>
-                                        <span className="small fw-medium">{studentInfo.status}</span>
-                                    </div>
-                                </div>
-                            </Col>
-                        </Row>
-                    </Card.Body>
-                </Card> */}
-
                 {/* Legend */}
                 <Card className="border-0 shadow-sm mb-4">
                     <Card.Body>
-                        <Row>
-                            <Col>
-                                <div className="d-flex align-items-center gap-4 flex-wrap">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <span className="bg-warning rounded-circle" style={{ width: '12px', height: '12px' }}></span>
-                                        <span className="small text-muted">Fall Semester</span>
-                                    </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <span className="bg-info rounded-circle" style={{ width: '12px', height: '12px' }}></span>
-                                        <span className="small text-muted">Spring Semester</span>
-                                    </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <FaStar className="text-warning" size={12} />
-                                        <span className="small text-muted">Notable Performance</span>
-                                    </div>
-                                    <span className="small text-muted fst-italic ms-auto d-none d-md-block">
-                                        ↓ Click any semester to expand results
-                                    </span>
-                                </div>
+                        <Row className="align-items-center">
+                            <Col md={4} className="mb-3 mb-md-0">
+                                <Form.Group>
+                                    <Form.Label className="fw-semibold">View Mode</Form.Label>
+                                    <Button
+                                        variant={viewMode === "all" ? "primary" : "outline-primary"}
+                                        onClick={() => setViewMode(viewMode === "all" ? "current" : "all")}
+                                        className="d-flex align-items-center justify-content-center gap-2 w-100"
+                                        style={{ height: '38px' }} // Match the height of selects
+                                    >
+                                        {viewMode === "all" ? (
+                                            <>
+                                                <Clock size={16} />
+                                                <span>Show Current Semester</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Edit size={16} />
+                                                <span>Show All Semesters</span>
+                                            </>
+                                        )}
+                                    </Button>
+                                </Form.Group>
+                            </Col>
+                            <Col md={4} className="mb-3 mb-md-0">
+                                <Form.Group>
+                                    <Form.Label className="fw-semibold">Terminal</Form.Label>
+                                    <Form.Select
+                                        value={selectedTerminal}
+                                        onChange={(e) => setSelectedTerminal(e.target.value)}
+                                        className="bg-light border-0"
+                                    >
+                                        <option value="F">Terminal 1</option>
+                                        <option value="S">Terminal 2</option>
+                                        <option value="FINAL">Final</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={4} className="mb-3 mb-md-0">
+                                <Form.Group style={{ display: viewMode === "current" ? "none" : "block" }}>
+                                    <Form.Label className="fw-semibold">Semester</Form.Label>
+                                    <Form.Select
+                                        value={semesterFilter}
+                                        onChange={(e) => setSemesterFilter(e.target.value)}
+                                        className="bg-light border-0"
+                                        disabled={isLoading || isFetching}
+                                    >
+                                        <option value="">All Semesters</option>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+                                            <option key={sem} value={sem}>
+                                                Semester {sem}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
                             </Col>
                         </Row>
                     </Card.Body>
                 </Card>
-
                 {/* Timeline */}
                 <div className="position-relative">
                     {/* Vertical Line */}
                     <div className="position-absolute start-0 top-0 bottom-0" style={{ width: '2px', left: '31px', background: '#dee2e6' }}></div>
 
-                    {Object.entries(groupedByYear).map(([year, sems], yearIndex) => (
-                        <div key={year} className="mb-2">
-                            {/* Year Node */}
-                            <div className="d-flex align-items-center gap-3 py-3 position-relative">
-                                <div className="bg-white border rounded-circle" style={{ width: '16px', height: '16px', borderColor: '#adb5bd', zIndex: 1, marginLeft: '24px' }}></div>
-                                <div className="text-muted small fw-semibold text-uppercase">{year}</div>
-                            </div>
+                    {isLoading || isFetching ? (
+                        // Loading Skeleton
+                        <>
+                            {[1, 2, 3].map((yearGroup) => (
+                                <div key={yearGroup} className="mb-2">
+                                    <SkeletonYearNode />
+                                    {[1, 2].map((sem) => (
+                                        <SkeletonSemester key={`${yearGroup}-${sem}`} />
+                                    ))}
+                                </div>
+                            ))}
+                        </>
+                    ) : (
+                        // Actual Data
+                        Object.entries(groupedByYear).map(([year, sems]) => (
+                            <div key={year} className="mb-2">
+                                {/* Year Node */}
+                                <div className="d-flex align-items-center gap-3 py-3 position-relative">
+                                    <div className="bg-white border rounded-circle" style={{ width: '16px', height: '16px', borderColor: '#adb5bd', zIndex: 1, marginLeft: '24px' }}></div>
+                                    <div className="text-muted small fw-semibold text-uppercase">{year}</div>
+                                </div>
 
-                            {/* Semesters */}
-                            {sems.map((sem) => {
-                                const avgMarks = (sem.subjects.reduce((acc, sub) => acc + sub.marks, 0) / sem.subjects.length).toFixed(1);
-                                const highestMarks = Math.max(...sem.subjects.map(s => s.marks));
-                                const isOpen = openSemesterId === sem.id;
-                                const seasonColor = getSeasonColor(sem.season);
+                                {/* Semesters */}
+                                {sems.map((sem) => {
+                                    const avgMarks = (sem.subjectBreakdown.reduce((acc, sub) => acc + sub.finalMarkOutOf100, 0) / sem.subjectBreakdown.length).toFixed(1);
+                                    const isOpen = openSemesterId === sem.id;
 
-                                return (
-                                    <div key={sem.id} className="ms-5 ps-3 mb-3 position-relative">
-                                        {/* Horizontal Connector */}
-                                        <div className="position-absolute" style={{ left: '-28px', top: '24px', width: '24px', height: '1px', background: '#dee2e6' }}></div>
+                                    return (
+                                        <div key={sem.id} className="ms-5 ps-3 mb-3 position-relative">
+                                            {/* Horizontal Connector line */}
+                                            <div className="position-absolute" style={{ left: '-28px', top: '24px', width: '24px', height: '1px', background: '#dee2e6' }}></div>
 
-                                        <Card className={`border-0 shadow-sm ${isOpen ? 'shadow' : ''}`}>
-                                            {/* Season Accent Strip */}
-                                            <div className={`bg-${seasonColor} rounded-top`} style={{ height: '4px' }}></div>
-                                            
-                                            {/* Card Header - Click to toggle */}
-                                            <div 
-                                                className="p-3 d-flex align-items-center gap-3 cursor-pointer"
-                                                onClick={() => toggleSemester(sem.id)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <div className={`bg-${seasonColor} bg-opacity-10 rounded d-flex align-items-center justify-content-center`} style={{ width: '40px', height: '40px' }}>
-                                                    <span className={`text-${seasonColor} fw-bold small`}>S{sem.id}</span>
-                                                </div>
+                                            <Card className={`border-0 shadow-sm ${isOpen ? 'shadow' : ''}`}>
+                                                {/* Season Accent Strip */}
+                                                <div className={`bg-info rounded-top`} style={{ height: '4px' }}></div>
                                                 
-                                                <div className="flex-grow-1">
-                                                    <div className="d-flex align-items-center gap-2 flex-wrap">
-                                                        <span className="fw-semibold">
-                                                            Semester {sem.id} · {sem.season.charAt(0).toUpperCase() + sem.season.slice(1)}
-                                                        </span>
-                                                        {sem.isStarred && (
-                                                            <Badge bg="warning" text="dark" className="d-flex align-items-center gap-1">
-                                                                <FaStar size={10} />
-                                                                Notable
-                                                            </Badge>
-                                                        )}
+                                                {/* Card Header - Click to toggle */}
+                                                <div 
+                                                    className="p-3 d-flex align-items-center gap-3 cursor-pointer"
+                                                    onClick={() => toggleSemester(sem.id)}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
+                                                    <div className={`bg-info bg-opacity-10 rounded d-flex align-items-center justify-content-center`} style={{ width: '40px', height: '40px' }}>
+                                                        <span className={`text-info fw-bold small`}>S{sem.id}</span>
                                                     </div>
-                                                    <div className="small text-muted">
-                                                        {sem.year} · {sem.subjects.length} subjects
-                                                    </div>
-                                                </div>
-
-                                                <div className="d-flex align-items-center gap-3">
-                                                    <div className="text-end">
-                                                        <div className={`fw-bold text-${seasonColor}`}>{sem.gpa}</div>
-                                                        <div className="small text-muted">GPA</div>
-                                                        <div className="bg-light rounded-pill" style={{ width: '50px', height: '4px' }}>
-                                                            <div 
-                                                                className={`bg-${seasonColor} rounded-pill`}
-                                                                style={{ width: `${getGpaPercentage(sem.gpa)}%`, height: '100%' }}
-                                                            ></div>
+                                                    
+                                                    <div className="flex-grow-1">
+                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                            <span className="fw-semibold">
+                                                                Semester {sem.semester}
+                                                            </span>
+                                                        </div>
+                                                        <div className="small text-muted">
+                                                            {new Date(sem.publishedAt).getFullYear()} · {sem.subjectBreakdown.length} subjects
                                                         </div>
                                                     </div>
-                                                    <FaChevronDown 
-                                                        className={`text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                                                        style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }}
-                                                    />
-                                                </div>
-                                            </div>
 
-                                            {/* Expandable Body */}
-                                            {isOpen && (
-                                                <div className="border-top">
-                                                    {/* Stats Row */}
-                                                    <Row className="g-0 bg-light">
-                                                        <Col className="p-3 text-center border-end">
-                                                            <div className="fw-bold">{sem.gpa}</div>
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <div className="text-end">
+                                                            <div className={`fw-bold text-info`}>{sem.gpa}</div>
                                                             <div className="small text-muted">GPA</div>
-                                                        </Col>
-                                                        <Col className="p-3 text-center border-end">
-                                                            <div className="fw-bold">{avgMarks}</div>
-                                                            <div className="small text-muted">Avg Marks</div>
-                                                        </Col>
-                                                        <Col className="p-3 text-center border-end">
-                                                            <div className="fw-bold">{highestMarks}</div>
-                                                            <div className="small text-muted">Highest</div>
-                                                        </Col>
-                                                        <Col className="p-3 text-center">
-                                                            <div className="fw-bold">{sem.subjects.length}</div>
-                                                            <div className="small text-muted">Subjects</div>
-                                                        </Col>
-                                                    </Row>
-
-                                                    {/* Subjects List */}
-                                                    <div className="p-3">
-                                                        {/* Header */}
-                                                        <Row className="g-0 mb-2 px-2">
-                                                            <Col xs={2} className="small text-muted">Code</Col>
-                                                            <Col xs={4} className="small text-muted">Subject Name</Col>
-                                                            <Col xs={2} className="small text-muted text-center">Marks</Col>
-                                                            <Col xs={2} className="small text-muted text-center">Grade</Col>
-                                                            <Col xs={2} className="small text-muted text-center">Progress</Col>
-                                                        </Row>
-
-                                                        {/* Subject Rows */}
-                                                        {sem.subjects.map((subject, idx) => (
-                                                            <Row key={idx} className="g-0 align-items-center py-2 px-2 rounded hover-bg-light">
-                                                                <Col xs={2}>
-                                                                    <span className="text-primary small fw-semibold">{subject.code}</span>
-                                                                </Col>
-                                                                <Col xs={4}>
-                                                                    <span className="small" title={subject.name}>
-                                                                        {subject.name}
-                                                                    </span>
-                                                                </Col>
-                                                                <Col xs={2} className="text-center">
-                                                                    <span className="small fw-medium">
-                                                                        {subject.marks}<sub className="text-muted">/100</sub>
-                                                                    </span>
-                                                                </Col>
-                                                                <Col xs={2} className="text-center">
-                                                                    <Badge bg={getGradeClass(subject.grade)}>
-                                                                        {subject.grade}
-                                                                    </Badge>
-                                                                </Col>
-                                                                <Col xs={2}>
-                                                                    <div className="d-flex align-items-center gap-2">
-                                                                        <div className="flex-grow-1 bg-light rounded-pill" style={{ height: '6px' }}>
-                                                                            <div 
-                                                                                className="rounded-pill"
-                                                                                style={{ 
-                                                                                    width: `${subject.marks}%`, 
-                                                                                    height: '100%',
-                                                                                    backgroundColor: getBarColor(subject.grade)
-                                                                                }}
-                                                                            ></div>
-                                                                        </div>
-                                                                        <span className="small text-muted">{subject.marks}%</span>
-                                                                    </div>
-                                                                </Col>
-                                                            </Row>
-                                                        ))}
+                                                            <div className="bg-light rounded-pill" style={{ width: '50px', height: '4px' }}>
+                                                                <div 
+                                                                    className={`bg-info rounded-pill`}
+                                                                    style={{ width: `${getGpaPercentage(sem.gpa)}%`, height: '100%' }}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                        <FaChevronDown 
+                                                            className={`text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                                            style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }}
+                                                        />
                                                     </div>
                                                 </div>
-                                            )}
-                                        </Card>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
+
+                                                {/* Expandable Body */}
+                                                {isOpen && (
+                                                    <div className="border-top">
+                                                        {/* Stats Row */}
+                                                        <Row className="g-0 bg-light">
+                                                            <Col className="p-3 text-center border-end">
+                                                                <div className="fw-bold">{sem.gpa}</div>
+                                                                <div className="small text-muted">GPA</div>
+                                                            </Col>
+                                                            <Col className="p-3 text-center border-end">
+                                                                <div className="fw-bold">{avgMarks}</div>
+                                                                <div className="small text-muted">Avg Marks</div>
+                                                            </Col>
+                                                            <Col className="p-3 text-center">
+                                                                <div className="fw-bold">{sem.subjectBreakdown.length}</div>
+                                                                <div className="small text-muted">Subjects</div>
+                                                            </Col>
+                                                        </Row>
+
+                                                        {/* Subjects List */}
+                                                        <div className="p-3">
+                                                            {/* Header */}
+                                                            <Row className="g-0 mb-2 px-2">
+                                                                <Col xs={2} className="small text-muted">Code</Col>
+                                                                <Col xs={4} className="small text-muted">Subject Name</Col>
+                                                                <Col xs={2} className="small text-muted text-center">Marks</Col>
+                                                                <Col xs={2} className="small text-muted text-center">Grade</Col>
+                                                                <Col xs={2} className="small text-muted text-center">Progress</Col>
+                                                            </Row>
+
+                                                            {/* Subject Rows */}
+                                                            {sem.subjectBreakdown.map((subject, idx) => (
+                                                                <Row key={idx} className="g-0 align-items-center py-2 px-2 rounded hover-bg-light">
+                                                                    <Col xs={2}>
+                                                                        <span className="text-primary small fw-semibold">{subject.subjectCode}</span>
+                                                                    </Col>
+                                                                    <Col xs={4}>
+                                                                        <span className="small" title={subject.subjectName}>
+                                                                            {subject.subjectName}
+                                                                        </span>
+                                                                    </Col>
+                                                                    <Col xs={2} className="text-center">
+                                                                        <span className="small fw-medium">
+                                                                            {subject.finalMarkOutOf100}<sub className="text-muted">/100</sub>
+                                                                        </span>
+                                                                    </Col>
+                                                                    <Col xs={2} className="text-center">
+                                                                        <Badge bg={getGradeClass(subject.grade ?? 'N/A')}>
+                                                                            {subject.grade ?? "N/A"}
+                                                                        </Badge>
+                                                                    </Col>
+                                                                    <Col xs={2}>
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <div className="flex-grow-1 bg-light rounded-pill" style={{ height: '6px' }}>
+                                                                                <div 
+                                                                                    className="rounded-pill"
+                                                                                    style={{ 
+                                                                                        width: `${subject.finalMarkOutOf100}%`, 
+                                                                                        height: '100%',
+                                                                                        backgroundColor: getBarColor(subject.grade ?? "N/A")
+                                                                                    }}
+                                                                                ></div>
+                                                                            </div>
+                                                                            <span className="small text-muted">{subject.finalMarkOutOf100}%</span>
+                                                                        </div>
+                                                                    </Col>
+                                                                </Row>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </Card>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {/* Mobile Hint */}
-                <div className="d-block d-md-none text-center mt-4">
-                    <small className="text-muted fst-italic">↓ Click any semester to expand results</small>
-                </div>
+                {!isLoading && resultData?.data && resultData?.data.length > 0 && (
+                    <div className="d-block d-md-none text-center mt-4">
+                        <small className="text-muted fst-italic">↓ Click any semester to expand results</small>
+                    </div>
+                )}
+                
+                {/* No Data State */}
+                {!isLoading && (!resultData?.data || resultData.data.length === 0) && (
+                    <div className="text-center py-5">
+                        <p className="text-muted">No result data available for this student</p>
+                    </div>
+                )}
             </Container>
         </div>
     );

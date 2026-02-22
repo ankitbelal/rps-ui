@@ -13,6 +13,7 @@ export const AdminStudentEndpoints: EndpointType = {
   SUBJECT_LIST: "/subject/students-subject-eval-param",
   STUDENT_MARKS: "/result/student-marks",
   ADD_MARKS: "/result/add-marks",
+  PUBLISHED_RESULT:"/result/get-published-result"
 };
 
 export default AdminStudentEndpoints;

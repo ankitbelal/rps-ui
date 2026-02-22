@@ -163,30 +163,45 @@ export interface StudentMarksResponse{
   data: MarksData[];
 }
 
-
-
-// features/admin/results/utils/index.ts
-export interface Subject {
-    code: string;
-    name: string;
-    marks: number;
-    grade: string;
+export interface SubjectData {
+  subjectId:number;
+  subjectCode:string;
+  subjectName:string;
+  firstTermMark:number;
+  secondTermMark:number;
+  finalMarkOutOf100:number;
+  subjectObtainedOutOf50:number;
+  extraParamObtainedOutOf50:number;
+  grade:string;
 }
 
-export interface Semester {
-    id: number;
-    year: number;
-    season: 'fall' | 'spring';
-    gpa: number;
-    isStarred?: boolean;
-    subjects: Subject[];
+
+export interface ResultData{
+  id:number;
+  studentId:number;
+  programId:number;
+  semester:number;
+  examTerm:string;
+  totalObtained:number;
+  totalFull:number;
+  percentage:number;
+  gpa:number;
+  subjectBreakdown:SubjectData[];
+  publishedBy:string;
+  publishedAt:string;
+  updatedAt:string;
 }
 
-export interface StudentInfo {
-    name: string;
-    program: string;
-    duration: string;
-    cgpa: number;
-    totalSemesters: number;
-    status: 'Active' | 'Completed' | 'On Hold';
+
+export interface ResultApiResponse {
+  success:boolean;
+  statusCode:number;
+  message:string;
+  data:ResultData[];
+}
+
+export interface FinalResultParam{
+  studentId:number;
+  examTerm:string;
+  semester:number|string;
 }
