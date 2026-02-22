@@ -7,13 +7,14 @@ interface StatCardsProps {
   value: number;
   trend: string;
   variant: "primary" | "info";
-  icon: "book" | "people";
+  icon: "book" | "people" | "program";
   loading?: boolean;
 }
 
 const iconMap = {
   book: "📚",
-  people: "👨‍🎓",
+  program: <i className="fas fa-layer-group" />,
+  people: <i className="fas fa-users"></i>,
 };
 
 const variantColor = {

@@ -1,81 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Container, Row, Col, Alert, Button } from "react-bootstrap";
 import StatCards from "./StatsCards";
 import AssignedPrograms from "./AssignedPrograms";
-import { DashboardStats, Subject } from "./types";
+import { useGetDashboardDataQuery } from "../../features/teacher/dashobard/dashboardApi";
+import toast from "react-hot-toast";
 
 const TeacherDashboard: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetDashboardDataQuery();
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+  const stats = response?.data;
 
-        setStats({
-          activeCourses: 12,
-          totalStudents: 384,
-          activeCoursesTrend: "+2",
-          totalStudentsTrend: "+24",
-        });
-
-        setSubjects([
-          {
-            id: "1",
-            name: "Data Structures & Algorithms",
-            code: "CS-201",
-            program: "BSCS",
-            semester: "4th",
-            studentsCount: 45,
-            schedule: "Mon/Wed 09:00-10:30",
-          },
-          {
-            id: "2",
-            name: "Linear Algebra",
-            code: "MATH-301",
-            program: "BS Mathematics",
-            semester: "5th",
-            studentsCount: 32,
-            schedule: "Tue/Thu 11:30-13:00",
-          },
-        ]);
-
-        setError(null);
-      } catch (err) {
-        setError("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (error) {
-    return (
-      <Container className="py-5">
-        <Row className="justify-content-center">
-          <Col md={6}>
-            <Alert variant="danger" className="text-center p-4">
-              <Alert.Heading>Error Loading Dashboard</Alert.Heading>
-              <p>{error}</p>
-              <Button
-                variant="primary"
-                onClick={() => window.location.reload()}
-                className="mt-3"
-              >
-                Retry
-              </Button>
-            </Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
+  if (isError) {
+    toast.error("Something went wrong");
+    // return (
+    //   <Container className="py-5">
+    //     <Row className="justify-content-center">
+    //       <Col md={6}>
+    //         <Alert variant="danger" className="text-center p-4">
+    //           <Alert.Heading>Error Loading Dashboard</Alert.Heading>
+    //           <p>Failed to load dashboard data. Please try again.</p>
+    //           <Button variant="primary" onClick={refetch} className="mt-3">
+    //             Retry
+    //           </Button>
+    //         </Alert>
+    //       </Col>
+    //     </Row>
+    //   </Container>
+    // );
   }
+
+  // derive program count from assignedPrograms array length
+  const programCount = stats?.assignedPrograms?.length ?? 0;
 
   return (
     <Container
@@ -83,34 +43,47 @@ const TeacherDashboard: React.FC = () => {
       className="py-4 px-lg-4"
       style={{ backgroundColor: "#f4f2ee", minHeight: "100vh" }}
     >
-      {/* Stat Cards — always render, skeleton shows until data arrives */}
+      {/* Stat Cards */}
       <Row className="g-4 mb-4">
         <Col xs={12} sm={6} xl={3}>
           <StatCards
-            title="ACTIVE COURSES"
-            value={stats?.activeCourses ?? 0}
-            trend={stats?.activeCoursesTrend ?? ""}
-            variant="primary"
-            icon="book"
-            loading={loading}
+            title="PROGRAMS"
+            value={programCount}
+            trend={`${programCount} active`}
+            variant="info"
+            icon="program"
+            loading={isLoading}
           />
         </Col>
         <Col xs={12} sm={6} xl={3}>
           <StatCards
-            title="TOTAL STUDENTS"
-            value={stats?.totalStudents ?? 0}
-            trend={stats?.totalStudentsTrend ?? ""}
-            variant="info"
+            title="Total Students"
+            value={stats?.students ?? 0}
+            trend={`${stats?.students ?? 0} assigned`}
+            variant="primary"
             icon="people"
-            loading={loading}
+            loading={isLoading}
+          />
+        </Col>
+        <Col xs={12} sm={6} xl={3}>
+          <StatCards
+            title="ACTIVE SUBJECTS"
+            value={stats?.subjects ?? 0}
+            trend={`${stats?.subjects ?? 0} assigned`}
+            variant="primary"
+            icon="book"
+            loading={isLoading}
           />
         </Col>
       </Row>
 
-      {/* Assigned Programs — has its own internal skeleton */}
+      {/* Assigned Programs */}
       <Row>
         <Col xs={12}>
-          <AssignedPrograms />
+          <AssignedPrograms
+            data={stats?.assignedPrograms}
+            loading={isLoading}
+          />
         </Col>
       </Row>
     </Container>
