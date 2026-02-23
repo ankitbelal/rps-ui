@@ -312,7 +312,7 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
                 </Dropdown.Item>
 
                 {/* Show Administration only for admin role */}
-                {user.role === "admin" && (
+                {user.role === "superadmin" && (
                   <Dropdown.Item
                     className="d-flex align-items-center py-2 px-3"
                     onClick={() => navigate("/admin/administration")}

@@ -17,6 +17,7 @@ import AdminManagement from "../pages/admin/Administration/AdminManagement";
 import MarksEntryPage from "../Component/Marks/MarksEntryPage";
 import Parameter from "../pages/admin/EvaluationParameter/Parameter";
 import { RootState } from "../app/store";
+import { current } from "@reduxjs/toolkit";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -37,7 +38,12 @@ const AppRouter = () => {
         : currentRole === requiredRole;
 
       if (!allowed) {
-        return <Navigate to={`/${currentRole}/dashboard`} replace />;
+        return (
+          <Navigate
+            to={`/${currentRole == "superadmin" ? "admin" : currentRole}/dashboard`}
+            replace
+          />
+        );
       }
     }
     return <>{children}</>;
@@ -51,7 +57,10 @@ const AppRouter = () => {
             !isAuthenticated ? (
               <AuthFlow />
             ) : (
-              <Navigate to={`/${currentRole}/dashboard`} replace />
+              <Navigate
+                to={`/${currentRole == "superadmin" ? "admin" : currentRole}/dashboard`}
+                replace
+              />
             )
           }
         />
@@ -59,7 +68,7 @@ const AppRouter = () => {
         <Route
           path="/admin/dashboard"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <AdminDashboard />
               </DashboardLayout>
@@ -70,7 +79,7 @@ const AppRouter = () => {
         <Route
           path="/admin/administration"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <AdminManagement />
               </DashboardLayout>
@@ -81,7 +90,7 @@ const AppRouter = () => {
         <Route
           path="/admin/eval-param"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <Parameter />
               </DashboardLayout>
@@ -92,7 +101,7 @@ const AppRouter = () => {
         <Route
           path="/admin/students"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <StudentManagement />
               </DashboardLayout>
@@ -103,7 +112,7 @@ const AppRouter = () => {
         <Route
           path="/admin/teachers"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <TeacherManagement />
               </DashboardLayout>
@@ -114,7 +123,7 @@ const AppRouter = () => {
         <Route
           path="/admin/programs"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <ProgramManagement />
               </DashboardLayout>
@@ -125,7 +134,7 @@ const AppRouter = () => {
         <Route
           path="/admin/faculties"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <FacultyManagement />
               </DashboardLayout>
@@ -136,7 +145,7 @@ const AppRouter = () => {
         <Route
           path="/admin/subjects"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
                 <SubjectManagement />
               </DashboardLayout>
@@ -148,7 +157,7 @@ const AppRouter = () => {
         <Route
           path="/admin/students/marks-entry"
           element={
-            <ProtectedRoute requiredRole={["admin", "teacher"]}>
+            <ProtectedRoute requiredRole={["admin", "teacher", "superadmin"]}>
               <DashboardLayout>
                 <MarksEntryPage />
               </DashboardLayout>
