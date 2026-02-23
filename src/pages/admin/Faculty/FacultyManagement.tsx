@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Button, Table, Badge, Form } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
+import { Row, Col, Card, Button, Table, Badge } from "react-bootstrap";
 import {
   useGetFacultiesQuery,
   useAddFacultyMutation,
@@ -17,8 +15,8 @@ import { useAppDispatch } from "../../../app/hooks";
 import { setPageTitle } from "../../../features/ui/uiSlice";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { FaTachometerAlt } from "react-icons/fa";
+import PaginationComponent from "../../../Component/common/Pagination";
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const FacultyManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -176,67 +174,6 @@ const FacultyManagement: React.FC = () => {
     setSearchTerm("");
   };
 
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-            disabled={isFacultyLoading || isFetching}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex}-{endIndex} of {facultyData?.total} faculties
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {facultyData && facultyData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={facultyData?.lastPage}
-            page={currentPage}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            showFirstButton
-            showLastButton
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
-
   // Get badge color based on number of programs
   const getProgramsBadgeColor = (count: number) => {
     if (count === 0) return "secondary";
@@ -316,7 +253,19 @@ const FacultyManagement: React.FC = () => {
         {/* Faculties Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isFacultyLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={facultyData?.total??0}
+                lastPage={facultyData?.lastPage??0}
+                page={facultyData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isFacultyLoading || isFetching ? (
@@ -453,7 +402,19 @@ const FacultyManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isFacultyLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={facultyData?.total??0}
+                lastPage={facultyData?.lastPage??0}
+                page={facultyData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>

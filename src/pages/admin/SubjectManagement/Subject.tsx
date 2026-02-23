@@ -7,10 +7,7 @@ import {
   Table,
   Form,
   Badge,
-  Dropdown,
 } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
 import toast from "react-hot-toast";
 import {
   useGetProgramsQuery,
@@ -36,8 +33,8 @@ import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { FaTachometerAlt } from "react-icons/fa";
 import { RootState } from "../../../app/store";
 import { getRoleByType } from "../../../helper";
+import PaginationComponent from "../../../Component/common/Pagination";
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const SubjectManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -270,66 +267,6 @@ const SubjectManagement: React.FC = () => {
     setSemesterFilter("");
   };
 
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex + 1}-{endIndex} of {subjectData?.total} programs
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {subjectData && subjectData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={subjectData?.lastPage}
-            page={subjectData?.page}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            showFirstButton
-            showLastButton
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
-
   return (
     <>
       <div className="mb-4">
@@ -352,6 +289,7 @@ const SubjectManagement: React.FC = () => {
               variant="primary"
               onClick={handleAddNew}
               className="d-flex align-items-center gap-2 mb-4"
+              disabled={isSubjectLoading || isFetching}
             >
               <i className="fas fa-plus"></i>
               Add Subjects
@@ -435,7 +373,19 @@ const SubjectManagement: React.FC = () => {
         {/* Programs Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isSubjectLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={subjectData?.total??0}
+                lastPage={subjectData?.lastPage??0}
+                page={subjectData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isSubjectLoading || isFetching ? (
@@ -603,7 +553,19 @@ const SubjectManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isSubjectLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={subjectData?.total??0}
+                lastPage={subjectData?.lastPage??0}
+                page={subjectData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>

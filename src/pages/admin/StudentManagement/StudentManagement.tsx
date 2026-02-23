@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Card, Button, Table, Badge, Form } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
 import StudentFormModal from "./partials/StudentFormModal";
 import DeleteConfirmationModal from "./partials/DeleteConfirmationModal";
 import ViewStudentDetailsModal from "./partials/StudentDetailsModal";
@@ -26,8 +24,7 @@ import { setPageTitle } from "../../../features/ui/uiSlice";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { RootState } from "../../../app/store";
 import { getRoleByType } from "../../../helper";
-
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
+import PaginationComponent from "../../../Component/common/Pagination";
 
 const StudentManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -117,6 +114,7 @@ const StudentManagement: React.FC = () => {
   // Calculate pagination
   let startIndex = 0;
   let endIndex = 0;
+  let totalCount=0;
   if (studentsData) {
     startIndex =
       studentsData?.total === 0
@@ -126,6 +124,7 @@ const StudentManagement: React.FC = () => {
       studentsData?.page * studentsData?.limit,
       studentsData?.total,
     );
+    totalCount=studentsData?.total
   }
 
   // Reset to first page when filters or items per page change
@@ -263,65 +262,6 @@ const StudentManagement: React.FC = () => {
     setProgramFilter("");
     setSemesterFilter("");
   };
-
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-            disabled={isLoading || isFetching}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex} to {endIndex} of {studentsData?.total} students
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {studentsData && studentsData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={studentsData?.lastPage}
-            page={studentsData?.page}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -501,7 +441,19 @@ const StudentManagement: React.FC = () => {
         {/* Students Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+              itemsPerPage={itemsPerPage}
+              isLoading={isLoading || isFetching}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              total={totalCount}
+              lastPage={studentsData?.lastPage??0}
+              page={studentsData?.page??1}
+              handlePageChange={handlePageChange}
+              handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isLoading || isFetching ? (
@@ -668,7 +620,19 @@ const StudentManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+              itemsPerPage={itemsPerPage}
+              isLoading={isLoading || isFetching}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              total={totalCount}
+              lastPage={studentsData?.lastPage??0}
+              page={studentsData?.page??1}
+              handlePageChange={handlePageChange}
+              handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>

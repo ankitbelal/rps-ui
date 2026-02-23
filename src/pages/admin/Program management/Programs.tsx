@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Row, Col, Card, Button, Table, Form, Badge } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
 import {
   useGetProgramsQuery,
   useAddProgramMutation,
@@ -19,8 +17,8 @@ import { useAppDispatch } from "../../../app/hooks";
 import { setPageTitle } from "../../../features/ui/uiSlice";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { FaTachometerAlt } from "react-icons/fa";
+import PaginationComponent from "../../../Component/common/Pagination";
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const ProgramManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -203,66 +201,6 @@ const ProgramManagement: React.FC = () => {
     setFacultyFilter("");
   };
 
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex + 1}-{endIndex} of {programData?.total} programs
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {programData && programData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={programData?.lastPage}
-            page={programData?.page}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            showFirstButton
-            showLastButton
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
-
   return (
     <>
       <div className="mb-4">
@@ -284,6 +222,7 @@ const ProgramManagement: React.FC = () => {
             variant="primary"
             onClick={handleAddNew}
             className="d-flex align-items-center gap-2 mb-4"
+            disabled={isProgramLoading || isFetching}
           >
             <i className="fas fa-plus"></i>
             Add Program
@@ -306,6 +245,7 @@ const ProgramManagement: React.FC = () => {
                     placeholder="Search programs by name or code..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    disabled={isProgramLoading}
                   />
                 </div>
               </Col>
@@ -348,7 +288,19 @@ const ProgramManagement: React.FC = () => {
         {/* Programs Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isProgramLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={programData?.total??0}
+                lastPage={programData?.lastPage??0}
+                page={programData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isProgramLoading || isFetching ? (
@@ -489,7 +441,19 @@ const ProgramManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isProgramLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={programData?.total??0}
+                lastPage={programData?.lastPage??0}
+                page={programData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>

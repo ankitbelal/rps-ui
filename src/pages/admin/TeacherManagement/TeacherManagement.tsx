@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Row, Col, Card, Button, Table, Badge, Form } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
 import TeacherFormModal from "./Partials/TeacherFormModal";
 import DeleteConfirmationModal from "./Partials/DeleteConfirmationModal";
 import TeacherEditModal from "./Partials/TeacherEditModal";
@@ -22,8 +20,8 @@ import { setPageTitle } from "../../../features/ui/uiSlice";
 import { useAppDispatch } from "../../../app/hooks";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import AssignSubjectsModal from "./Partials/AssignSubjects";
+import PaginationComponent from "../../../Component/common/Pagination";
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const TeacherManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -234,67 +232,6 @@ const TeacherManagement: React.FC = () => {
     setShowAssignModal(true);
   };
 
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-            disabled={isTeacherLoading || isFetching}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex + 1}-{endIndex} of {teacherData?.total} teachers
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {teacherData && teacherData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={teacherData?.lastPage}
-            page={teacherData?.page}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            showFirstButton
-            showLastButton
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
-
   return (
     <>
       <div className="mb-4">
@@ -432,7 +369,19 @@ const TeacherManagement: React.FC = () => {
         {/* Teachers Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isTeacherLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={teacherData?.total??0}
+                lastPage={teacherData?.lastPage??0}
+                page={teacherData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isTeacherLoading || isFetching ? (
@@ -563,7 +512,19 @@ const TeacherManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isTeacherLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={teacherData?.total??0}
+                lastPage={teacherData?.lastPage??0}
+                page={teacherData?.page??0}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>
