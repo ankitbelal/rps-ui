@@ -54,14 +54,14 @@ const StudentManagement: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const [userRole,setUserRole] = useState<string>("")
-  
+  const [userRole, setUserRole] = useState<string>("");
 
-  useEffect(()=>{
-    if(user){
-      setUserRole(getRoleByType(user.UserType));
+  useEffect(() => {
+    if (user) {
+      const role = getRoleByType(user.UserType);
+      setUserRole(role === "superadmin" ? "admin" : role);
     }
-  },[user])
+  }, [user]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -93,7 +93,7 @@ const StudentManagement: React.FC = () => {
     data: studentsData,
     isLoading,
     isFetching,
-  } = useGetStudentsQuery(queryParams,{refetchOnMountOrArgChange:true});
+  } = useGetStudentsQuery(queryParams, { refetchOnMountOrArgChange: true });
   const { data: programData } = useGetProgramsQuery();
   const [deleteStudent, { isLoading: isDeleting }] = useDeleteStudentMutation();
   const [addStudent, { isLoading: isAddingStudent }] = useAddStudentMutation();
@@ -114,7 +114,7 @@ const StudentManagement: React.FC = () => {
   // Calculate pagination
   let startIndex = 0;
   let endIndex = 0;
-  let totalCount=0;
+  let totalCount = 0;
   if (studentsData) {
     startIndex =
       studentsData?.total === 0
@@ -124,7 +124,7 @@ const StudentManagement: React.FC = () => {
       studentsData?.page * studentsData?.limit,
       studentsData?.total,
     );
-    totalCount=studentsData?.total
+    totalCount = studentsData?.total;
   }
 
   // Reset to first page when filters or items per page change
@@ -271,7 +271,7 @@ const StudentManagement: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: `${userRole==="admin"?"/admin":"/teacher"}/dashboard`,
+                link: `${userRole === "admin" ? "/admin" : "/teacher"}/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
@@ -280,71 +280,71 @@ const StudentManagement: React.FC = () => {
               },
             ]}
           />
-        {(userRole==="admin") &&
-          <div className="d-flex gap-2">
-            {/* Export Button */}
-            <Button
-              variant="success"
-              disabled={isExporting || isLoading || isFetching}
-              className="d-flex align-items-center gap-2 mb-4"
-              style={{ backgroundColor: "#198754", borderColor: "#198754" }}
-              onClick={async () => {
-                setIsExporting(true);
-                try {
-                  const blob = await exportStudentReport({
-                    search: debouncedSearch,
-                    programId: programFilter
-                      ? Number(programFilter)
-                      : undefined,
-                    currentSemester: semesterFilter
-                      ? Number(semesterFilter)
-                      : undefined,
-                    status: statusFilter || undefined,
-                  }).unwrap();
+          {userRole === "admin" && (
+            <div className="d-flex gap-2">
+              {/* Export Button */}
+              <Button
+                variant="success"
+                disabled={isExporting || isLoading || isFetching}
+                className="d-flex align-items-center gap-2 mb-4"
+                style={{ backgroundColor: "#198754", borderColor: "#198754" }}
+                onClick={async () => {
+                  setIsExporting(true);
+                  try {
+                    const blob = await exportStudentReport({
+                      search: debouncedSearch,
+                      programId: programFilter
+                        ? Number(programFilter)
+                        : undefined,
+                      currentSemester: semesterFilter
+                        ? Number(semesterFilter)
+                        : undefined,
+                      status: statusFilter || undefined,
+                    }).unwrap();
 
-                  const url = window.URL.createObjectURL(blob);
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.download = "StudentReport.xlsx"; // dynamic filename if needed
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                  window.URL.revokeObjectURL(url);
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "StudentReport.xlsx"; // dynamic filename if needed
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.URL.revokeObjectURL(url);
 
-                  toast.success("Report downloaded!");
-                } catch (err: any) {
-                  const errorMsg = err?.data?.message;
-                  toast.error(errorMsg || "Failed to export report.");
-                } finally {
-                  setIsExporting(false);
-                }
-              }}
-            >
-              {isExporting ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2"></span>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-file-export"></i>
-                  Export Data
-                </>
-              )}
-            </Button>
+                    toast.success("Report downloaded!");
+                  } catch (err: any) {
+                    const errorMsg = err?.data?.message;
+                    toast.error(errorMsg || "Failed to export report.");
+                  } finally {
+                    setIsExporting(false);
+                  }
+                }}
+              >
+                {isExporting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-file-export"></i>
+                    Export Data
+                  </>
+                )}
+              </Button>
 
-            {/* Add Student Button */}
-            <Button
-              variant="primary"
-              onClick={handleAddNew}
-              className="d-flex align-items-center gap-2 mb-4"
-              disabled={isLoading || isFetching}
-            >
-              <i className="fas fa-plus"></i>
-              Add Student
-            </Button>
-          </div>
-        }
+              {/* Add Student Button */}
+              <Button
+                variant="primary"
+                onClick={handleAddNew}
+                className="d-flex align-items-center gap-2 mb-4"
+                disabled={isLoading || isFetching}
+              >
+                <i className="fas fa-plus"></i>
+                Add Student
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Search and Filters Section */}
@@ -442,16 +442,16 @@ const StudentManagement: React.FC = () => {
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
             <div className="px-3 pb-3">
-              <PaginationComponent 
-              itemsPerPage={itemsPerPage}
-              isLoading={isLoading || isFetching}
-              startIndex={startIndex}
-              endIndex={endIndex}
-              total={totalCount}
-              lastPage={studentsData?.lastPage??0}
-              page={studentsData?.page??1}
-              handlePageChange={handlePageChange}
-              handleItemsPerPageChange={handleItemsPerPageChange}
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={totalCount}
+                lastPage={studentsData?.lastPage ?? 0}
+                page={studentsData?.page ?? 1}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
               />
             </div>
           </Card.Header>
@@ -559,7 +559,7 @@ const StudentManagement: React.FC = () => {
                               </td>
                               <td>
                                 <div className="d-flex gap-2">
-                                  {(userRole==="admin") &&
+                                  {userRole === "admin" && (
                                     <Button
                                       variant="outline-primary"
                                       size="sm"
@@ -568,8 +568,8 @@ const StudentManagement: React.FC = () => {
                                     >
                                       <i className="fas fa-edit"></i>
                                     </Button>
-                                  }
-                                  {(userRole==="admin") &&
+                                  )}
+                                  {userRole === "admin" && (
                                     <Button
                                       variant="outline-danger"
                                       size="sm"
@@ -578,7 +578,7 @@ const StudentManagement: React.FC = () => {
                                     >
                                       <i className="fas fa-trash"></i>
                                     </Button>
-                                  }
+                                  )}
                                   <Button
                                     variant="outline-info"
                                     size="sm"
@@ -621,16 +621,16 @@ const StudentManagement: React.FC = () => {
             )}
             {/* Bottom pagination controls */}
             <div className="px-3 pb-3">
-              <PaginationComponent 
-              itemsPerPage={itemsPerPage}
-              isLoading={isLoading || isFetching}
-              startIndex={startIndex}
-              endIndex={endIndex}
-              total={totalCount}
-              lastPage={studentsData?.lastPage??0}
-              page={studentsData?.page??1}
-              handlePageChange={handlePageChange}
-              handleItemsPerPageChange={handleItemsPerPageChange}
+              <PaginationComponent
+                itemsPerPage={itemsPerPage}
+                isLoading={isLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={totalCount}
+                lastPage={studentsData?.lastPage ?? 0}
+                page={studentsData?.page ?? 1}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
               />
             </div>
           </Card.Body>

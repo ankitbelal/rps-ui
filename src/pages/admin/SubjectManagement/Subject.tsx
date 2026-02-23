@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Button,
-  Table,
-  Form,
-  Badge,
-} from "react-bootstrap";
+import { Row, Col, Card, Button, Table, Form, Badge } from "react-bootstrap";
 import toast from "react-hot-toast";
 import {
   useGetProgramsQuery,
@@ -34,7 +26,6 @@ import { FaTachometerAlt } from "react-icons/fa";
 import { RootState } from "../../../app/store";
 import { getRoleByType } from "../../../helper";
 import PaginationComponent from "../../../Component/common/Pagination";
-
 
 const SubjectManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -64,7 +55,7 @@ const SubjectManagement: React.FC = () => {
   const [programFilter, setProgramFilter] = useState<string>("");
   const [semesterFilter, setSemesterFilter] = useState<string>("");
   const [editingSubject, SetEditingSubject] = useState<Subject | null>(null);
-  const [userRole,setUserRole] = useState<string>("")
+  const [userRole, setUserRole] = useState<string>("");
 
   // const formatDate = (dateString: string) => {
   //   return new Date(dateString).toLocaleDateString("en-US", {
@@ -74,11 +65,12 @@ const SubjectManagement: React.FC = () => {
   //   });
   // };
 
-  useEffect(()=>{
-    if(user){
-      setUserRole(getRoleByType(user.UserType));
+  useEffect(() => {
+    if (user) {
+      const role = getRoleByType(user.UserType);
+      setUserRole(role === "superadmin" ? "admin" : role);
     }
-  },[user])
+  }, [user]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -102,12 +94,15 @@ const SubjectManagement: React.FC = () => {
     data: subjectData,
     isLoading: isSubjectLoading,
     isFetching,
-  } = useGetSubjectsQuery(queryParams,{refetchOnMountOrArgChange:true});
+  } = useGetSubjectsQuery(queryParams, { refetchOnMountOrArgChange: true });
 
-  const { data: programData, isLoading: isProgramLoading } = useGetProgramsQuery(undefined,{refetchOnMountOrArgChange:true});
-  const { data: TeachersData, isLoading: isTeachersLoading } = useGetTeacherListQuery(undefined,{refetchOnMountOrArgChange:true});
+  const { data: programData, isLoading: isProgramLoading } =
+    useGetProgramsQuery(undefined, { refetchOnMountOrArgChange: true });
+  const { data: TeachersData, isLoading: isTeachersLoading } =
+    useGetTeacherListQuery(undefined, { refetchOnMountOrArgChange: true });
   const [addSubject, { isLoading: isAddingStudent }] = useAddSubjectMutation();
-  const [assignParams, { isLoading: isAssigning }] = useAssignParametersMutation();
+  const [assignParams, { isLoading: isAssigning }] =
+    useAssignParametersMutation();
   const [editSubject, { isLoading: isEditing }] = useEditSubjectMutation();
   const [deleteSubject, { isLoading: isDeleting }] = useDeleteSubjectMutation();
 
@@ -275,7 +270,7 @@ const SubjectManagement: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: `${userRole==="admin"?"/admin":"/teacher"}/dashboard`,
+                link: `${userRole === "admin" ? "/admin" : "/teacher"}/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
@@ -284,7 +279,7 @@ const SubjectManagement: React.FC = () => {
               },
             ]}
           />
-          {(userRole==="admin")&&
+          {userRole === "admin" && (
             <Button
               variant="primary"
               onClick={handleAddNew}
@@ -294,7 +289,7 @@ const SubjectManagement: React.FC = () => {
               <i className="fas fa-plus"></i>
               Add Subjects
             </Button>
-          }
+          )}
         </div>
 
         {/* Search and Filters Section */}
@@ -374,14 +369,14 @@ const SubjectManagement: React.FC = () => {
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
             <div className="px-3 pb-3">
-              <PaginationComponent 
+              <PaginationComponent
                 itemsPerPage={itemsPerPage}
                 isLoading={isSubjectLoading || isFetching}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                total={subjectData?.total??0}
-                lastPage={subjectData?.lastPage??0}
-                page={subjectData?.page??0}
+                total={subjectData?.total ?? 0}
+                lastPage={subjectData?.lastPage ?? 0}
+                page={subjectData?.page ?? 0}
                 handlePageChange={handlePageChange}
                 handleItemsPerPageChange={handleItemsPerPageChange}
               />
@@ -403,7 +398,7 @@ const SubjectManagement: React.FC = () => {
                         <th>SN</th>
                         <th>Subject Code</th>
                         <th>Subject Name</th>
-                        {(userRole==="admin")&&<th>Teacher</th>}
+                        {userRole === "admin" && <th>Teacher</th>}
                         <th>Details</th>
                         <th>Actions</th>
                       </tr>
@@ -440,32 +435,32 @@ const SubjectManagement: React.FC = () => {
                                   </small>
                                 </div>
                               </td>
-                            {(userRole==="admin")&&
-                              <td>
-                                {item?.subjectTeacher ? (
-                                  <>
-                                    <div className="fw-semibold">
-                                      {item.subjectTeacher.firstName +
-                                        " " +
-                                        item.subjectTeacher.lastName}
-                                    </div>
-                                    <div>
-                                      <a
-                                        href={`mailto:${item.subjectTeacher.email}`}
-                                        className="text-decoration-none d-block"
-                                      >
-                                        <i className="fas fa-envelope me-1"></i>
-                                        {item.subjectTeacher.email}
-                                      </a>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <span className="badge bg-danger">
-                                    Not Assigned
-                                  </span>
-                                )}
-                              </td>
-                            }
+                              {userRole === "admin" && (
+                                <td>
+                                  {item?.subjectTeacher ? (
+                                    <>
+                                      <div className="fw-semibold">
+                                        {item.subjectTeacher.firstName +
+                                          " " +
+                                          item.subjectTeacher.lastName}
+                                      </div>
+                                      <div>
+                                        <a
+                                          href={`mailto:${item.subjectTeacher.email}`}
+                                          className="text-decoration-none d-block"
+                                        >
+                                          <i className="fas fa-envelope me-1"></i>
+                                          {item.subjectTeacher.email}
+                                        </a>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <span className="badge bg-danger">
+                                      Not Assigned
+                                    </span>
+                                  )}
+                                </td>
+                              )}
 
                               <td>
                                 <div>
@@ -482,17 +477,17 @@ const SubjectManagement: React.FC = () => {
                               <td>
                                 <div className="d-flex gap-2">
                                   {/* Edit Button */}
-                                {(userRole==="admin")&&
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => handleEdit(item)}
-                                    title="Edit"
-                                    className="d-flex align-items-center"
-                                  >
-                                    <i className="fas fa-edit"></i>
-                                  </Button>
-                                }
+                                  {userRole === "admin" && (
+                                    <Button
+                                      variant="outline-primary"
+                                      size="sm"
+                                      onClick={() => handleEdit(item)}
+                                      title="Edit"
+                                      className="d-flex align-items-center"
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </Button>
+                                  )}
                                   {/* Evaluation Parameters Button */}
                                   <Button
                                     variant="outline-info"
@@ -510,19 +505,19 @@ const SubjectManagement: React.FC = () => {
                                   </Button>
 
                                   {/* Delete Button */}
-                                {(userRole==="admin")&& 
-                                  <Button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleDeleteClick(item.id, item.name)
-                                    }
-                                    title="Delete"
-                                    className="d-flex align-items-center"
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </Button>
-                                }
+                                  {userRole === "admin" && (
+                                    <Button
+                                      variant="outline-danger"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleDeleteClick(item.id, item.name)
+                                      }
+                                      title="Delete"
+                                      className="d-flex align-items-center"
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </Button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -554,14 +549,14 @@ const SubjectManagement: React.FC = () => {
             )}
             {/* Bottom pagination controls */}
             <div className="px-3 pb-3">
-              <PaginationComponent 
+              <PaginationComponent
                 itemsPerPage={itemsPerPage}
                 isLoading={isSubjectLoading || isFetching}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                total={subjectData?.total??0}
-                lastPage={subjectData?.lastPage??0}
-                page={subjectData?.page??0}
+                total={subjectData?.total ?? 0}
+                lastPage={subjectData?.lastPage ?? 0}
+                page={subjectData?.page ?? 0}
                 handlePageChange={handlePageChange}
                 handleItemsPerPageChange={handleItemsPerPageChange}
               />

@@ -19,7 +19,7 @@ import {
 import "./Sidebar.css";
 
 interface SidebarProps {
-  role: "admin" | "teacher" | "student";
+  role: "superadmin" | "admin" | "teacher" | "student";
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -38,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
 
     switch (role) {
       case "admin":
+      case "superadmin":
         return [
           ...commonItems,
           {

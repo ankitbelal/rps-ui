@@ -16,6 +16,7 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
   // Format role display name
   const getRoleDisplayName = (role: string) => {
     switch (role) {
+      case "superadmin":
       case "admin":
         return "Administrator";
       case "teacher":
@@ -32,6 +33,8 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
     switch (role) {
       case "admin":
         return "Result Management Dashboard";
+      case "superadmin":
+        return "Result Management Dashboard";
       case "teacher":
         return "Teacher Dashboard";
       case "student":
@@ -44,6 +47,7 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
   // Get dashboard subtitle based on user role
   const getDashboardSubtitle = (role: string) => {
     switch (role) {
+      case "superadmin":
       case "admin":
         return "Here's an overview of your LMS performance";
       case "teacher":
