@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card } from "react-bootstrap";
+import { Row, Col, Card, Tooltip, OverlayTrigger } from "react-bootstrap";
 import {
   FaUsers,
   FaBook,
@@ -14,9 +14,11 @@ import { useGetStatisticsQuery } from "../../features/admin/dashboard/dahboardAp
 import { useAppDispatch } from "../../app/hooks";
 import { clearPageTitle } from "../../features/ui/uiSlice";
 import Skeleton from "react-loading-skeleton";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Clear page title to show default welcome message in Topbar
@@ -41,13 +43,17 @@ const AdminDashboard: React.FC = () => {
     return `hsl(${hue}, 65%, 55%)`;
   };
 
-  const {data:statisticsData,isLoading,isFetching} = useGetStatisticsQuery(undefined,{refetchOnMountOrArgChange:true});
+  const {
+    data: statisticsData,
+    isLoading,
+    isFetching,
+  } = useGetStatisticsQuery(undefined, { refetchOnMountOrArgChange: true });
 
   useEffect(() => {
     if (!statisticsData?.data?.studentsDistributions) return;
 
     const mappedData = Object.entries(
-      statisticsData.data.studentsDistributions
+      statisticsData.data.studentsDistributions,
     ).map(([program, students], index) => ({
       program,
       students,
@@ -64,20 +70,23 @@ const AdminDashboard: React.FC = () => {
       icon: <FaUsers />,
       color: "primary",
       id: "totalStudents",
+      route: "/admin/students",
     },
     {
       title: "Total Programs",
-      value:statisticsData?.data.programs || 0,
+      value: statisticsData?.data.programs || 0,
       icon: <FaBook />,
       color: "success",
       id: "totalPrograms",
+      route: "/admin/programs",
     },
     {
       title: "Total Teachers",
-      value:statisticsData?.data.teachers || 0,
+      value: statisticsData?.data.teachers || 0,
       icon: <FaChalkboardTeacher />,
       color: "info",
       id: "totalTeachers",
+      route: "/admin/teachers",
     },
     {
       title: "Total Faculties",
@@ -85,43 +94,44 @@ const AdminDashboard: React.FC = () => {
       icon: <FaUniversity />,
       color: "warning",
       id: "totalFaculties",
+      route: "/admin/faculties",
     },
   ];
 
   const [activities] = useState([
-      {
-        id: 1,
-        title: "Results published for Mathematics 101",
-        description: "Results for the final exam have been published",
-        time: "2 hours ago",
-        icon: "check",
-        type: "success" as const,
-      },
-      {
-        id: 2,
-        title: "3 results pending review",
-        description: "Require attention from the examination committee",
-        time: "5 hours ago",
-        icon: "exclamation",
-        type: "warning" as const,
-      },
-      {
-        id: 3,
-        title: "15 new students enrolled",
-        description: "New batch of students added to the system",
-        time: "1 day ago",
-        icon: "user-plus",
-        type: "info" as const,
-      },
-      {
-        id: 4,
-        title: "Performance report generated",
-        description: "Monthly performance report is ready for download",
-        time: "2 days ago",
-        icon: "chart-line",
-        type: "success" as const,
-      },
-    ]);
+    {
+      id: 1,
+      title: "Results published for Mathematics 101",
+      description: "Results for the final exam have been published",
+      time: "2 hours ago",
+      icon: "check",
+      type: "success" as const,
+    },
+    {
+      id: 2,
+      title: "3 results pending review",
+      description: "Require attention from the examination committee",
+      time: "5 hours ago",
+      icon: "exclamation",
+      type: "warning" as const,
+    },
+    {
+      id: 3,
+      title: "15 new students enrolled",
+      description: "New batch of students added to the system",
+      time: "1 day ago",
+      icon: "user-plus",
+      type: "info" as const,
+    },
+    {
+      id: 4,
+      title: "Performance report generated",
+      description: "Monthly performance report is ready for download",
+      time: "2 days ago",
+      icon: "chart-line",
+      type: "success" as const,
+    },
+  ]);
 
   return (
     /* Main Dashboard Content - No header here */
@@ -132,37 +142,40 @@ const AdminDashboard: React.FC = () => {
           <Col xs={12} sm={6} lg={3} key={index}>
             <Card className="border-0 shadow-sm stat-card">
               {isLoading || isFetching ? (
-                // <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 120 }}>
-                //   <span className="spinner-border text-primary" role="status" aria-hidden="true"></span>
-                // </div>
                 <Card.Body>
                   <div className="d-flex align-items-center">
-                    {/* Skeleton for the icon */}
-                    <Skeleton 
-                      circle 
-                      width={56} 
-                      height={56} 
-                      className="me-3"
-                    />
+                    {/* Skeleton for icon */}
+                    <Skeleton circle width={56} height={56} className="me-3" />
                     <div className="stat-info flex-grow-1">
-                      {/* Skeleton for the main value */}
-                      <Skeleton 
-                        width={70} 
-                        height={28} 
-                        className="mb-2"
-                      />
-                      {/* Skeleton for the title */}
-                      <Skeleton 
-                        width="50%" 
-                        height={20}
-                      />
+                      {/* Skeleton for value */}
+                      <Skeleton width={70} height={28} className="mb-2" />
+                      {/* Skeleton for title */}
+                      <Skeleton width="50%" height={20} />
                     </div>
                   </div>
                 </Card.Body>
               ) : (
                 <Card.Body>
                   <div className="d-flex align-items-center">
-                    <div className={`stat-icon ${stat.color}`}>{stat.icon}</div>
+                    {/* Clickable icon with tooltip */}
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={
+                        <Tooltip id={`tooltip-${stat.id}`}>
+                          Go to {stat.title}
+                        </Tooltip>
+                      }
+                    >
+                      <div
+                        className={`stat-icon ${stat.color}`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate(stat.route)}
+                      >
+                        {stat.icon}
+                      </div>
+                    </OverlayTrigger>
+
+                    {/* Stat text */}
                     <div className="stat-info ms-3">
                       <h4 className="fw-bold mb-1">
                         {stat.value.toLocaleString()}
@@ -172,9 +185,9 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </Card.Body>
               )}
-                  </Card>
-                </Col>
-              ))}
+            </Card>
+          </Col>
+        ))}
       </Row>
 
       {/* Charts Row */}
@@ -183,7 +196,10 @@ const AdminDashboard: React.FC = () => {
           <PerformanceChart data={performanceData} />
         </Col> */}
         <Col lg={12}>
-          <StudentDistributionChart data={distributionData} Loading={isLoading} />
+          <StudentDistributionChart
+            data={distributionData}
+            Loading={isLoading}
+          />
         </Col>
       </Row>
 
