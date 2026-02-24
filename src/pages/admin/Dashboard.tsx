@@ -15,6 +15,7 @@ import { useAppDispatch } from "../../app/hooks";
 import { clearPageTitle } from "../../features/ui/uiSlice";
 import Skeleton from "react-loading-skeleton";
 import { useNavigate } from "react-router-dom";
+import StudentLeaderboard from "./StudentLeaderBoard";
 
 const AdminDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -190,16 +191,18 @@ const AdminDashboard: React.FC = () => {
         ))}
       </Row>
 
-      {/* Charts Row */}
-      <Row className="mb-4">
-        {/* <Col lg={6} className="mb-4 mb-lg-0">
-          <PerformanceChart data={performanceData} />
-        </Col> */}
-        <Col lg={12}>
+      <Row className="g-3 mb-4">
+        {/* Distribution chart — left half */}
+        <Col lg={6} className="mb-4 mb-lg-0">
           <StudentDistributionChart
             data={distributionData}
             Loading={isLoading}
           />
+        </Col>
+
+        {/* Leaderboard — right half */}
+        <Col lg={6} className="mb-4 mb-lg-0">
+          <StudentLeaderboard />
         </Col>
       </Row>
 

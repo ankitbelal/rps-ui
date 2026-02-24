@@ -11,295 +11,228 @@ interface DistributionData {
 
 interface StudentDistributionChartProps {
   data: DistributionData[];
-  Loading:boolean;
+  Loading: boolean;
 }
+
+const VIVID_COLORS = [
+  "#6366f1", "#f43f5e", "#10b981", "#f59e0b",
+  "#3b82f6", "#a855f7", "#06b6d4", "#ec4899",
+  "#84cc16", "#f97316", "#14b8a6", "#8b5cf6",
+];
 
 const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
   data,
-  Loading=false
+  Loading = false,
 }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const svgRef       = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 500, height: 350 });
+  const [dimensions, setDimensions] = useState({ width: 500, height: 380 });
 
-  // Handle responsive sizing
   useEffect(() => {
-    const updateDimensions = () => {
+    const update = () => {
       if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        const isMobile = window.innerWidth < 768;
-        
-        const width = Math.min(containerWidth - 40, isMobile ? 350 : 500);
-        const height = isMobile ? 320 : 350;
-        
-        setDimensions({ width, height });
+        const w = containerRef.current.clientWidth;
+        setDimensions({ width: w, height: w < 480 ? 320 : 380 });
       }
     };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    
-    return () => {
-      window.removeEventListener("resize", updateDimensions);
-    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg   = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
     const { width, height } = dimensions;
-    const isMobile = width <= 400;
-    
-    // Adjust layout based on device
-    const pieRadius = Math.min(width, height) / 2 - (isMobile ? 40 : 50);
-    const pieCenterX = isMobile ? width / 2 : width * 0.4;
-    const pieCenterY = isMobile ? height * 0.4 : height / 2;
+    const total             = d3.sum(data, (d) => d.students);
 
-    const chart = svg
-      .attr("width", width)
+    const coloredData = data.map((d, i) => ({
+      ...d,
+      color: VIVID_COLORS[i % VIVID_COLORS.length],
+    }));
+
+    /* ── Legend geometry ── */
+    const legendRowH = 26;                                   // ↑ taller rows so text breathes
+    const legendCols = Math.min(coloredData.length, 4);
+    const legendRows = Math.ceil(coloredData.length / legendCols);
+    const legendH    = legendRows * legendRowH + 28;
+
+    /* ── Pie geometry ── */
+    const pieAreaH = height - legendH;
+    const pieCX    = width / 2;
+    const pieCY    = pieAreaH / 2;
+    const outerR   = Math.min(pieCX - 24, pieCY - 16, 130); // ← 130 instead of 160
+    const innerR   = outerR * 0.50;
+    const midR     = (innerR + outerR) / 2;
+
+    svg
+      .attr("width",  width)
       .attr("height", height)
       .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("preserveAspectRatio", "xMidYMid meet")
-      .append("g")
-      .attr("transform", `translate(${pieCenterX},${pieCenterY})`);
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
-    // Create pie layout
-    const pie = d3
-      .pie<DistributionData>()
-      .value((d) => d.students)
-      .sort(null);
+    /* ── Drop shadow ── */
+    const defs = svg.append("defs");
+    const f    = defs.append("filter").attr("id", "sdc-sh")
+      .attr("x", "-20%").attr("y", "-20%")
+      .attr("width", "140%").attr("height", "140%");
+    f.append("feDropShadow")
+      .attr("dx", 0).attr("dy", 3).attr("stdDeviation", 8)
+      .attr("flood-color", "rgba(0,0,0,0.11)");
 
-    const innerRadius = pieRadius * 0.5;
-    const outerRadius = pieRadius;
-    const middleRadius = (innerRadius + outerRadius) / 2; // Define here so it's accessible
-    
-    const arc = d3
-      .arc<d3.PieArcDatum<DistributionData>>()
-      .innerRadius(innerRadius)
-      .outerRadius(outerRadius);
+    /* ── Pie ── */
+    const pie = d3.pie<typeof coloredData[0]>()
+      .value((d) => d.students).sort(null).padAngle(0.03);
 
-    // Draw arcs
-    const arcs = chart
-      .selectAll(".arc")
-      .data(pie(data))
-      .enter()
-      .append("g")
-      .attr("class", "arc");
+    const arc = d3.arc<d3.PieArcDatum<typeof coloredData[0]>>()
+      .innerRadius(innerR).outerRadius(outerR).cornerRadius(6);
 
-    const paths = arcs
-      .append("path")
-      .attr("d", arc)
-      .attr("fill", (d) => d.data.color)
-      .attr("stroke", "#fff")
-      .attr("stroke-width", isMobile ? 1 : 2)
-      .attr("opacity", 0.8);
+    const arcHover = d3.arc<d3.PieArcDatum<typeof coloredData[0]>>()
+      .innerRadius(innerR - 3).outerRadius(outerR + 9).cornerRadius(6);
 
-    // Add percentage labels - perfectly centered in the colored segment
-    // arcs
-    //   .append("text")
-    //   .attr("transform", (d) => {
-    //     // Calculate the exact center point of the arc segment
-    //     const midAngle = (d.startAngle + d.endAngle) / 2;
-        
-    //     const x = Math.cos(midAngle) * middleRadius;
-    //     const y = Math.sin(midAngle) * middleRadius;
-    //     return `translate(${x},${y})`;
-    //   })
-    //   .attr("text-anchor", "middle")
-    //   .attr("dominant-baseline", "middle")
-    //   .attr("fill", "#ffffff") // Pure white for maximum contrast
-    //   .attr("font-size", isMobile ? "11px" : "13px")
-    //   .attr("font-weight", "600") // Semi-bold for better readability
-    //   .attr("pointer-events", "none")
-    //   .style("text-shadow", 
-    //     "0px 1px 2px rgba(0,0,0,0.7), " +
-    //     "1px 0px 2px rgba(0,0,0,0.7), " +
-    //     "0px -1px 2px rgba(0,0,0,0.7), " +
-    //     "-1px 0px 2px rgba(0,0,0,0.7)") // Shadow on all sides for contrast
-    //   .style("user-select", "none")
-    //   .style("filter", "drop-shadow(0px 1px 1px rgba(0,0,0,0.8))")
-    //   .style("paint-order", "stroke")
-    //   .text((d) => {
-    //     const total = d3.sum(data, (d) => d.students);
-    //     const percentage = Math.round((d.data.students / total) * 100);
-    //     return `${percentage}%`;
-    //   });
+    const chartG = svg.append("g")
+      .attr("transform", `translate(${pieCX},${pieCY})`)
+      .attr("filter", "url(#sdc-sh)");
 
-    // For very small segments, we need to adjust font size or hide labels
-    arcs.each(function(d: any) {
-      const total = d3.sum(data, (d) => d.students);
-      const percentage = Math.round((d.data.students / total) * 100);
-      const arcLength = (d.endAngle - d.startAngle) * middleRadius; // Now middleRadius is accessible
-      
-      // If segment is too small, make font smaller or hide
-      const textElement = d3.select(this).select("text");
-      if (percentage < 5 || arcLength < 20) {
-        textElement.attr("font-size", isMobile ? "9px" : "10px");
-      }
-      
-      // For very very small segments (<2%), hide the label completely
-      if (percentage < 2 || arcLength < 10) {
-        textElement.style("display", "none");
-      }
+    const arcs = chartG.selectAll(".arc")
+      .data(pie(coloredData)).enter().append("g").attr("class", "arc");
+
+    const paths = arcs.append("path")
+      .attr("d",            (d) => arc(d) as string)
+      .attr("fill",         (d) => d.data.color)
+      .attr("stroke",       "#fff")
+      .attr("stroke-width", 2.5)
+      .attr("opacity",      0.92)
+      .style("cursor",      "pointer");
+
+    /* % labels inside segments */
+    arcs.each(function (d) {
+      const pct    = Math.round((d.data.students / total) * 100);
+      const arcLen = (d.endAngle - d.startAngle) * midR;
+      if (pct < 5 || arcLen < 22) return;
+      const mid = (d.startAngle + d.endAngle) / 2;
+      d3.select(this).append("text")
+        .attr("transform", `translate(${Math.sin(mid) * midR},${-Math.cos(mid) * midR})`)
+        .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+        .attr("fill", "#fff").attr("font-size", "11px").attr("font-weight", "700")
+        .attr("pointer-events", "none").text(`${pct}%`);
     });
 
-    // Add legend - positioned differently for mobile
-    if (isMobile) {
-      // Mobile: Horizontal legend below pie
-      const legendStartY = pieCenterY + pieRadius + 30;
-      const legendItemWidth = 80;
-      const itemsPerRow = Math.floor(width / legendItemWidth);
-      
-      const legend = svg
-        .append("g")
-        .attr("transform", `translate(${width * 0.1}, ${legendStartY})`);
+    /* Centre label */
+    const cg = svg.append("g").attr("transform", `translate(${pieCX},${pieCY})`);
+    cg.append("text").attr("text-anchor", "middle").attr("y", -10)
+      .attr("font-size", "22px").attr("font-weight", "800").attr("fill", "#1f2937")
+      .text(total.toLocaleString());
+    cg.append("text").attr("text-anchor", "middle").attr("y", 13)
+      .attr("font-size", "9px").attr("font-weight", "600")
+      .attr("fill", "#9ca3af").attr("letter-spacing", "1").text("STUDENTS");
 
-      data.forEach((item, i) => {
-        const row = Math.floor(i / itemsPerRow);
-        const col = i % itemsPerRow;
-        
-        const legendRow = legend
-          .append("g")
-          .attr("transform", `translate(${col * legendItemWidth}, ${row * 40})`);
+    /* ── Legend — measured widths, tight columns ── */
+    const charW   = 7;                // ↑ wider estimate for bigger font
+    const rectW   = 13;               // ↑ slightly bigger swatch
+    const textOff = 20;               // rect(13) + gap(7)
 
-        legendRow
-          .append("rect")
-          .attr("width", 12)
-          .attr("height", 12)
-          .attr("fill", item.color)
-          .attr("rx", 3)
-          .attr("y", 4);
+    const itemW = coloredData.map((item) => {
+      const lbl = item.program.length > 14 ? `${item.program.substring(0, 14)}…` : item.program;
+      return textOff + (`${lbl}: ${item.students}`).length * charW;
+    });
 
-        const maxChars = 8;
-        const displayText = item.program.length > maxChars 
-          ? `${item.program.substring(0, maxChars)}...` 
-          : item.program;
+    const colMax: number[] = Array(legendCols).fill(0);
+    coloredData.forEach((_, i) => {
+      colMax[i % legendCols] = Math.max(colMax[i % legendCols], itemW[i]);
+    });
 
-        legendRow
-          .append("text")
-          .attr("x", 16)
-          .attr("y", 12)
-          .attr("font-size", "10px")
-          .attr("fill", "#333")
-          .attr("dominant-baseline", "middle")
-          .text(`${displayText}: ${item.students}`);
-      });
-    } else {
-      // Desktop: Vertical legend on the right
-      const legendStartX = width * 0.75;
-      const legendStartY = 50;
-      const legendSpacing = 25;
-      const legendTextSize = "12px";
-
-      const legend = svg
-        .append("g")
-        .attr("transform", `translate(${legendStartX}, ${legendStartY})`);
-
-      data.forEach((item, i) => {
-        const legendRow = legend
-          .append("g")
-          .attr("transform", `translate(0, ${i * legendSpacing})`);
-
-        legendRow
-          .append("rect")
-          .attr("width", 15)
-          .attr("height", 15)
-          .attr("fill", item.color)
-          .attr("rx", 3);
-
-        const maxChars = 20;
-        const displayText = item.program.length > maxChars 
-          ? `${item.program.substring(0, maxChars)}...` 
-          : item.program;
-
-        legendRow
-          .append("text")
-          .attr("x", 20)
-          .attr("y", 12)
-          .attr("font-size", legendTextSize)
-          .attr("fill", "#333")
-          .attr("dominant-baseline", "middle")
-          .text(`${displayText}: ${item.students}`);
-      });
+    const colGap = 20;
+    const colX: number[] = [];
+    let cur = 0;
+    for (let c = 0; c < legendCols; c++) {
+      colX.push(cur);
+      cur += colMax[c] + colGap;
     }
+    const totLegW   = cur - colGap;
+    const legStartX = (width - totLegW) / 2;
+    const legY      = pieAreaH + 28;
 
-    // Tooltip
-    const tooltip = d3
-      .select("body")
-      .append("div")
-      .attr("class", "chart-tooltip")
-      .style("position", "absolute")
-      .style("background", "#fff")
-      .style("padding", "8px")
-      .style("border", "1px solid #ddd")
-      .style("border-radius", "4px")
-      .style("pointer-events", "none")
-      .style("opacity", 0)
-      .style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)")
-      .style("z-index", "1000")
-      .style("font-size", "14px");
+    const lgG = svg.append("g").attr("transform", `translate(${legStartX},${legY})`);
+
+    coloredData.forEach((item, i) => {
+      const col  = i % legendCols;
+      const row  = Math.floor(i / legendCols);
+      const lbl  = item.program.length > 14 ? `${item.program.substring(0, 14)}…` : item.program;
+
+      const itemG = lgG.append("g")
+        .attr("transform", `translate(${colX[col]},${row * legendRowH})`);
+
+      /* Coloured square */
+      itemG.append("rect")
+        .attr("width", rectW).attr("height", rectW)
+        .attr("fill", item.color).attr("rx", 3).attr("y", 2);
+
+      /* Label text — bigger + bolder */
+      itemG.append("text")
+        .attr("x", textOff).attr("y", 9)
+        .attr("dominant-baseline", "middle")
+        .attr("font-size", "13.5px")          // ↑ was 12px
+        .attr("font-weight", "600")            // ↑ was unset/400
+        .attr("fill", "#374151")               // ↑ darker than #444
+        .text(`${lbl}: ${item.students}`);
+    });
+
+    /* ── Tooltip ── */
+    const tip = d3.select("body").append("div").attr("class", "chart-tooltip")
+      .style("position", "absolute").style("background", "#fff")
+      .style("padding", "8px").style("border", "1px solid #ddd")
+      .style("border-radius", "4px").style("pointer-events", "none")
+      .style("opacity", 0).style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)")
+      .style("z-index", "1000").style("font-size", "14px");
 
     paths
-      .on("mouseover", function (event, d: any) {
-        const total = d3.sum(data, (d) => d.students);
-        const percentage = Math.round((d.data.students / total) * 100);
-
-        tooltip
-          .style("opacity", 1)
-          .html(
-            `<div style="font-weight: bold; color: ${d.data.color}; margin-bottom: 4px;">${d.data.program}</div>
-             <div>Students: ${d.data.students}</div>
-             <div>Percentage: ${percentage}%</div>`
-          );
+      .on("mouseover", function (event, d) {
+        d3.select(this).transition().duration(150)
+          .attr("d", (d) => arcHover(d as d3.PieArcDatum<typeof coloredData[0]>) as string)
+          .attr("opacity", 1);
+        const pct = Math.round((d.data.students / total) * 100);
+        tip.style("opacity", 1).html(
+          `<div style="font-weight:bold;color:${d.data.color};margin-bottom:4px">${d.data.program}</div>
+           <div>Students: ${d.data.students}</div><div>Percentage: ${pct}%</div>`
+        );
       })
       .on("mousemove", function (event) {
-        const tooltipWidth = 150;
-        const tooltipHeight = 80;
-        const x = event.pageX + 10;
-        const y = event.pageY - 10;
-
-        const adjustedX = x + tooltipWidth > window.innerWidth 
-          ? event.pageX - tooltipWidth - 10 
-          : x;
-        const adjustedY = y + tooltipHeight > window.innerHeight
-          ? event.pageY - tooltipHeight - 10
-          : y;
-
-        tooltip
-          .style("left", adjustedX + "px")
-          .style("top", adjustedY + "px");
+        const tw = 150, th = 80, x = event.pageX + 10, y = event.pageY - 10;
+        tip.style("left", `${x + tw > window.innerWidth  ? event.pageX - tw - 10 : x}px`)
+           .style("top",  `${y + th > window.innerHeight ? event.pageY - th - 10 : y}px`);
       })
-      .on("mouseout", function () {
-        tooltip.style("opacity", 0);
+      .on("mouseout", function (event, d) {
+        d3.select(this).transition().duration(150)
+          .attr("d", (d) => arc(d as d3.PieArcDatum<typeof coloredData[0]>) as string)
+          .attr("opacity", 0.92);
+        tip.style("opacity", 0);
       });
 
-    return () => {
-      tooltip.remove();
-    };
+    return () => { tip.remove(); };
   }, [data, dimensions]);
 
   return (
-    <Card className="border-0 shadow-sm chart-card">
+    <Card className="border-0 shadow-sm chart-card h-100">
       {Loading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 120 }}>
-          <span className="spinner-border text-primary" role="status" aria-hidden="true"></span>
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 200 }}>
+          <span className="spinner-border text-primary" role="status" aria-hidden="true" />
         </div>
-      ):(
-        <Card.Body className="chart-card-body">
-          <div className="chart-header">
-            <h5 className="chart-title">Student Distribution by Program</h5>
-          </div>
-          <div 
-            ref={containerRef} 
-            className="chart-container-responsive"
-          >
-            <svg ref={svgRef} className="chart-svg"></svg>
+      ) : (
+        <Card.Body className="chart-card-body d-flex flex-column">
+          <h5 className="chart-title">
+            Student{" "}
+            <span className="chart-title-gradient">Distribution</span>
+            {" "}by Program
+          </h5>
+          <div ref={containerRef} className="chart-container-responsive flex-grow-1">
+            <svg ref={svgRef} className="chart-svg" />
           </div>
         </Card.Body>
-      )} 
+      )}
     </Card>
   );
 };

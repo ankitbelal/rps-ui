@@ -6,101 +6,71 @@
 }
 
 .chart-card-body {
-  padding: 20px;
+  padding: 22px 20px 16px;
 }
 
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
+/* ── Title: !important beats any Bootstrap h5 rule ── */
 .chart-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #1a1523 !important;
+  margin: 0 0 12px 0 !important;
+  /* Centre the text inside the full card width */
+  text-align: center !important;
+  width: 100%;
+  letter-spacing: -0.3px;
+  display: block;
 }
 
+/* Gradient word — mirrors StudentLeaderboard */
+.chart-title-gradient {
+  background: linear-gradient(120deg, #6366f1, #a855f7 60%, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Container: block, full width ── */
 .chart-container-responsive {
+  display: block;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 300px;
   overflow: visible;
 }
 
 .chart-svg {
   display: block;
-  margin: 0 auto;
-  max-width: 100%;
+  width: 100%;
   overflow: visible;
 }
 
-/* Ensure SVG content doesn't get clipped */
 .chart-svg g {
   overflow: visible;
 }
 
-/* Responsive adjustments */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .chart-card-body {
-    padding: 15px;
+    padding: 16px;
   }
-  
-  .chart-header {
-    justify-content: center;
-    text-align: center;
-  }
-  
   .chart-title {
-    font-size: 16px;
-    text-align: center;
-    width: 100%;
+    font-size: 17px !important;
   }
-  
   .chart-container-responsive {
-    min-height: 380px; /* Increased for mobile to accommodate horizontal legend */
+    min-height: 320px;
   }
 }
 
 @media (max-width: 480px) {
-  .chart-card-body {
-    padding: 12px;
-  }
-  
   .chart-title {
-    font-size: 15px;
+    font-size: 15px !important;
   }
-  
   .chart-container-responsive {
-    min-height: 350px;
+    min-height: 300px;
   }
 }
 
-/* For very small screens */
-@media (max-width: 350px) {
-  .chart-container-responsive {
-    min-height: 400px; /* Even more height for very small screens */
-  }
-  
-  .chart-title {
-    font-size: 14px;
-  }
-}
-
-/* Landscape mode adjustments */
-@media (max-height: 500px) and (orientation: landscape) {
-  .chart-container-responsive {
-    min-height: 280px;
-  }
-}
-
-/* Prevent text selection on labels */
+/* Prevent text selection on SVG */
 .chart-svg text {
   user-select: none;
   -webkit-user-select: none;
@@ -108,7 +78,7 @@
   -ms-user-select: none;
 }
 
-/* Tooltip styles */
+/* Tooltip */
 .chart-tooltip {
   max-width: 200px;
   word-wrap: break-word;
@@ -119,5 +89,5 @@
   border-radius: 4px;
   padding: 8px;
   font-size: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
