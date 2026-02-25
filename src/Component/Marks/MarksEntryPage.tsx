@@ -102,7 +102,7 @@ const MarksEntryPage: React.FC = () => {
     {
       programId: studentData.program.id!,
       semester: studentData.currentSemester,
-      studentId: 0,
+      studentId: studentData.id,
     },
     { skip: !studentData, refetchOnMountOrArgChange: true },
   );
@@ -451,12 +451,12 @@ const MarksEntryPage: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: `${userRole === "admin" ? "/admin" : "/teacher"}/dashboard`,
+                link: `${userRole === "admin" || userRole == "superadmin" ? "/admin" : "/teacher"}/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
                 label: "Student Management",
-                link: `${userRole === "admin" ? "/admin" : "/teacher"}/students`,
+                link: `${userRole === "admin" || userRole === "superadmin" ? "/admin" : "/teacher"}/students`,
                 icon: <FaUserGraduate />,
               },
               {
@@ -761,7 +761,10 @@ const MarksEntryPage: React.FC = () => {
           </>
         ) : (
           /* Result Timeline View */
-          <StudentResultTimeline studentId={studentData.id} currentSemester={studentData.currentSemester}/>
+          <StudentResultTimeline
+            studentId={studentData.id}
+            currentSemester={studentData.currentSemester}
+          />
         )}
       </div>
     </>

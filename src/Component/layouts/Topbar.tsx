@@ -17,6 +17,7 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case "superadmin":
+        return "Super Admin";
       case "admin":
         return "Administrator";
       case "teacher":

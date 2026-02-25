@@ -79,9 +79,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 8,
-            label: "Reports",
+            label: "Manage Result",
             icon: <FaClipboardList />,
-            path: "/admin/reports",
+            path: "/admin/manage-result",
           },
           { id: 9, label: "Settings", icon: <FaCog />, path: "/settings" },
           {
@@ -222,7 +222,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
         {/* Optional Sidebar Footer */}
         <div className="sidebar-footer">
           <div className="text-center small text-white-50">
-            {role === "admin"
+            {role === "admin" || role == "superadmin"
               ? "Admin Portal"
               : role === "teacher"
                 ? "Teacher Portal"
