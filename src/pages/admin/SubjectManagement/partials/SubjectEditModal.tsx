@@ -1,11 +1,11 @@
-import React from 'react';
-import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
-import { useForm } from 'react-hook-form';
-import { ProgramList } from '../../../../features/admin/students/utils';
-import { Teacher } from '../../../../features/admin/students/utils';
-import { Subject } from '../../../../features/admin/subjects/utils';
-import { subjectSchema } from '../validations/subjectSchema';
-import { yupResolver } from '@hookform/resolvers/yup';
+import React from "react";
+import { Modal, Button, Row, Col, Form } from "react-bootstrap";
+import { useForm } from "react-hook-form";
+import { ProgramList } from "../../../../features/admin/students/utils";
+import { Teacher } from "../../../../features/admin/students/utils";
+import { Subject } from "../../../../features/admin/subjects/utils";
+import { subjectSchema } from "../validations/subjectSchema";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 export interface SubjectFormData {
   name: string;
@@ -34,15 +34,15 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
   isLoading,
   programs,
   teachers,
-  subjectData
+  subjectData,
 }) => {
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<SubjectFormData>({
-    resolver: yupResolver(subjectSchema as any)
+    resolver: yupResolver(subjectSchema as any),
   });
 
   const handleFormSubmit = (data: SubjectFormData) => {
@@ -70,7 +70,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
           <div className="d-flex align-items-center gap-3 mb-2">
             <div
               className="bg-warning rounded-circle p-2 d-flex align-items-center justify-content-center"
-              style={{ width: '44px', height: '44px' }}
+              style={{ width: "44px", height: "44px" }}
             >
               <i className="fas fa-book text-white fs-5"></i>
             </div>
@@ -102,7 +102,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                     Subject Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
-                    {...register('name')}
+                    {...register("name")}
                     isInvalid={!!errors.name}
                     placeholder="Subject"
                     className="py-2"
@@ -119,7 +119,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                     Subject Code <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
-                    {...register('code')}
+                    {...register("code")}
                     isInvalid={!!errors.code}
                     placeholder="SUB 123"
                     className="py-2"
@@ -137,7 +137,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                   </Form.Label>
                   <Form.Control
                     type="number"
-                    {...register('credits', { valueAsNumber: true })}
+                    {...register("credits", { valueAsNumber: true })}
                     isInvalid={!!errors.credits}
                     className="py-2 no-spinner"
                     min="0"
@@ -163,7 +163,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                   </Form.Label>
                   <Form.Control
                     type="number"
-                    {...register('semester', { valueAsNumber: true })}
+                    {...register("semester", { valueAsNumber: true })}
                     isInvalid={!!errors.semester}
                     className="py-2 no-spinner"
                     min="1"
@@ -188,7 +188,11 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                   <Form.Label className="fw-semibold">
                     Type <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select {...register('type')} className="py-2" isInvalid={!!errors.type}>
+                  <Form.Select
+                    {...register("type")}
+                    className="py-2"
+                    isInvalid={!!errors.type}
+                  >
                     <option value="theory">Theory</option>
                     <option value="practical">Practical</option>
                     <option value="hybrid">Hybrid</option>
@@ -217,12 +221,12 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                     Program <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
-                    {...register('programId', { valueAsNumber: true })}
+                    {...register("programId", { valueAsNumber: true })}
                     isInvalid={!!errors.programId}
                     className="py-2"
                   >
                     <option value={0}>Select Program</option>
-                    {programs.map(program => (
+                    {programs.map((program) => (
                       <option key={program.id} value={program.id}>
                         ({program.code})
                       </option>
@@ -240,12 +244,12 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
                     Teacher <span className="text-muted">(Optional)</span>
                   </Form.Label>
                   <Form.Select
-                    {...register('teacherId', { valueAsNumber: true })}
+                    {...register("teacherId", { valueAsNumber: true })}
                     isInvalid={!!errors.teacherId}
                     className="py-2"
                   >
                     <option value={0}>Select Teacher</option>
-                    {teachers.map(teacher => (
+                    {teachers.map((teacher) => (
                       <option key={teacher.id} value={teacher.id}>
                         {teacher.name}
                       </option>
@@ -265,7 +269,12 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
             <i className="fas fa-times me-2"></i>
             Cancel
           </Button>
-          <Button variant="warning" type="submit" disabled={isLoading} className="px-4">
+          <Button
+            variant="warning"
+            type="submit"
+            disabled={isLoading || !isDirty}
+            className="px-4"
+          >
             {isLoading ? (
               <>
                 <span className="spinner-border spinner-border-sm me-2" />
@@ -280,7 +289,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
           </Button>
         </Modal.Footer>
       </Form>
-      
+
       <style>
         {`
           /* Hide the arrow spinners in number inputs */

@@ -33,7 +33,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<AdminFormData>();
 
   // Reset form when modal opens/closes or adminData changes
@@ -249,7 +249,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
           <Button
             variant="primary"
             type="submit"
-            disabled={isUpdating}
+            disabled={isUpdating || !isDirty}
             className="px-4"
           >
             {isUpdating ? (

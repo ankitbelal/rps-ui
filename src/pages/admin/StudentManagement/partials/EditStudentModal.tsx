@@ -1,9 +1,22 @@
 import React, { useEffect } from "react";
-import { Modal, Button, Row, Col, Form, InputGroup, Spinner } from "react-bootstrap";
-import { ProgramList, Student } from "../../../../features/admin/students/utils";
+import {
+  Modal,
+  Button,
+  Row,
+  Col,
+  Form,
+  InputGroup,
+  Spinner,
+} from "react-bootstrap";
+import {
+  ProgramList,
+  Student,
+} from "../../../../features/admin/students/utils";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import SearchableDropdown, { DropdownOption } from "../../../../Component/common/SearchableDropdown";
+import SearchableDropdown, {
+  DropdownOption,
+} from "../../../../Component/common/SearchableDropdown";
 import { EditStudentFormData } from "../validations/editStudentSchema";
 import { studentSchema } from "../validations/studentSchema";
 
@@ -32,7 +45,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EditStudentFormData>({
     resolver: yupResolver(studentSchema as any),
     mode: "onChange",
@@ -40,7 +53,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
 
   // Prepare dropdown options
   const programOptions: DropdownOption<number>[] = [
-    { value: 0, label: "Select Program"  },
+    { value: 0, label: "Select Program" },
     ...programs.map((program) => ({
       value: program.id,
       label: `${program.code}`,
@@ -52,14 +65,14 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     (_, i) => ({
       value: i + 1,
       label: `Semester ${i + 1}`,
-    })
+    }),
   );
 
   // Reset form when modal opens with student data
   useEffect(() => {
     if (show && studentData) {
       const student = studentData;
-      
+
       // Format dates
       const enrollmentDate = student.enrollmentDate
         ? new Date(student.enrollmentDate).toISOString().split("T")[0]
@@ -105,9 +118,9 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
   const handleFormSubmit = (data: EditStudentFormData) => {
     // Filter out empty/null values
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_, value]) => 
-        value !== "" && value !== null && value !== undefined
-      )
+      Object.entries(data).filter(
+        ([_, value]) => value !== "" && value !== null && value !== undefined,
+      ),
     );
     onSubmit(filteredData as EditStudentFormData);
   };
@@ -237,9 +250,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
                   <Form.Control.Feedback type="invalid">
                     {errors.phone?.message}
                   </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
-                    10 digits only 
-                  </Form.Text>
+                  <Form.Text className="text-muted">10 digits only</Form.Text>
                 </Form.Group>
               </Col>
 
@@ -416,14 +427,19 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
         </Modal.Body>
 
         <Modal.Footer className="border-top-0">
-          <Button variant="outline-secondary" onClick={onHide} className="px-4" disabled={isLoading}>
+          <Button
+            variant="outline-secondary"
+            onClick={onHide}
+            className="px-4"
+            disabled={isLoading}
+          >
             <i className="fas fa-times me-2"></i>
             Cancel
           </Button>
           <Button
             variant="warning"
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !isDirty}
             className="px-4"
           >
             {isLoading ? (

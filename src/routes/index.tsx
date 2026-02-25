@@ -143,7 +143,7 @@ const AppRouter = () => {
         />
 
         <Route
-          path="/admin/manage-result"
+          path="/admin/management"
           element={
             <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
