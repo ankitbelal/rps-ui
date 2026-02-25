@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Card } from "react-bootstrap";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import "./StudentDistributionChart.css";
 
 interface DistributionData {
@@ -14,21 +16,89 @@ interface StudentDistributionChartProps {
   Loading: boolean;
 }
 
-const VIVID_COLORS = [
-  "#6366f1",
-  "#f43f5e",
-  "#10b981",
-  "#f59e0b",
-  "#3b82f6",
-  "#a855f7",
-  "#06b6d4",
-  "#ec4899",
-  "#84cc16",
-  "#f97316",
-  "#14b8a6",
-  "#8b5cf6",
-];
+/* ─────────────────────────────────────────────
+   GOLDEN-RATIO COLOR GENERATOR
+───────────────────────────────────────────── */
+const GOLDEN_RATIO = 0.618033988749895;
 
+function generateColor(index: number): string {
+  const hue = Math.round(((index * GOLDEN_RATIO) % 1) * 360);
+  return `hsl(${hue}, 70%, 45%)`;
+}
+
+function buildPalette(count: number): string[] {
+  return Array.from({ length: count }, (_, i) => generateColor(i));
+}
+
+/* ─────────────────────────────────────────────
+   SKELETON PIE
+───────────────────────────────────────────── */
+const PieSkeleton: React.FC = () => (
+  <div className="sdc-skeleton-wrap">
+    {/* Circle */}
+    <div className="sdc-skeleton-circle-wrap">
+      <Skeleton circle width={200} height={200} />
+      {/* Punch out center to mimic donut */}
+      <div className="sdc-skeleton-donut-hole" />
+    </div>
+    {/* Legend rows */}
+    <div className="sdc-skeleton-legend">
+      {[90, 70, 110, 80].map((w, i) => (
+        <div key={i} className="sdc-skeleton-legend-row">
+          <Skeleton width={13} height={13} borderRadius={3} />
+          <Skeleton width={w} height={12} borderRadius={4} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ─────────────────────────────────────────────
+   EMPTY STATE — dead pie SVG
+───────────────────────────────────────────── */
+const EmptyPie: React.FC = () => (
+  <div className="sdc-empty-wrap">
+    <svg viewBox="0 0 160 160" className="sdc-empty-svg">
+      {/* Grey donut ring */}
+      <circle
+        cx="80"
+        cy="80"
+        r="55"
+        fill="none"
+        stroke="#e5e7eb"
+        strokeWidth="28"
+        strokeDasharray="10 6"
+        strokeLinecap="round"
+      />
+      {/* Inner white hole */}
+      <circle cx="80" cy="80" r="38" fill="#fff" />
+
+      {/* Sad face */}
+      {/* Eyes */}
+      <circle cx="68" cy="72" r="4" fill="#d1d5db" />
+      <circle cx="92" cy="72" r="4" fill="#d1d5db" />
+      {/* Sad mouth */}
+      <path
+        d="M 65 90 Q 80 82 95 90"
+        stroke="#d1d5db"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Tear */}
+      <ellipse cx="68" cy="82" rx="2.5" ry="4" fill="#bfdbfe" />
+    </svg>
+
+    <p className="sdc-empty-title">No data available</p>
+    <p className="sdc-empty-sub">
+      Student distribution will appear here once data is loaded
+    </p>
+  </div>
+);
+
+/* ─────────────────────────────────────────────
+   MAIN COMPONENT
+───────────────────────────────────────────── */
 const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
   data,
   Loading = false,
@@ -58,13 +128,11 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
     const { width, height } = dimensions;
     const total = d3.sum(data, (d) => d.students);
 
-    const coloredData = data.map((d, i) => ({
-      ...d,
-      color: VIVID_COLORS[i % VIVID_COLORS.length],
-    }));
+    const palette = buildPalette(data.length);
+    const coloredData = data.map((d, i) => ({ ...d, color: palette[i] }));
 
     /* ── Legend geometry ── */
-    const legendRowH = 26; // ↑ taller rows so text breathes
+    const legendRowH = 26;
     const legendCols = Math.min(coloredData.length, 4);
     const legendRows = Math.ceil(coloredData.length / legendCols);
     const legendH = legendRows * legendRowH + 28;
@@ -73,7 +141,7 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
     const pieAreaH = height - legendH;
     const pieCX = width / 2;
     const pieCY = pieAreaH / 2;
-    const outerR = Math.min(pieCX - 24, pieCY - 16, 130); // ← 130 instead of 160
+    const outerR = Math.min(pieCX - 24, pieCY - 16, 130);
     const innerR = outerR * 0.5;
     const midR = (innerR + outerR) / 2;
 
@@ -179,10 +247,10 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
       .attr("letter-spacing", "1")
       .text("STUDENTS");
 
-    /* ── Legend — measured widths, tight columns ── */
-    const charW = 7; // ↑ wider estimate for bigger font
-    const rectW = 13; // ↑ slightly bigger swatch
-    const textOff = 20; // rect(13) + gap(7)
+    /* ── Legend ── */
+    const charW = 7;
+    const rectW = 13;
+    const textOff = 20;
 
     const itemW = coloredData.map((item) => {
       const lbl =
@@ -224,7 +292,6 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
         .append("g")
         .attr("transform", `translate(${colX[col]},${row * legendRowH})`);
 
-      /* Coloured square */
       itemG
         .append("rect")
         .attr("width", rectW)
@@ -233,15 +300,14 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
         .attr("rx", 3)
         .attr("y", 2);
 
-      /* Label text — bigger + bolder */
       itemG
         .append("text")
         .attr("x", textOff)
         .attr("y", 9)
         .attr("dominant-baseline", "middle")
-        .attr("font-size", "13.5px") // ↑ was 12px
-        .attr("font-weight", "600") // ↑ was unset/400
-        .attr("fill", "#374151") // ↑ darker than #444
+        .attr("font-size", "13.5px")
+        .attr("font-weight", "600")
+        .attr("fill", "#374151")
         .text(`${lbl}: ${item.students}`);
     });
 
@@ -293,7 +359,7 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
             `${y + th > window.innerHeight ? event.pageY - th - 10 : y}px`,
           );
       })
-      .on("mouseout", function (event, d) {
+      .on("mouseout", function () {
         d3.select(this)
           .transition()
           .duration(150)
@@ -311,33 +377,30 @@ const StudentDistributionChart: React.FC<StudentDistributionChartProps> = ({
   }, [data, dimensions]);
 
   return (
-    <Card className="border-0 shadow-sm chart-card h-100">
-      {Loading ? (
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ minHeight: 200 }}
-        >
-          <span
-            className="spinner-border text-primary"
-            role="status"
-            aria-hidden="true"
-          />
-        </div>
-      ) : (
+    <SkeletonTheme baseColor="#f3f4f6" highlightColor="#e9eaf0">
+      <Card className="border-0 shadow-sm chart-card h-100">
         <Card.Body className="chart-card-body d-flex flex-column">
+          {/* Title — always visible */}
           <h5 className="chart-title">
             Student <span className="chart-title-gradient">Distribution</span>{" "}
             by Program
           </h5>
-          <div
-            ref={containerRef}
-            className="chart-container-responsive flex-grow-1"
-          >
-            <svg ref={svgRef} className="chart-svg" />
-          </div>
+
+          {Loading ? (
+            <PieSkeleton />
+          ) : !data.length ? (
+            <EmptyPie />
+          ) : (
+            <div
+              ref={containerRef}
+              className="chart-container-responsive flex-grow-1"
+            >
+              <svg ref={svgRef} className="chart-svg" />
+            </div>
+          )}
         </Card.Body>
-      )}
-    </Card>
+      </Card>
+    </SkeletonTheme>
   );
 };
 

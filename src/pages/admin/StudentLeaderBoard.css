@@ -194,7 +194,7 @@
 /* ── Table Head ── */
 .slb-thead {
   display: grid;
-  grid-template-columns: 36px 1fr 56px 64px 60px;
+  grid-template-columns: 1fr 56px 64px 60px; /* removed 36px rank col */
   padding: 7px 18px;
   background: rgba(248, 248, 252, 0.7);
   border-top: 1px solid rgba(0, 0, 0, 0.04);
@@ -220,14 +220,13 @@
 
 .slb-row {
   display: grid;
-  grid-template-columns: 36px 1fr 56px 64px 60px;
-  padding: 8px 18px;
+  grid-template-columns: 1fr 56px 64px 60px; /* removed 36px rank col */
+  padding: 10px 18px;
   align-items: center;
   transition: background 0.13s;
   animation: slbSlideUp 0.35s ease both;
   position: relative;
 }
-
 .slb-row:hover {
   background: rgba(99, 102, 241, 0.03);
 }
@@ -331,7 +330,7 @@
 .slb-sid {
   font-size: 9px;
   font-weight: 600;
-  color: #d1d5db;
+  color: #1a58b5;
 }
 
 .slb-stag {
@@ -346,7 +345,7 @@
 .slb-ssem {
   font-size: 9px;
   font-weight: 600;
-  color: #c4c7d4;
+  color: #21ab6b;
   white-space: nowrap;
 }
 
@@ -444,4 +443,33 @@
   color: #9ca3af;
   font-size: 13px;
   font-weight: 700;
+}
+
+.slb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 18px;
+  gap: 10px;
+}
+
+.slb-empty-icon svg {
+  width: 80px;
+  height: 80px;
+}
+
+.slb-empty-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #6b7280;
+  margin: 0;
+}
+
+.slb-empty-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4c7d4;
+  margin: 0;
+  text-align: center;
 }

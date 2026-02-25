@@ -45,6 +45,7 @@ export interface StudentListApiReponse {
 export interface ProgramList {
   id: number;
   code: string;
+  name: string;
 }
 
 export interface ProgramListApiResponse {
@@ -73,16 +74,16 @@ export interface StudentDetailApiResponse {
   data: Student[];
 }
 
-export interface Teacher{
-  id:number;
-  name:string;
+export interface Teacher {
+  id: number;
+  name: string;
 }
 
-export interface TeacherList{
+export interface TeacherList {
   success: boolean;
   statusCode: number;
   message: string;
-  data:Teacher[];
+  data: Teacher[];
 }
 
 export interface StudentForm {
@@ -101,62 +102,62 @@ export interface StudentForm {
 }
 
 interface EvaluationParameter {
-  weight:number;
-  id:number;
-  code:string;
-  name:string;
-  assigned:number;
+  weight: number;
+  id: number;
+  code: string;
+  name: string;
+  assigned: number;
 }
 
 export interface StudentSubjectData {
-  id:number;
-  name:string;
-  code:string;
-  semester:number;
-  type:string;
-  subjectTeacher:null;
-  evaluationParameters:EvaluationParameter[]
+  id: number;
+  name: string;
+  code: string;
+  semester: number;
+  type: string;
+  subjectTeacher: null;
+  evaluationParameters: EvaluationParameter[];
 }
 
-export interface StudentSubjectResponse{
+export interface StudentSubjectResponse {
   success: boolean;
   statusCode: number;
   message: string;
   data: StudentSubjectData[];
 }
 
-export interface Param{
-  programId:number;
-  semester:number;
-  studentId?:number;
+export interface Param {
+  programId: number;
+  semester: number;
+  studentId?: number;
 }
 
-export interface ResultParam{
-  semester:number;
-  examTerm:string;
-  studentId:number;
+export interface ResultParam {
+  semester: number;
+  examTerm: string;
+  studentId: number;
 }
 
-export interface ExtraParameter{
-  id:number;
-  subjectId:number;
-  evaluationParameterId:number;
-  obtainedMarks:number;
-  fullMarks:number;
+export interface ExtraParameter {
+  id: number;
+  subjectId: number;
+  evaluationParameterId: number;
+  obtainedMarks: number;
+  fullMarks: number;
 }
-export interface MarksData{
-  id:number;
-  studentId:number;
-  subjectId:number;
-  examTerm:string;
-  semester:number;
-  obtainedMarks:number;
-  fullMarks:number;
-  extraParametersMarks:ExtraParameter[];
-  createdAt:string;
+export interface MarksData {
+  id: number;
+  studentId: number;
+  subjectId: number;
+  examTerm: string;
+  semester: number;
+  obtainedMarks: number;
+  fullMarks: number;
+  extraParametersMarks: ExtraParameter[];
+  createdAt: string;
 }
 
-export interface StudentMarksResponse{
+export interface StudentMarksResponse {
   success: boolean;
   statusCode: number;
   message: string;
@@ -164,44 +165,42 @@ export interface StudentMarksResponse{
 }
 
 export interface SubjectData {
-  subjectId:number;
-  subjectCode:string;
-  subjectName:string;
-  firstTermMark:number;
-  secondTermMark:number;
-  finalMarkOutOf100:number;
-  subjectObtainedOutOf50:number;
-  extraParamObtainedOutOf50:number;
-  grade:string;
+  subjectId: number;
+  subjectCode: string;
+  subjectName: string;
+  firstTermMark: number;
+  secondTermMark: number;
+  finalMarkOutOf100: number;
+  subjectObtainedOutOf50: number;
+  extraParamObtainedOutOf50: number;
+  grade: string;
 }
 
-
-export interface ResultData{
-  id:number;
-  studentId:number;
-  programId:number;
-  semester:number;
-  examTerm:string;
-  totalObtained:number;
-  totalFull:number;
-  percentage:number;
-  gpa:number;
-  subjectBreakdown:SubjectData[];
-  publishedBy:string;
-  publishedAt:string;
-  updatedAt:string;
+export interface ResultData {
+  id: number;
+  studentId: number;
+  programId: number;
+  semester: number;
+  examTerm: string;
+  totalObtained: number;
+  totalFull: number;
+  percentage: number;
+  gpa: number;
+  subjectBreakdown: SubjectData[];
+  publishedBy: string;
+  publishedAt: string;
+  updatedAt: string;
 }
-
 
 export interface ResultApiResponse {
-  success:boolean;
-  statusCode:number;
-  message:string;
-  data:ResultData[];
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: ResultData[];
 }
 
-export interface FinalResultParam{
-  studentId:number;
-  examTerm:string;
-  semester:number|string;
+export interface FinalResultParam {
+  studentId: number;
+  examTerm: string;
+  semester: number | string;
 }

@@ -91,3 +91,76 @@
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+/* ── Skeleton pie ── */
+.sdc-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  flex: 1;
+}
+
+.sdc-skeleton-circle-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Punches a white hole in center of skeleton circle to mimic donut */
+.sdc-skeleton-donut-hole {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: #fff;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sdc-skeleton-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.sdc-skeleton-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Empty pie ── */
+.sdc-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 10px;
+  padding: 24px 16px;
+}
+
+.sdc-empty-svg {
+  width: 160px;
+  height: 160px;
+}
+
+.sdc-empty-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #6b7280;
+  margin: 0;
+}
+
+.sdc-empty-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4c7d4;
+  margin: 0;
+  text-align: center;
+  max-width: 200px;
+  line-height: 1.5;
+}
