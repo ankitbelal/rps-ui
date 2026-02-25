@@ -305,7 +305,9 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
                   <span className="fw-bold text-dark">{user.email}</span>
                 </Dropdown.Header>
                 <Dropdown.Divider className="my-1" />
-                <Dropdown.Item className="d-flex align-items-center py-2 px-3">
+                <Dropdown.Item 
+                onClick={()=> navigate("/profile")}
+                className="d-flex align-items-center py-2 px-3">
                   <i
                     className="fas fa-user me-3 text-primary"
                     style={{ width: "20px" }}

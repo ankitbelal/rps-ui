@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaClipboardList />,
             path: "/admin/management",
           },
-          { id: 9, label: "Settings", icon: <FaCog />, path: "/settings" },
+          { id: 9, label: "Profile Settings", icon: <FaCog />, path: "/profile" },
           {
             id: 10,
             label: "Attendance",
@@ -133,6 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaClipboardList />,
             path: "/assignments",
           },
+          { id: 9, label: "Profile Settings", icon: <FaCog />, path: "/profile" },
         ];
 
       case "student":

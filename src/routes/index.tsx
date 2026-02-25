@@ -16,6 +16,7 @@ import SubjectManagement from "../pages/admin/SubjectManagement/Subject";
 import AdminManagement from "../pages/admin/Administration/AdminManagement";
 import MarksEntryPage from "../Component/Marks/MarksEntryPage";
 import Parameter from "../pages/admin/EvaluationParameter/Parameter";
+import ProfilePage from "../Component/common/ProfilePage";
 import { RootState } from "../app/store";
 import { current } from "@reduxjs/toolkit";
 const AppRouter = () => {
@@ -239,6 +240,17 @@ const AppRouter = () => {
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
                 <StudentResults />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/profile"
+          element={
+            <ProtectedRoute requiredRole={["teacher","student","admin","superadmin"]}>
+              <DashboardLayout>
+                <ProfilePage />
               </DashboardLayout>
             </ProtectedRoute>
           }

@@ -12,6 +12,7 @@ import { facultyApi } from "../features/admin/faculty/facultyApi";
 import { subjectAPi } from "../features/admin/subjects/subjectApi";
 import { adminApi } from "../features/admin/admins/adminApi";
 import { paramAPi } from "../features/admin/params/paramApi";
+import { profileApi } from "../features/profile/profileApi";
 import { teacherDashboardApi } from "../features/teacher/dashobard/dashboardApi";
 const persistConfig = {
   key: "root",
@@ -33,6 +34,7 @@ export const store = configureStore({
     [adminApi.reducerPath]: adminApi.reducer,
     [paramAPi.reducerPath]:paramAPi.reducer,
     [teacherDashboardApi.reducerPath]:teacherDashboardApi.reducer,
+    [profileApi.reducerPath]:profileApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }).concat(
@@ -46,6 +48,7 @@ export const store = configureStore({
       adminApi.middleware,
       paramAPi.middleware,
       teacherDashboardApi.middleware,
+      profileApi.middleware
     ),
 });
 
