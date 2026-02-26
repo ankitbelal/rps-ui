@@ -158,6 +158,40 @@ form.sign-in-form {
   font-weight: 500;
 }
 
+/* Override browser autofill styles */
+.input-field input:-webkit-autofill,
+.input-field input:-webkit-autofill:hover,
+.input-field input:-webkit-autofill:focus,
+.input-field input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #f0f0f0 inset !important;
+    box-shadow: 0 0 0 30px #f0f0f0 inset !important;
+    -webkit-text-fill-color: #333 !important;
+    caret-color: #333;
+    border-radius: 55px;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* For Firefox */
+.input-field input:autofill {
+    background-color: #f0f0f0 !important;
+    box-shadow: 0 0 0 30px #f0f0f0 inset !important;
+    -webkit-text-fill-color: #333 !important;
+}
+
+/* When input is focused, maintain the same background */
+.input-field:focus-within input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #e8e8e8 inset !important;
+    box-shadow: 0 0 0 30px #e8e8e8 inset !important;
+}
+
+/* For the eye icon positioning */
+.input-field i.fa-eye,
+.input-field i.fa-eye-slash {
+    cursor: pointer;
+    user-select: none;
+    z-index: 3;
+}
+
 .social-text {
   padding: 0.7rem 0;
   font-size: 1rem;

@@ -47,8 +47,6 @@ const LoginComponent: React.FC<LoginComponentProps> = ({
       const errorMessage = error?.data?.message || "Login failed. Please try again.";
       toast.error(errorMessage);
     }
-    // Add your login logic here
-    // Example: await loginAPI(data.email, data.password);
   };
 
   const togglePasswordVisibility = () => {
