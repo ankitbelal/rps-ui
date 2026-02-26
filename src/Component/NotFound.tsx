@@ -1,10 +1,11 @@
 // src/components/NotFound.tsx
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import "../css/NotFound.css";
+import { useNavigate } from 'react-router-dom';
 
 const NotFound: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-dark position-relative overflow-hidden">
       {/* Animated particles background */}
@@ -51,6 +52,7 @@ const NotFound: React.FC = () => {
                 variant="outline-info" 
                 size="lg" 
                 className="px-5 py-3 rounded-pill border-2 position-relative overflow-hidden"
+                onClick={()=>navigate('/')}
                 style={{
                   background: 'rgba(0, 255, 255, 0.1)',
                   backdropFilter: 'blur(5px)',
@@ -67,11 +69,9 @@ const NotFound: React.FC = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <Link to="/" className="text-white text-decoration-none">
                   <span className="me-2">🚀</span>
                   Return to Earth
                   <span className="ms-2">🌍</span>
-                </Link>
               </Button>
             </Card.Body>
           </Card>
