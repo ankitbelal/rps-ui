@@ -6,7 +6,7 @@ import Sidebar from "../Component/layouts/Sidebar";
 import Topbar from "../Component/layouts/Topbar";
 import { getRoleByType } from "../helper";
 import { useLogoutMutation } from "../features/auth/authApi";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import './DashboardLayout.css';
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -70,7 +70,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const handleLogout = async () => {
     try {
-      const res = await logout(user?.email).unwrap();
+      const res = await toast.promise(logout(user?.email).unwrap(),{
+        loading:"Logging out.."
+      });
       if (res?.statusCode == 200) {
         toast.success(res?.data?.message || "Logged out Successfully");
       }

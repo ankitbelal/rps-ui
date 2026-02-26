@@ -26,7 +26,14 @@ export const profileSchema = yup.object({
     
     DOB: yup.string()
         .required('Date of birth is required')
-        .matches(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+        .matches(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+        .test('past-date', 'Date of birth must be in the past.', (value) => {
+            if (!value || value.trim() === '') return true; 
+            const selectedDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return selectedDate < today;
+    }),
     
     address1: yup.string()
         .required('Address is required')

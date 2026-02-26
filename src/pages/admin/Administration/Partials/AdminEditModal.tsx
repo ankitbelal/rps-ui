@@ -202,6 +202,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
                     {...register("DOB")}
                     isInvalid={!!errors.DOB}
                     className="py-2"
+                    max={new Date().toISOString().split("T")[0]}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.DOB?.message}

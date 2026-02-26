@@ -410,6 +410,7 @@ const ProfilePage: React.FC = () => {
                                                 isInvalid={!!profileErrors.DOB}
                                                 disabled={isUpdatingAdmin || isUpdatingTeacher}
                                                 className="py-2"
+                                                max={new Date().toISOString().split("T")[0]}
                                             />
                                             <Form.Control.Feedback type="invalid">
                                                 {profileErrors.DOB?.message}

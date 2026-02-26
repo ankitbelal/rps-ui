@@ -73,6 +73,7 @@ const ForgotPasswordComponent: React.FC<ForgotPasswordComponentProps> = ({
               message: "Invalid email address",
             },
           })}
+          disabled={isSending}
         />
       </div>
       {errors.email && (

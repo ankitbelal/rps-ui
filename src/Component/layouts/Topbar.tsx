@@ -1,5 +1,5 @@
 import React from "react";
-import { Navbar, Nav, Dropdown, Badge, Container } from "react-bootstrap";
+import { Navbar, Nav, Dropdown, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../app/hooks";
 

@@ -167,19 +167,13 @@ const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
                   <Form.Label className="fw-semibold">
                     Semester <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Control
-                    type="number"
-                    {...register('semester', { valueAsNumber: true })}
-                    isInvalid={!!errors.semester}
-                    className="py-2 no-spinner"
-                    min="1"
-                    max="10"
-                    step="1"
-                    onWheel={(e) => {
-                      // Prevent changing value with mouse wheel
-                      (e.target as HTMLInputElement).blur();
-                    }}
-                  />
+                  <Form.Select {...register('semester')} className="py-2" isInvalid={!!errors.semester}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+                    <option key={sem} value={sem}>
+                      Semester {sem}
+                    </option>
+                  ))}
+                  </Form.Select>
                   <Form.Control.Feedback type="invalid">
                     {errors.semester?.message}
                   </Form.Control.Feedback>
