@@ -177,9 +177,6 @@ const SubjectFormModal: React.FC<SubjectFormModalProps> = ({
                   <Form.Control.Feedback type="invalid">
                     {errors.semester?.message}
                   </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
-                    Enter between 1 and 10
-                  </Form.Text>
                 </Form.Group>
               </Col>
 

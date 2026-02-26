@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Row, Col, Card, Button, Table, Badge, Form } from "react-bootstrap";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
 import AdminFormModal from "./Partials/AdminFormModal";
 import DeleteConfirmationModal from "./Partials/DeleteConfirmationModal";
 import AdminEditModal from "./Partials/AdminEditModal";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
-
 import {
   useGetAdminByIdQuery,
   useAddAdminMutation,
@@ -21,8 +18,8 @@ import { FaUserCog, FaTachometerAlt } from "react-icons/fa";
 import { Admin } from "../../../features/admin/admins/utils";
 import { useAppDispatch } from "../../../app/hooks";
 import { setPageTitle } from "../../../features/ui/uiSlice";
+import PaginationComponent from "../../../Component/common/Pagination";
 
-const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20, 50];
 
 const AdminManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -69,7 +66,7 @@ const AdminManagement: React.FC = () => {
     data: adminData,
     isLoading: isAdminLoading,
     isFetching,
-  } = useGetAdminQuery(queryParams);
+  } = useGetAdminQuery(queryParams,{refetchOnMountOrArgChange:true});
   const [addAdmin, { isLoading: isAddingAdmin }] = useAddAdminMutation();
   const [deleteAdmin, { isLoading: isDeleting }] = useDeleteAdminMutation();
   const [editAdmin, { isLoading: isUpdatingAdmin }] = useEditAdminMutation();
@@ -214,66 +211,6 @@ const AdminManagement: React.FC = () => {
     setGenderFilter("all");
   };
 
-  // Render pagination controls component (reusable)
-  const renderPaginationControls = () => (
-    <div
-      className={`d-flex justify-content-between align-items-center border-top pt-3`}
-    >
-      {/* Items per page and showing info */}
-      <div className="d-flex align-items-center gap-3">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small">Show:</span>
-          <Form.Select
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            size="sm"
-            className="w-auto"
-            style={{ width: "80px" }}
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Form.Select>
-          <span className="text-muted small ms-2">per page</span>
-        </div>
-        <span className="text-muted">
-          Showing {startIndex + 1}-{endIndex} of {adminData?.total} admins
-        </span>
-      </div>
-
-      {/* Material-UI Pagination */}
-      {adminData && adminData?.total > 1 && (
-        <Stack spacing={2}>
-          <Pagination
-            count={adminData?.lastPage}
-            page={adminData?.page}
-            onChange={handlePageChange}
-            variant="outlined"
-            shape="rounded"
-            color="primary"
-            showFirstButton
-            showLastButton
-            size={"medium"}
-            sx={{
-              "& .MuiPaginationItem-root": {
-                fontSize: "0.875rem",
-              },
-              "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "#0d6efd",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "#0b5ed7",
-                },
-              },
-            }}
-          />
-        </Stack>
-      )}
-    </div>
-  );
-
   return (
     <>
       <div className="mb-4">
@@ -356,7 +293,19 @@ const AdminManagement: React.FC = () => {
         {/* admins Table */}
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isAdminLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={adminData?.total || 0}
+                lastPage={adminData?.lastPage || 0}
+                page={adminData?.page || 1}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Header>
           <Card.Body className="p-0">
             {isAdminLoading || isFetching ? (
@@ -474,7 +423,19 @@ const AdminManagement: React.FC = () => {
               </>
             )}
             {/* Bottom pagination controls */}
-            <div className="px-3 pb-3">{renderPaginationControls()}</div>
+            <div className="px-3 pb-3">
+              <PaginationComponent 
+                itemsPerPage={itemsPerPage}
+                isLoading={isAdminLoading || isFetching}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                total={adminData?.total || 0}
+                lastPage={adminData?.lastPage || 0}
+                page={adminData?.page || 1}
+                handlePageChange={handlePageChange}
+                handleItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           </Card.Body>
         </Card>
       </div>
