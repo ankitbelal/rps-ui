@@ -528,7 +528,10 @@ const StudentManagement: React.FC = () => {
                                     </span>
                                   </div>
                                   <small className="text-muted d-block mt-1">
-                                    Enrolled: {formatDate(item.createdAt)}
+                                    Enrolled:{" "}
+                                    {formatDate(
+                                      item.enrollmentDate || item.createdAt,
+                                    )}
                                   </small>
                                 </div>
                               </td>
