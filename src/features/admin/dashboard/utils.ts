@@ -44,3 +44,22 @@ export interface TopStudentQuery {
   programId?: number;
   examTerm?: "F" | "S" | "FINAL";
 }
+export interface Params {
+  year:string
+}
+
+export interface StudentGraphData {
+  year:number;
+  new:number;
+  passed:number;
+  disabled:number;
+  total:number;
+}
+
+
+export interface GraphApiResponse {
+  success:boolean;
+  statusCode:number;
+  message:string;
+  data:StudentGraphData[];
+}

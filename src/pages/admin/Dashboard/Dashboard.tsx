@@ -6,13 +6,12 @@ import {
   FaChalkboardTeacher,
   FaUniversity,
 } from "react-icons/fa";
-import PerformanceChart from "./PerformanceChart";
 import StudentDistributionChart from "./StudentDistributionChart";
 import RecentActivity from "./RecentActivity";
-import "./Dashboard.css";
-import { useGetStatisticsQuery } from "../../features/admin/dashboard/dahboardApi";
-import { useAppDispatch } from "../../app/hooks";
-import { clearPageTitle } from "../../features/ui/uiSlice";
+import "./css/Dashboard.css";
+import { useGetStatisticsQuery } from "../../../features/admin/dashboard/dahboardApi";
+import { useAppDispatch } from "../../../app/hooks";
+import { clearPageTitle } from "../../../features/ui/uiSlice";
 import Skeleton from "react-loading-skeleton";
 import { useNavigate } from "react-router-dom";
 import StudentLeaderboard from "./StudentLeaderBoard";
@@ -26,14 +25,6 @@ const AdminDashboard: React.FC = () => {
     dispatch(clearPageTitle());
   }, [dispatch]);
 
-  const [performanceData] = useState([
-    { course: "Mathematics", score: 85 },
-    { course: "Science", score: 78 },
-    { course: "English", score: 92 },
-    { course: "History", score: 75 },
-    { course: "Computer Science", score: 88 },
-    { course: "Physics", score: 80 },
-  ]);
 
   const [distributionData, setDistributionData] = useState<
     { program: string; students: number; color: string }[]

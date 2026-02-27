@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import { Card } from "react-bootstrap";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import "./StudentDistributionChart.css";
+import "./css/StudentDistributionChart.css";
 
 interface DistributionData {
   program: string;

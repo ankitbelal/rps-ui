@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import NotFound from "../Component/NotFound";
 import AuthFlow from "../Component/AuthWrapper/AuthFlow";
-import AdminDashboard from "../pages/admin/Dashboard";
+import AdminDashboard from "../pages/admin/Dashboard/Dashboard";
 import StudentManagement from "../pages/admin/StudentManagement/StudentManagement";
 import TeacherManagement from "../pages/admin/TeacherManagement/TeacherManagement";
 import MarksEntry from "../pages/teacher/MarksEntry";
@@ -18,7 +18,6 @@ import MarksEntryPage from "../Component/Marks/MarksEntryPage";
 import Parameter from "../pages/admin/EvaluationParameter/Parameter";
 import ProfilePage from "../Component/common/ProfilePage";
 import { RootState } from "../app/store";
-import { current } from "@reduxjs/toolkit";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 

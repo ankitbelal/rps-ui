@@ -5,6 +5,7 @@ import {
   StatisticsAPiResponse,
   TopStudentQuery,
   TopStudentsApiResponse,
+  Params
 } from "./utils";
 
 export const dashboardApi = createApi({
@@ -24,7 +25,18 @@ export const dashboardApi = createApi({
         params,
       }),
     }),
+    getStudentReportGraph:builder.query<void,Params>({
+      query:(queryParams)=>({
+        url:AdminEndpoints.STUDENT_GRAPH,
+        method:"GET",
+        params:queryParams
+      })
+    })
   }),
 });
 
-export const { useGetStatisticsQuery, useGetTopStudentsQuery } = dashboardApi;
+export const { 
+  useGetStatisticsQuery, 
+  useGetTopStudentsQuery,
+  useGetStudentReportGraphQuery 
+} = dashboardApi;

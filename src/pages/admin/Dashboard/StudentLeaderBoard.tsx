@@ -2,11 +2,11 @@ import React, { useState, useRef, useMemo } from "react";
 import { Card } from "react-bootstrap";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { useGetTopStudentsQuery } from "../../features/admin/dashboard/dahboardApi";
-import { useGetProgramsQuery } from "../../features/admin/students/studentApi";
-import "./StudentLeaderBoard.css";
-import { StudentWithResult } from "../../features/admin/dashboard/utils";
-import { ProgramList } from "../../features/admin/students/utils";
+import { useGetTopStudentsQuery } from "../../../features/admin/dashboard/dahboardApi";
+import { useGetProgramsQuery } from "../../../features/admin/students/studentApi";
+import "./css/StudentLeaderBoard.css";
+import { StudentWithResult } from "../../../features/admin/dashboard/utils";
+import { ProgramList } from "../../../features/admin/students/utils";
 
 /* ─────────────────────────────────────────────
    TYPES
