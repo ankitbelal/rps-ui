@@ -45,21 +45,23 @@ export interface TopStudentQuery {
   examTerm?: "F" | "S" | "FINAL";
 }
 export interface Params {
-  year:string
+  toYear: number;
+  fromYear: number;
 }
 
 export interface StudentGraphData {
-  year:number;
-  new:number;
-  passed:number;
-  disabled:number;
-  total:number;
+  year: number;
+  new: number;
+  passed: number;
+  disabled: number;
+  total: number;
 }
 
-
 export interface GraphApiResponse {
-  success:boolean;
-  statusCode:number;
-  message:string;
-  data:StudentGraphData[];
+  success: boolean;
+  statusCode: number;
+  message: string;
+  toYear: number;
+  fromYear: number;
+  data: StudentGraphData[];
 }

@@ -15,7 +15,7 @@ import { clearPageTitle } from "../../../features/ui/uiSlice";
 import Skeleton from "react-loading-skeleton";
 import { useNavigate } from "react-router-dom";
 import StudentLeaderboard from "./StudentLeaderBoard";
-
+import StudentReportGraph from "./StudentReportChart";
 const AdminDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -24,7 +24,6 @@ const AdminDashboard: React.FC = () => {
     // Clear page title to show default welcome message in Topbar
     dispatch(clearPageTitle());
   }, [dispatch]);
-
 
   const [distributionData, setDistributionData] = useState<
     { program: string; students: number; color: string }[]
@@ -183,23 +182,32 @@ const AdminDashboard: React.FC = () => {
       </Row>
 
       <Row className="g-3 mb-4">
-        {/* Distribution chart — left half */}
-        <Col lg={6} className="mb-4 mb-lg-0">
-          <StudentDistributionChart
-            data={distributionData}
-            Loading={isLoading}
-          />
-        </Col>
-
         {/* Leaderboard — right half */}
-        <Col lg={6} className="mb-4 mb-lg-0">
-          <StudentLeaderboard />
+        <Col lg={6} className="d-flex">
+          <div className="w-100 h-100">
+            <StudentReportGraph />
+          </div>
+        </Col>
+        {/* Distribution chart — left half */}
+        <Col lg={6} className="d-flex">
+          <div className="w-100 h-100">
+            <StudentDistributionChart
+              data={distributionData}
+              Loading={isLoading}
+            />
+          </div>
         </Col>
       </Row>
 
       {/* Recent Activity */}
-      <Row>
-        <Col lg={12}>
+      <Row className="g-3 mb-4">
+        <Col lg={6} className="d-flex">
+          <div className="w-100 h-100">
+            <StudentLeaderboard />
+          </div>
+        </Col>
+
+        <Col lg={6} className="d-flex">
           <Card className="border-0 shadow-sm activity-card">
             <Card.Header className="bg-white border-0">
               <h5 className="mb-0">Recent Activity</h5>
