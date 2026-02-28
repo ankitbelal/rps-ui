@@ -13,6 +13,7 @@ import {
   useGetStudentByIdQuery,
   useEditStudentMutation,
   useLazyStudentReportQuery,
+  useRestoreStudentMutation,
 } from "../../../features/admin/students/studentApi";
 import { Student } from "../../../features/admin/students/utils";
 import toast from "react-hot-toast";
@@ -97,6 +98,8 @@ const StudentManagement: React.FC = () => {
   } = useGetStudentsQuery(queryParams, { refetchOnMountOrArgChange: true });
   const { data: programData } = useGetProgramsQuery();
   const [deleteStudent, { isLoading: isDeleting }] = useDeleteStudentMutation();
+  const [restoreStudent, { isLoading: isRstoring }] =
+    useRestoreStudentMutation();
   const [addStudent, { isLoading: isAddingStudent }] = useAddStudentMutation();
   const [editStudent, { isLoading: isUpdatingStudent }] =
     useEditStudentMutation();
@@ -207,7 +210,10 @@ const StudentManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!deletingStudent) return;
     try {
-      const response = await deleteStudent(deletingStudent.id).unwrap();
+      const response =
+        deletingStudent.status === "S"
+          ? await restoreStudent(deletingStudent.id).unwrap()
+          : await deleteStudent(deletingStudent.id).unwrap();
       if (response.success) {
         toast.success(response.message);
         handleCloseDeleteModal();
@@ -599,16 +605,26 @@ const StudentManagement: React.FC = () => {
                                       <i className="fas fa-edit"></i>
                                     </Button>
                                   )}
-                                  {userRole === "admin" && (
-                                    <Button
-                                      variant="outline-danger"
-                                      size="sm"
-                                      onClick={() => handleDeleteClick(item)}
-                                      title="Delete"
-                                    >
-                                      <i className="fas fa-trash"></i>
-                                    </Button>
-                                  )}
+                                  <Button
+                                    variant={
+                                      item.status === "S"
+                                        ? "outline-success"
+                                        : "outline-danger"
+                                    }
+                                    size="sm"
+                                    onClick={() => handleDeleteClick(item)}
+                                    title={
+                                      item.status === "S" ? "Restore" : "Delete"
+                                    }
+                                  >
+                                    <i
+                                      className={
+                                        item.status === "S"
+                                          ? "fas fa-undo"
+                                          : "fas fa-trash"
+                                      }
+                                    ></i>
+                                  </Button>
                                   <Button
                                     variant="outline-info"
                                     size="sm"
@@ -685,6 +701,7 @@ const StudentManagement: React.FC = () => {
             ? `${deletingStudent.firstName} ${deletingStudent.lastName}`
             : ""
         }
+        status={deletingStudent ? deletingStudent.status : "A"}
         isLoading={isDeleting}
       />
 

@@ -13,7 +13,7 @@ import {
   ResultParam,
   StudentMarksResponse,
   ResultApiResponse,
-  FinalResultParam
+  FinalResultParam,
 } from "./utils";
 
 export const adminStudentApi = createApi({
@@ -81,6 +81,14 @@ export const adminStudentApi = createApi({
       query: (id) => ({
         url: `${AdminStudentEndpoints.STUDENT_ACTION}/${id}`,
         method: "DELETE",
+      }),
+      invalidatesTags: (result) => (result?.success ? ["Students"] : []),
+    }),
+
+    restoreStudent: builder.mutation({
+      query: (id) => ({
+        url: `${AdminStudentEndpoints.STUDENT_RESTORE}/${id}`,
+        method: "PATCH",
       }),
       invalidatesTags: (result) => (result?.success ? ["Students"] : []),
     }),
@@ -189,14 +197,13 @@ export const adminStudentApi = createApi({
       transformResponse: (response: Blob) => response,
       providesTags: [],
     }),
-    getPublishedResult:(builder).query<ResultApiResponse,FinalResultParam>({
-      query:(queryParams)=>({
-        url:AdminStudentEndpoints.PUBLISHED_RESULT,
-        method:"GET",
-        params:queryParams
-      })
-    })
-
+    getPublishedResult: builder.query<ResultApiResponse, FinalResultParam>({
+      query: (queryParams) => ({
+        url: AdminStudentEndpoints.PUBLISHED_RESULT,
+        method: "GET",
+        params: queryParams,
+      }),
+    }),
   }),
 });
 
@@ -213,5 +220,6 @@ export const {
   useGetStudentMarksQuery,
   useAddStudentMarksMutation,
   useLazyStudentReportQuery,
-  useGetPublishedResultQuery
+  useGetPublishedResultQuery,
+  useRestoreStudentMutation,
 } = adminStudentApi;
