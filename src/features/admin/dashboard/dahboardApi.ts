@@ -26,11 +26,11 @@ export const dashboardApi = createApi({
         params,
       }),
     }),
-    getStudentReportGraph: builder.query<GraphApiResponse, void>({
-      query: () => ({
+    getStudentReportGraph: builder.query<GraphApiResponse, Params>({
+      query: (params) => ({
         url: AdminEndpoints.STUDENT_GRAPH,
         method: "GET",
-        // params:queryParams
+        params,
       }),
     }),
   }),

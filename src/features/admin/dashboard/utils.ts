@@ -47,6 +47,7 @@ export interface TopStudentQuery {
 export interface Params {
   toYear: number;
   fromYear: number;
+  programId?: number;
 }
 
 export interface StudentGraphData {
@@ -54,7 +55,6 @@ export interface StudentGraphData {
   new: number;
   passed: number;
   disabled: number;
-  total: number;
 }
 
 export interface GraphApiResponse {
