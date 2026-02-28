@@ -8,7 +8,7 @@ import {
   InputGroup,
   Spinner,
 } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import { Teacher } from "../../../../features/admin/teacher/utils";
 import { TeacherFormData } from "../../../../features/admin/teacher/utils";
 import { teacherSchema } from "../validation/teacherSchema";
@@ -17,11 +17,37 @@ import { yupResolver } from "@hookform/resolvers/yup";
 interface TeacherEditModalProps {
   show: boolean;
   onHide: () => void;
-  onSubmit: (data: TeacherFormData) => void;
+  onSubmit: (
+    data: TeacherFormData,
+    setError: UseFormSetError<TeacherFormData>,
+  ) => void;
   isLoading: boolean;
-  teacherData?: Teacher; // Data for editing
+  teacherData?: Teacher;
   isUpdating?: boolean;
 }
+
+// Phone field helpers
+const phoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.ctrlKey || e.metaKey) return;
+  const allowed = [
+    "Backspace",
+    "Delete",
+    "Tab",
+    "ArrowLeft",
+    "ArrowRight",
+    "Home",
+    "End",
+    "Enter",
+  ];
+  if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+    e.preventDefault();
+  }
+};
+
+const phoneInput = (e: React.FormEvent<HTMLInputElement>) => {
+  const input = e.target as HTMLInputElement;
+  input.value = input.value.replace(/\D/g, "").slice(0, 10);
+};
 
 const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
   show,
@@ -35,21 +61,18 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isDirty },
   } = useForm<TeacherFormData>({
     resolver: yupResolver(teacherSchema),
   });
 
-  // Reset form when modal opens/closes or teacherData changes
   useEffect(() => {
     if (show && teacherData) {
-      // Pre-fill form with teacher data for editing
       const teacher = teacherData;
-      const dob =
-        teacher.DOB || teacher.DOB
-          ? new Date(teacher.DOB).toISOString().split("T")[0]
-          : "";
-
+      const dob = teacher.DOB
+        ? new Date(teacher.DOB).toISOString().split("T")[0]
+        : "";
       reset({
         firstName: teacher.firstName || "",
         lastName: teacher.lastName || "",
@@ -63,7 +86,7 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
   }, [show, teacherData, reset]);
 
   const handleFormSubmit = (data: TeacherFormData) => {
-    onSubmit(data);
+    onSubmit(data, setError);
   };
 
   if (isLoading) {
@@ -101,7 +124,6 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
 
       <Form onSubmit={handleSubmit(handleFormSubmit)}>
         <Modal.Body>
-          {/* Personal Information Section */}
           <div className="mb-4">
             <div className="d-flex align-items-center mb-3">
               <div className="bg-warning rounded-circle p-2 d-flex align-items-center justify-content-center me-3">
@@ -123,9 +145,6 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
                     placeholder="Enter first name"
                     className="py-2"
                   />
-                  {/* <Form.Text className="text-muted small">
-                                        Name cannot be changed for existing teachers
-                                    </Form.Text> */}
                   <Form.Control.Feedback type="invalid">
                     {errors.firstName?.message}
                   </Form.Control.Feedback>
@@ -181,13 +200,22 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
                       type="tel"
                       {...register("phone")}
                       isInvalid={!!errors.phone}
-                      placeholder="+1234567890"
+                      placeholder="9876543210"
                       className="py-2"
+                      maxLength={10}
+                      onKeyDown={phoneKeyDown}
+                      onInput={phoneInput}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.phone?.message}
-                    </Form.Control.Feedback>
                   </InputGroup>
+                  {errors.phone && (
+                    <div
+                      className="text-danger"
+                      style={{ fontSize: "0.875em", marginTop: "0.25rem" }}
+                    >
+                      {errors.phone.message}
+                    </div>
+                  )}
+                  <Form.Text className="text-muted">10 digits only</Form.Text>
                 </Form.Group>
               </Col>
 
@@ -221,6 +249,7 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
                     {...register("DOB")}
                     isInvalid={!!errors.DOB}
                     className="py-2"
+                    max={new Date().toISOString().split("T")[0]}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.DOB?.message}
@@ -230,7 +259,6 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
             </Row>
           </div>
 
-          {/* Address Information Section */}
           <div className="mb-3">
             <div className="d-flex align-items-center mb-3">
               <div className="bg-warning rounded-circle p-2 d-flex align-items-center justify-content-center me-3">

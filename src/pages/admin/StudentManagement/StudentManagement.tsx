@@ -25,6 +25,7 @@ import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { RootState } from "../../../app/store";
 import { getRoleByType } from "../../../helper";
 import PaginationComponent from "../../../Component/common/Pagination";
+import { UseFormSetError } from "react-hook-form";
 
 const StudentManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -132,7 +133,10 @@ const StudentManagement: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, programFilter, semesterFilter, itemsPerPage]);
 
-  const onSubmit = async (data: StudentForm) => {
+  const onSubmit = async (
+    data: StudentForm,
+    setError: UseFormSetError<StudentForm>,
+  ) => {
     if (!data) return;
     try {
       const response = await addStudent(data).unwrap();
@@ -141,7 +145,17 @@ const StudentManagement: React.FC = () => {
         setShowFormModal(false);
       }
     } catch (error: any) {
-      toast.error(error?.data?.message);
+      const apiErrors = error?.data?.errors;
+      if (apiErrors) {
+        Object.entries(apiErrors).forEach(([field, message]) => {
+          setError(field as keyof StudentForm, {
+            type: "server",
+            message: message as string,
+          });
+        });
+      } else {
+        toast.error(error?.data?.message);
+      }
     }
   };
 
@@ -155,7 +169,10 @@ const StudentManagement: React.FC = () => {
     setViewingStudentId(null);
   };
 
-  const handleEditConfirm = async (data: EditStudentFormData) => {
+  const handleEditConfirm = async (
+    data: EditStudentFormData,
+    setError: UseFormSetError<EditStudentFormData>,
+  ) => {
     if (!data) return;
     try {
       const response = await editStudent({
@@ -168,7 +185,17 @@ const StudentManagement: React.FC = () => {
         setViewingStudentId(null);
       }
     } catch (error: any) {
-      toast.error(error?.data?.message);
+      const apiErrors = error?.data?.errors;
+      if (apiErrors) {
+        Object.entries(apiErrors).forEach(([field, message]) => {
+          setError(field as keyof EditStudentFormData, {
+            type: "server",
+            message: message as string,
+          });
+        });
+      } else {
+        toast.error(error?.data?.message);
+      }
     }
   };
 

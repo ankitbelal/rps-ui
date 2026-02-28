@@ -21,7 +21,7 @@ import { useAppDispatch } from "../../../app/hooks";
 import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import AssignSubjectsModal from "./Partials/AssignSubjects";
 import PaginationComponent from "../../../Component/common/Pagination";
-
+import { UseFormSetError } from "react-hook-form";
 
 const TeacherManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -74,7 +74,7 @@ const TeacherManagement: React.FC = () => {
     data: teacherData,
     isLoading: isTeacherLoading,
     isFetching,
-  } = useGetTeacherQuery(queryParams,{refetchOnMountOrArgChange:true});
+  } = useGetTeacherQuery(queryParams, { refetchOnMountOrArgChange: true });
   const [addTeacher, { isLoading: isAddingTeacher }] = useAddTeacherMutation();
   const [deleteTeacher, { isLoading: isDeleting }] = useDeleteTeacherMutation();
   const [editTeacher, { isLoading: isUpdatingTeacher }] =
@@ -110,8 +110,10 @@ const TeacherManagement: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, genderFilter, itemsPerPage]);
 
-  const onSubmit = async (data: TeacherFormData) => {
-    if (!data) return;
+  const onSubmit = async (
+    data: TeacherFormData,
+    setError: UseFormSetError<TeacherFormData>,
+  ) => {
     try {
       const response = await addTeacher(data).unwrap();
       if (response.success) {
@@ -119,7 +121,17 @@ const TeacherManagement: React.FC = () => {
         setShowFormModal(false);
       }
     } catch (error: any) {
-      toast.error(error?.data?.message);
+      const apiErrors = error?.data?.errors;
+      if (apiErrors) {
+        Object.entries(apiErrors).forEach(([field, message]) => {
+          setError(field as keyof TeacherFormData, {
+            type: "server",
+            message: message as string,
+          });
+        });
+      } else {
+        toast.error(error?.data?.message);
+      }
     }
   };
 
@@ -131,7 +143,10 @@ const TeacherManagement: React.FC = () => {
   const handleCloseEditModal = () => {
     setShowEditModal(false);
   };
-  const handleUpdateTeacher = async (data: TeacherFormData) => {
+  const handleUpdateTeacher = async (
+    data: TeacherFormData,
+    setError: UseFormSetError<TeacherFormData>,
+  ) => {
     if (!data) return;
     try {
       const response = await editTeacher({
@@ -144,11 +159,19 @@ const TeacherManagement: React.FC = () => {
         setShowEditModal(false);
       }
     } catch (error: any) {
-      const errorMessage = error?.data?.message || "Failed to edit techer";
-      toast.error(errorMessage);
+      const apiErrors = error?.data?.errors;
+      if (apiErrors) {
+        Object.entries(apiErrors).forEach(([field, message]) => {
+          setError(field as keyof TeacherFormData, {
+            type: "server",
+            message: message as string,
+          });
+        });
+      } else {
+        toast.error(error?.data?.message || "Failed to edit teacher");
+      }
     }
   };
-
   const handleDeleteClick = (teacher: Teacher) => {
     setDeletingTeacher(teacher);
     setShowDeleteModal(true);
@@ -370,14 +393,14 @@ const TeacherManagement: React.FC = () => {
         <Card className="border-0 shadow-sm">
           <Card.Header className="bg-white py-3">
             <div className="px-3 pb-3">
-              <PaginationComponent 
+              <PaginationComponent
                 itemsPerPage={itemsPerPage}
                 isLoading={isTeacherLoading || isFetching}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                total={teacherData?.total??0}
-                lastPage={teacherData?.lastPage??0}
-                page={teacherData?.page??0}
+                total={teacherData?.total ?? 0}
+                lastPage={teacherData?.lastPage ?? 0}
+                page={teacherData?.page ?? 0}
                 handlePageChange={handlePageChange}
                 handleItemsPerPageChange={handleItemsPerPageChange}
               />
@@ -513,14 +536,14 @@ const TeacherManagement: React.FC = () => {
             )}
             {/* Bottom pagination controls */}
             <div className="px-3 pb-3">
-              <PaginationComponent 
+              <PaginationComponent
                 itemsPerPage={itemsPerPage}
                 isLoading={isTeacherLoading || isFetching}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                total={teacherData?.total??0}
-                lastPage={teacherData?.lastPage??0}
-                page={teacherData?.page??0}
+                total={teacherData?.total ?? 0}
+                lastPage={teacherData?.lastPage ?? 0}
+                page={teacherData?.page ?? 0}
                 handlePageChange={handlePageChange}
                 handleItemsPerPageChange={handleItemsPerPageChange}
               />

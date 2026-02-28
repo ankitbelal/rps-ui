@@ -1,17 +1,19 @@
 import React, { useEffect } from "react";
 import { Modal, Button, Row, Col, Form, InputGroup } from "react-bootstrap";
 import { ProgramList } from "../../../../features/admin/students/utils";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import SearchableDropdown,{DropdownOption} from "../../../../Component/common/SearchableDropdown";
+import SearchableDropdown, {
+  DropdownOption,
+} from "../../../../Component/common/SearchableDropdown";
 import { studentSchema } from "../validations/studentSchema";
 import { StudentForm } from "../../../../features/admin/students/utils";
-
 
 interface StudentFormModalProps {
   show: boolean;
   onHide: () => void;
-  onSubmit: (data: StudentForm) => void;
+  // setError is passed so parent can map API errors back to fields
+  onSubmit: (data: StudentForm, setError: UseFormSetError<StudentForm>) => void;
   isLoading: boolean;
   programs: ProgramList[];
 }
@@ -47,10 +49,10 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
       DOB: "",
       address1: "",
       programId: 0,
-    }
+    },
   });
 
-  const programOptions: DropdownOption<number >[] = [
+  const programOptions: DropdownOption<number>[] = [
     { value: 0, label: "Select Program" },
     ...programs.map((program) => ({
       value: program.id,
@@ -63,11 +65,12 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
     (_, i) => ({
       value: i + 1,
       label: `Semester ${i + 1}`,
-    })
+    }),
   );
 
+  // Pass setError to parent so API errors can be mapped to fields
   const handleFormSubmit = (data: StudentForm) => {
-    onSubmit(data);
+    onSubmit(data, setError);
   };
 
   // Additional validation for program selection
@@ -76,12 +79,34 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
     if (programId === 0 || programId === null) {
       setError("programId", {
         type: "manual",
-        message: "Please select a program"
+        message: "Please select a program",
       });
     } else {
       clearErrors("programId");
     }
   }, [watch("programId"), setError, clearErrors]);
+  // ─── Shared phone key restriction handler ─────────────────────────────────────
+  const phoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey) return;
+    const allowed = [
+      "Backspace",
+      "Delete",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Home",
+      "End",
+      "Enter",
+    ];
+    if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const phoneInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, "").slice(0, 10);
+  };
 
   // Reset form when modal opens
   React.useEffect(() => {
@@ -211,11 +236,19 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                       isInvalid={!!errors.phone}
                       placeholder="9876543210"
                       className="py-2"
+                      maxLength={10}
+                      onKeyDown={phoneKeyDown}
+                      onInput={phoneInput}
                     />
                   </InputGroup>
-                  <Form.Control.Feedback type="invalid">
-                    {errors.phone?.message}
-                  </Form.Control.Feedback>
+                  {errors.phone && (
+                    <div
+                      className="text-danger"
+                      style={{ fontSize: "0.875em", marginTop: "0.25rem" }}
+                    >
+                      {errors.phone.message}
+                    </div>
+                  )}
                   <Form.Text className="text-muted">
                     10-15 digits only
                   </Form.Text>
@@ -346,7 +379,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                   />
                 </Form.Group>
               </Col>
-              
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold">
@@ -363,13 +396,13 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                     }}
                     placeholder="Select Program"
                     required
-                    enableSearch={programs.length > 5} 
+                    enableSearch={programs.length > 5}
                     searchPlaceholder="Search programs..."
                     error={errors.programId?.message}
                     className="mb-3"
                   />
                 </Form.Group>
-              </Col>              
+              </Col>
             </Row>
           </div>
 
@@ -401,9 +434,9 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
         </Modal.Body>
 
         <Modal.Footer className="border-top-0">
-          <Button 
-            variant="outline-secondary" 
-            onClick={onHide} 
+          <Button
+            variant="outline-secondary"
+            onClick={onHide}
             className="px-4"
             disabled={isLoading}
           >

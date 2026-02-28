@@ -12,7 +12,7 @@ import {
   ProgramList,
   Student,
 } from "../../../../features/admin/students/utils";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import SearchableDropdown, {
   DropdownOption,
@@ -23,12 +23,38 @@ import { studentSchema } from "../validations/studentSchema";
 interface StudentEditModalProps {
   show: boolean;
   onHide: () => void;
-  onSubmit: (data: EditStudentFormData) => void;
+  onSubmit: (
+    data: EditStudentFormData,
+    setError: UseFormSetError<EditStudentFormData>,
+  ) => void;
   isLoading: boolean;
   isGettingData: boolean;
   programs: ProgramList[];
   studentData?: Student;
 }
+
+// ─── Shared phone key restriction handler ─────────────────────────────────────
+const phoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.ctrlKey || e.metaKey) return;
+  const allowed = [
+    "Backspace",
+    "Delete",
+    "Tab",
+    "ArrowLeft",
+    "ArrowRight",
+    "Home",
+    "End",
+    "Enter",
+  ];
+  if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+    e.preventDefault();
+  }
+};
+
+const phoneInput = (e: React.FormEvent<HTMLInputElement>) => {
+  const input = e.target as HTMLInputElement;
+  input.value = input.value.replace(/\D/g, "").slice(0, 10);
+};
 
 const StudentEditModal: React.FC<StudentEditModalProps> = ({
   show,
@@ -45,13 +71,13 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors, isDirty },
   } = useForm<EditStudentFormData>({
     resolver: yupResolver(studentSchema as any),
     mode: "onChange",
   });
 
-  // Prepare dropdown options
   const programOptions: DropdownOption<number>[] = [
     { value: 0, label: "Select Program" },
     ...programs.map((program) => ({
@@ -73,7 +99,6 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     if (show && studentData) {
       const student = studentData;
 
-      // Format dates
       const enrollmentDate = student.enrollmentDate
         ? new Date(student.enrollmentDate).toISOString().split("T")[0]
         : new Date(student.createdAt).toISOString().split("T")[0];
@@ -97,7 +122,6 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
         programId: student.program?.id || 0,
       });
     } else if (show) {
-      // Reset form when opening without data
       reset({
         firstName: "",
         lastName: "",
@@ -115,14 +139,14 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     }
   }, [show, studentData, reset]);
 
+  // Pass setError to parent so API errors can be mapped to fields
   const handleFormSubmit = (data: EditStudentFormData) => {
-    // Filter out empty/null values
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(
         ([_, value]) => value !== "" && value !== null && value !== undefined,
       ),
     );
-    onSubmit(filteredData as EditStudentFormData);
+    onSubmit(filteredData as EditStudentFormData, setError);
   };
 
   if (isGettingData) {
@@ -245,11 +269,19 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
                       isInvalid={!!errors.phone}
                       placeholder="9876543210"
                       className="py-2"
+                      maxLength={10}
+                      onKeyDown={phoneKeyDown}
+                      onInput={phoneInput}
                     />
                   </InputGroup>
-                  <Form.Control.Feedback type="invalid">
-                    {errors.phone?.message}
-                  </Form.Control.Feedback>
+                  {errors.phone && (
+                    <div
+                      className="text-danger"
+                      style={{ fontSize: "0.875em", marginTop: "0.25rem" }}
+                    >
+                      {errors.phone.message}
+                    </div>
+                  )}
                   <Form.Text className="text-muted">10 digits only</Form.Text>
                 </Form.Group>
               </Col>
