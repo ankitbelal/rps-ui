@@ -1,74 +1,244 @@
 import React from "react";
 import {
-  FaCheck,
-  FaExclamation,
   FaUserPlus,
   FaChartLine,
+  FaClipboardList,
+  FaBell,
 } from "react-icons/fa";
+import { MdOutlineDoNotDisturb } from "react-icons/md";
+import { TbPlugConnectedX } from "react-icons/tb";
+import { useGetAuditLogsQuery } from "../../../features/admin/dashboard/dahboardApi";
+import { AuditLogs } from "../../../features/admin/dashboard/utils";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
-interface ActivityItem {
-  id: number;
-  title: string;
-  description: string;
-  time: string;
-  icon: string;
-  type: "success" | "warning" | "info";
-}
+dayjs.extend(relativeTime);
 
-interface RecentActivityProps {
-  activities: ActivityItem[];
-}
+const timeAgo = (dateStr: string): string => dayjs(dateStr).fromNow();
 
-const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
-  const getIcon = (iconName: string, type: string) => {
-    const iconClass = `activity-icon ${type}`;
+// ─── Icon + Type Map ─────────────────────────────────────────────────────────
 
-    switch (iconName) {
-      case "check":
-        return (
-          <div className={iconClass}>
-            <FaCheck />
-          </div>
-        );
-      case "exclamation":
-        return (
-          <div className={iconClass}>
-            <FaExclamation />
-          </div>
-        );
-      case "user-plus":
-        return (
-          <div className={iconClass}>
-            <FaUserPlus />
-          </div>
-        );
-      case "chart-line":
-        return (
-          <div className={iconClass}>
-            <FaChartLine />
-          </div>
-        );
-      default:
-        return (
-          <div className={iconClass}>
-            <FaCheck />
-          </div>
-        );
-    }
-  };
+type IconType = "success" | "warning" | "info" | "purple";
+
+const getIconAndType = (
+  actCode: string,
+  isBatch?: boolean,
+): { icon: React.ReactNode; type: IconType } => {
+  if (isBatch || actCode === "SENROLL")
+    return { icon: <FaUserPlus />, type: "info" };
+  if (actCode === "SPROMO") return { icon: <FaChartLine />, type: "warning" };
+  if (actCode === "RPUBLISH")
+    return { icon: <FaClipboardList />, type: "success" };
+  return { icon: <FaBell />, type: "purple" };
+};
+
+const iconBg: Record<IconType, string> = {
+  success: "#dcfce7",
+  warning: "#fef9c3",
+  info: "#dbeafe",
+  purple: "#ede9fe",
+};
+
+const iconColor: Record<IconType, string> = {
+  success: "#16a34a",
+  warning: "#ca8a04",
+  info: "#2563eb",
+  purple: "#7c3aed",
+};
+
+// ─── Skeleton ───────────────────────────────────────────────────────────────
+
+const SkeletonHeader: React.FC = () => (
+  <div className="d-flex align-items-center justify-content-between mb-3">
+    <div className="placeholder-glow" style={{ width: "40%" }}>
+      <span
+        className="placeholder rounded"
+        style={{ width: "100%", height: 18, display: "block" }}
+      />
+    </div>
+    <div className="placeholder-glow">
+      <span
+        className="placeholder rounded-circle"
+        style={{ width: 24, height: 24, display: "block" }}
+      />
+    </div>
+  </div>
+);
+
+const SkeletonItem: React.FC = () => (
+  <div className="d-flex align-items-start gap-3 px-2 py-3">
+    <div className="placeholder-glow flex-shrink-0">
+      <span
+        className="placeholder"
+        style={{ width: 38, height: 38, borderRadius: 10, display: "block" }}
+      />
+    </div>
+    <div className="flex-grow-1 placeholder-glow d-flex flex-column gap-2">
+      <span
+        className="placeholder rounded"
+        style={{ width: "50%", height: 13, display: "block" }}
+      />
+      <span
+        className="placeholder rounded"
+        style={{ width: "75%", height: 11, display: "block" }}
+      />
+    </div>
+    <div className="placeholder-glow flex-shrink-0">
+      <span
+        className="placeholder rounded"
+        style={{ width: 60, height: 11, display: "block" }}
+      />
+    </div>
+  </div>
+);
+
+// ─── Empty State ─────────────────────────────────────────────────────────────
+
+const EmptyState: React.FC = () => (
+  <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-2 text-center">
+    <MdOutlineDoNotDisturb size={42} color="#d1d5db" />
+    <p className="fw-semibold mb-0 text-secondary" style={{ fontSize: 14 }}>
+      No activities found
+    </p>
+    <p className="text-muted mb-0" style={{ fontSize: 12 }}>
+      Actions performed in the system will appear here.
+    </p>
+  </div>
+);
+
+// ─── Error State ─────────────────────────────────────────────────────────────
+
+const ErrorState: React.FC = () => (
+  <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-2 text-center">
+    <TbPlugConnectedX size={42} color="#f87171" />
+    <p className="fw-semibold mb-0 text-secondary" style={{ fontSize: 14 }}>
+      No activities found
+    </p>
+    <p className="text-muted mb-0" style={{ fontSize: 12 }}>
+      Could not reach the server. Please try again later.
+    </p>
+  </div>
+);
+
+// ─── Activity Row ─────────────────────────────────────────────────────────────
+
+const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
+  const { icon, type } = getIconAndType(log.actCode, log.isBatch);
 
   return (
-    <div className="activity-list">
-      {activities.map((activity) => (
-        <div key={activity.id} className="activity-item">
-          {getIcon(activity.icon, activity.type)}
-          <div className="activity-details">
-            <h6 className="fw-bold mb-1">{activity.title}</h6>
-            <p className="text-muted mb-0 small">{activity.description}</p>
-          </div>
-          <div className="activity-time text-muted small">{activity.time}</div>
-        </div>
-      ))}
+    <div
+      className="d-flex align-items-start gap-3 px-2 py-3 rounded-3"
+      style={{ transition: "background 0.15s", cursor: "default" }}
+      onMouseEnter={(e) =>
+        ((e.currentTarget as HTMLDivElement).style.background = "#f9fafb")
+      }
+      onMouseLeave={(e) =>
+        ((e.currentTarget as HTMLDivElement).style.background = "transparent")
+      }
+    >
+      {/* Icon */}
+      <div
+        className="d-flex align-items-center justify-content-center flex-shrink-0"
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          background: iconBg[type],
+          color: iconColor[type],
+          fontSize: 14,
+        }}
+      >
+        {icon}
+      </div>
+
+      {/* Details */}
+      <div className="flex-grow-1 overflow-hidden">
+        <p
+          className="mb-1 fw-semibold d-flex align-items-center gap-2"
+          style={{
+            fontSize: 15,
+            color: "#111827",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {log.action}
+          {log.isBatch && log.count !== undefined && (
+            <span
+              className="badge rounded-pill"
+              style={{
+                fontSize: 10,
+                background: "#dbeafe",
+                color: "#1d4ed8",
+                fontWeight: 700,
+              }}
+            >
+              {log.count}
+            </span>
+          )}
+        </p>
+        <p
+          className="mb-0 text-muted"
+          style={{
+            fontSize: 12,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {log.comment}
+        </p>
+      </div>
+
+      {/* Meta */}
+      <div className="d-flex flex-column align-items-end flex-shrink-0 gap-1">
+        <span
+          className="text-muted"
+          style={{ fontSize: 11, whiteSpace: "nowrap" }}
+        >
+          {timeAgo(log.createdAt)}
+        </span>
+        {log.name && (
+          <span
+            className="fw-medium"
+            style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}
+          >
+            {log.name}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────────
+
+const RecentActivity: React.FC = () => {
+  const { data, isLoading, isError } = useGetAuditLogsQuery();
+
+  return (
+    <div
+      className="bg-white border rounded-4 p-4 d-flex flex-column"
+      style={{ maxHeight: 480 }}
+    >
+      {/* Scrollable list */}
+      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
+        {isLoading &&
+          Array.from({ length: 5 }).map((_, i) => <SkeletonItem key={i} />)}
+
+        {!isLoading && isError && <ErrorState />}
+
+        {!isLoading && !isError && (!data?.data || data.data.length === 0) && (
+          <EmptyState />
+        )}
+
+        {!isLoading &&
+          !isError &&
+          data?.data?.map((log) => (
+            <ActivityRow key={`${log.id}-${log.actCode}`} log={log} />
+          ))}
+      </div>
     </div>
   );
 };

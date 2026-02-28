@@ -7,6 +7,7 @@ import {
   TopStudentsApiResponse,
   Params,
   GraphApiResponse,
+  AuditLogsResponse,
 } from "./utils";
 
 export const dashboardApi = createApi({
@@ -33,6 +34,12 @@ export const dashboardApi = createApi({
         params,
       }),
     }),
+    getAuditLogs: builder.query<AuditLogsResponse, void>({
+      query: () => ({
+        url: AdminEndpoints.AUDIT_LOGS,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -40,4 +47,5 @@ export const {
   useGetStatisticsQuery,
   useGetTopStudentsQuery,
   useGetStudentReportGraphQuery,
+  useGetAuditLogsQuery,
 } = dashboardApi;

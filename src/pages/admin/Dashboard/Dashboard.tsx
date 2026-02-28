@@ -89,41 +89,6 @@ const AdminDashboard: React.FC = () => {
     },
   ];
 
-  const [activities] = useState([
-    {
-      id: 1,
-      title: "Results published for Mathematics 101",
-      description: "Results for the final exam have been published",
-      time: "2 hours ago",
-      icon: "check",
-      type: "success" as const,
-    },
-    {
-      id: 2,
-      title: "3 results pending review",
-      description: "Require attention from the examination committee",
-      time: "5 hours ago",
-      icon: "exclamation",
-      type: "warning" as const,
-    },
-    {
-      id: 3,
-      title: "15 new students enrolled",
-      description: "New batch of students added to the system",
-      time: "1 day ago",
-      icon: "user-plus",
-      type: "info" as const,
-    },
-    {
-      id: 4,
-      title: "Performance report generated",
-      description: "Monthly performance report is ready for download",
-      time: "2 days ago",
-      icon: "chart-line",
-      type: "success" as const,
-    },
-  ]);
-
   return (
     /* Main Dashboard Content - No header here */
     <div className="dashboard-content">
@@ -210,10 +175,10 @@ const AdminDashboard: React.FC = () => {
         <Col lg={6} className="d-flex">
           <Card className="border-0 shadow-sm activity-card">
             <Card.Header className="bg-white border-0">
-              <h5 className="mb-0">Recent Activity</h5>
+              <h5 className="mb-0">Recent Activities</h5>
             </Card.Header>
             <Card.Body>
-              <RecentActivity activities={activities} />
+              <RecentActivity />
             </Card.Body>
           </Card>
         </Col>

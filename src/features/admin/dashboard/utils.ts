@@ -65,3 +65,25 @@ export interface GraphApiResponse {
   fromYear: number;
   data: StudentGraphData[];
 }
+
+export interface AuditLogsResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: AuditLogs[];
+  total: number;
+  page: number;
+  lastPage: number;
+  limit: number;
+}
+
+export interface AuditLogs {
+  id: number;
+  actCode: string;
+  action: string;
+  comment: string;
+  name: string | null;
+  createdAt: string;
+  isBatch?: boolean;
+  count?: number;
+}
