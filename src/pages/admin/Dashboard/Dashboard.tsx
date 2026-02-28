@@ -174,9 +174,9 @@ const AdminDashboard: React.FC = () => {
 
         <Col lg={6} className="d-flex">
           <Card className="border-0 shadow-sm activity-card">
-            <Card.Header className="bg-white border-0">
+            {/* <Card.Header className="bg-white border-0">
               <h5 className="mb-0">Recent Activities</h5>
-            </Card.Header>
+            </Card.Header> */}
             <Card.Body>
               <RecentActivity />
             </Card.Body>

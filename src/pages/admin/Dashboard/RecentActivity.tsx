@@ -46,49 +46,45 @@ const iconColor: Record<IconType, string> = {
   purple: "#7c3aed",
 };
 
+const rowBg: Record<IconType, string> = {
+  success: "#f0fdf4",
+  warning: "#fefce8",
+  info: "#eff6ff",
+  purple: "#faf5ff",
+};
+
+const rowBgHover: Record<IconType, string> = {
+  success: "#dcfce7",
+  warning: "#fef9c3",
+  info: "#dbeafe",
+  purple: "#ede9fe",
+};
+
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
-const SkeletonHeader: React.FC = () => (
-  <div className="d-flex align-items-center justify-content-between mb-3">
-    <div className="placeholder-glow" style={{ width: "40%" }}>
-      <span
-        className="placeholder rounded"
-        style={{ width: "100%", height: 18, display: "block" }}
-      />
-    </div>
-    <div className="placeholder-glow">
-      <span
-        className="placeholder rounded-circle"
-        style={{ width: 24, height: 24, display: "block" }}
-      />
-    </div>
-  </div>
+const Sk = ({
+  w,
+  h,
+  radius,
+}: {
+  w: string | number;
+  h: number;
+  radius?: number;
+}) => (
+  <div
+    className="skeleton"
+    style={{ width: w, height: h, borderRadius: radius ?? 6 }}
+  />
 );
 
 const SkeletonItem: React.FC = () => (
   <div className="d-flex align-items-start gap-3 px-2 py-3">
-    <div className="placeholder-glow flex-shrink-0">
-      <span
-        className="placeholder"
-        style={{ width: 38, height: 38, borderRadius: 10, display: "block" }}
-      />
+    <Sk w={38} h={38} radius={10} />
+    <div className="flex-grow-1 d-flex flex-column gap-2">
+      <Sk w="50%" h={13} />
+      <Sk w="75%" h={11} />
     </div>
-    <div className="flex-grow-1 placeholder-glow d-flex flex-column gap-2">
-      <span
-        className="placeholder rounded"
-        style={{ width: "50%", height: 13, display: "block" }}
-      />
-      <span
-        className="placeholder rounded"
-        style={{ width: "75%", height: 11, display: "block" }}
-      />
-    </div>
-    <div className="placeholder-glow flex-shrink-0">
-      <span
-        className="placeholder rounded"
-        style={{ width: 60, height: 11, display: "block" }}
-      />
-    </div>
+    <Sk w={60} h={11} />
   </div>
 );
 
@@ -127,16 +123,23 @@ const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
 
   return (
     <div
-      className="d-flex align-items-start gap-3 px-2 py-3 rounded-3"
-      style={{ transition: "background 0.15s", cursor: "default" }}
-      onMouseEnter={(e) =>
-        ((e.currentTarget as HTMLDivElement).style.background = "#f9fafb")
-      }
-      onMouseLeave={(e) =>
-        ((e.currentTarget as HTMLDivElement).style.background = "transparent")
-      }
+      className="d-flex align-items-start gap-3 px-3 py-3 rounded-3"
+      style={{
+        transition: "background 0.15s",
+        cursor: "default",
+        background: rowBg[type],
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        marginBottom: 8,
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.background = rowBgHover[type];
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLDivElement;
+        el.style.background = rowBg[type];
+      }}
     >
-      {/* Icon */}
       <div
         className="d-flex align-items-center justify-content-center flex-shrink-0"
         style={{
@@ -145,13 +148,12 @@ const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
           borderRadius: 10,
           background: iconBg[type],
           color: iconColor[type],
-          fontSize: 14,
+          fontSize: 15,
         }}
       >
         {icon}
       </div>
 
-      {/* Details */}
       <div className="flex-grow-1 overflow-hidden">
         <p
           className="mb-1 fw-semibold d-flex align-items-center gap-2"
@@ -191,7 +193,6 @@ const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
         </p>
       </div>
 
-      {/* Meta */}
       <div className="d-flex flex-column align-items-end flex-shrink-0 gap-1">
         <span
           className="text-muted"
@@ -219,9 +220,38 @@ const RecentActivity: React.FC = () => {
 
   return (
     <div
-      className="bg-white border rounded-4 p-4 d-flex flex-column"
+      className="bg-white rounded-4 p-4 d-flex flex-column"
       style={{ maxHeight: 480 }}
     >
+      {/* Header */}
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        {isLoading ? (
+          <>
+            <Sk w="38%" h={16} />
+            <Sk w={20} h={20} radius={10} />
+          </>
+        ) : (
+          <>
+            <h6
+              className="fw-bold mb-0"
+              style={{ fontSize: 15, color: "#0f0f0f" }}
+            >
+              Recent Activities
+            </h6>
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#22c55e",
+                boxShadow: "0 0 0 3px #dcfce7",
+                display: "inline-block",
+              }}
+            />
+          </>
+        )}
+      </div>
+
       {/* Scrollable list */}
       <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
         {isLoading &&
@@ -235,8 +265,10 @@ const RecentActivity: React.FC = () => {
 
         {!isLoading &&
           !isError &&
-          data?.data?.map((log) => (
-            <ActivityRow key={`${log.id}-${log.actCode}`} log={log} />
+          data?.data?.map((log, i, arr) => (
+            <React.Fragment key={`${log.id}-${log.actCode}`}>
+              <ActivityRow log={log} />
+            </React.Fragment>
           ))}
       </div>
     </div>
