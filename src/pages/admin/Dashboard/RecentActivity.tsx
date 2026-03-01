@@ -9,12 +9,6 @@ import { MdOutlineDoNotDisturb } from "react-icons/md";
 import { TbPlugConnectedX } from "react-icons/tb";
 import { useGetAuditLogsQuery } from "../../../features/admin/dashboard/dahboardApi";
 import { AuditLogs } from "../../../features/admin/dashboard/utils";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-
-dayjs.extend(relativeTime);
-
-const timeAgo = (dateStr: string): string => dayjs(dateStr).fromNow();
 
 // ─── Icon + Type Map ─────────────────────────────────────────────────────────
 
@@ -121,6 +115,19 @@ const ErrorState: React.FC = () => (
 const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
   const { icon, type } = getIconAndType(log.actCode, log.isBatch);
 
+  // Format date to relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <div
       className="d-flex align-items-start gap-3 px-3 py-3 rounded-3"
@@ -198,7 +205,7 @@ const ActivityRow: React.FC<{ log: AuditLogs }> = ({ log }) => {
           className="text-muted"
           style={{ fontSize: 11, whiteSpace: "nowrap" }}
         >
-          {timeAgo(log.createdAt)}
+          {getRelativeTime(log.createdAt)}
         </span>
         {log.name && (
           <span
