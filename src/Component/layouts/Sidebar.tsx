@@ -158,7 +158,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
 
       case "student":
         return [
-          ...commonItems,
           {
             id: 2,
             label: "My Courses",
@@ -217,7 +216,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
         {/* Scrollable Menu Container */}
         <div className="nav-menu-container">
           <Nav className="flex-column nav-menu">
-            {navItems.map((item) => (
+            {navItems?.map((item) => (
               <Nav.Link
                 key={item.id}
                 as={Link}
