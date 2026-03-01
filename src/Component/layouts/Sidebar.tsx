@@ -27,20 +27,25 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
   // Navigation items based on role
   const getNavItems = () => {
-    const commonItems = [
-      {
-        id: 1,
-        label: "Dashboard",
-        icon: <FaTachometerAlt />,
-        path: "/admin/dashboard",
-      },
-    ];
+    // const commonItems = [
+    //   {
+    //     id: 1,
+    //     label: "Dashboard",
+    //     icon: <FaTachometerAlt />,
+    //     path: "/admin/dashboard",
+    //   },
+    // ];
 
     switch (role) {
       case "admin":
       case "superadmin":
         return [
-          ...commonItems,
+          {
+            id: 1,
+            label: "Dashboard",
+            icon: <FaTachometerAlt />,
+            path: "/admin/dashboard",
+          },
           {
             id: 2,
             label: "Students",
@@ -83,7 +88,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaClipboardList />,
             path: "/admin/management",
           },
-          { id: 9, label: "Profile Settings", icon: <FaCog />, path: "/profile" },
+          {
+            id: 9,
+            label: "Profile Settings",
+            icon: <FaCog />,
+            path: "/profile",
+          },
           {
             id: 10,
             label: "Attendance",
@@ -95,7 +105,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
 
       case "teacher":
         return [
-          ...commonItems,
+          {
+            id: 1,
+            label: "Dashboard",
+            icon: <FaTachometerAlt />,
+            path: "/teacher/dashboard",
+          },
           {
             id: 2,
             label: "My Students",
@@ -133,7 +148,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaClipboardList />,
             path: "/assignments",
           },
-          { id: 9, label: "Profile Settings", icon: <FaCog />, path: "/profile" },
+          {
+            id: 9,
+            label: "Profile Settings",
+            icon: <FaCog />,
+            path: "/profile",
+          },
         ];
 
       case "student":
