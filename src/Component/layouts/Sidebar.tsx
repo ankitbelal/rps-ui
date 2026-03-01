@@ -199,7 +199,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
         ];
 
       default:
-        return commonItems;
     }
   };
 
