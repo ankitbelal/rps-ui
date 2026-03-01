@@ -50,7 +50,7 @@ const StudentManagement: React.FC = () => {
   const [viewingStudentId, setViewingStudentId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("A");
   const [programFilter, setProgramFilter] = useState<string>("");
   const [semesterFilter, setSemesterFilter] = useState<string>("");
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
@@ -291,7 +291,7 @@ const StudentManagement: React.FC = () => {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setStatusFilter("");
+    setStatusFilter("A");
     setProgramFilter("");
     setSemesterFilter("");
   };
@@ -409,7 +409,6 @@ const StudentManagement: React.FC = () => {
                   className="bg-light border-0"
                   disabled={isLoading || isFetching}
                 >
-                  <option value="">All Status</option>
                   <option value="A">Active</option>
                   <option value="P">Passed</option>
                   <option value="S">Suspended</option>
