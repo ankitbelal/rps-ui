@@ -17,6 +17,10 @@ import { RootState } from '../../app/store';
 import { getRoleByType } from '../../helper';
 import toast from 'react-hot-toast';
 import { ProfileData } from '../../features/profile/utils';
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface ProfileFormData {
     firstName: string;
@@ -70,6 +74,8 @@ const ProfilePage: React.FC = () => {
         register: registerProfile,
         handleSubmit: handleProfileSubmit,
         reset: resetProfile,
+        watch: watchProfile,
+        setValue: setValueProfile,
         formState: { errors: profileErrors, isDirty },
     } = useForm<ProfileFormData>({
         resolver: yupResolver(profileSchema as any),
@@ -404,17 +410,28 @@ const ProfilePage: React.FC = () => {
                                             <Form.Label className="fw-semibold">
                                                 Date of Birth <span className="text-danger">*</span>
                                             </Form.Label>
-                                            <Form.Control
-                                                type="date"
-                                                {...registerProfile('DOB')}
-                                                isInvalid={!!profileErrors.DOB}
-                                                disabled={isUpdatingAdmin || isUpdatingTeacher}
-                                                className="py-2"
-                                                max={new Date().toISOString().split("T")[0]}
-                                            />
-                                            <Form.Control.Feedback type="invalid">
-                                                {profileErrors.DOB?.message}
-                                            </Form.Control.Feedback>
+                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                                                <DatePicker
+                                                                  value={watchProfile("DOB") ? dayjs(watchProfile("DOB")) : null}
+                                                                  onChange={(newValue) =>
+                                                                    setValueProfile(
+                                                                      "DOB",
+                                                                      newValue ? newValue.format("YYYY-MM-DD") : "",
+                                                                      { shouldValidate: true }
+                                                                    )
+                                                                  }
+                                                                  maxDate={dayjs()}
+                                                                  slotProps={{
+                                                                    textField: {
+                                                                      fullWidth: true,
+                                                                      error: !!profileErrors.DOB,
+                                                                      helperText: profileErrors.DOB?.message,
+                                                                      size: "small",
+                                                                    },
+                                                                  }}
+                                                                />
+                                                              </LocalizationProvider>
+                                
                                         </Form.Group>
                                     </Col>
 

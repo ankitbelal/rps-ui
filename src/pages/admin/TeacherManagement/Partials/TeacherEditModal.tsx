@@ -13,6 +13,10 @@ import { Teacher } from "../../../../features/admin/teacher/utils";
 import { TeacherFormData } from "../../../../features/admin/teacher/utils";
 import { teacherSchema } from "../validation/teacherSchema";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface TeacherEditModalProps {
   show: boolean;
@@ -62,6 +66,8 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
     handleSubmit,
     reset,
     setError,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<TeacherFormData>({
     resolver: yupResolver(teacherSchema),
@@ -244,17 +250,28 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
                   <Form.Label className="fw-semibold">
                     Date of Birth <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Control
-                    type="date"
-                    {...register("DOB")}
-                    isInvalid={!!errors.DOB}
-                    className="py-2"
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.DOB?.message}
-                  </Form.Control.Feedback>
-                </Form.Group>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={watch("DOB") ? dayjs(watch("DOB")) : null}
+                      onChange={(newValue) =>
+                        setValue(
+                          "DOB",
+                          newValue ? newValue.format("YYYY-MM-DD") : "",
+                          { shouldValidate: true }
+                        )
+                      }
+                      maxDate={dayjs()}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: !!errors.DOB,
+                          helperText: errors.DOB?.message,
+                          size: "small",
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                  </Form.Group>
               </Col>
             </Row>
           </div>
