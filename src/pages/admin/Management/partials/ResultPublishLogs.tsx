@@ -9,6 +9,10 @@ import {
   FaInbox,
   FaEye,
 } from "react-icons/fa";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs, { Dayjs } from "dayjs";
 import {
   useGetAuditLogsQuery,
   useBulkPublishResultMutation,
@@ -31,9 +35,8 @@ const ResultPublishLogs: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
 
-  const today = new Date().toISOString().split("T")[0];
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<Dayjs | null>(null);
+  const [dateTo, setDateTo] = useState<Dayjs | null>(null);
 
   const [appliedFrom, setAppliedFrom] = useState<string>("");
   const [appliedTo, setAppliedTo] = useState<string>("");
@@ -41,8 +44,8 @@ const ResultPublishLogs: React.FC = () => {
 
   useEffect(() => {
     if (dateFrom && dateTo) {
-      setAppliedFrom(dateFrom);
-      setAppliedTo(dateTo);
+      setAppliedFrom(dateFrom.format("YYYY-MM-DD"));
+      setAppliedTo(dateTo.format("YYYY-MM-DD"));
       setCurrentPage(1);
     }
   }, [dateFrom, dateTo]);
@@ -95,8 +98,8 @@ const ResultPublishLogs: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setDateFrom("");
-    setDateTo("");
+    setDateFrom(null);
+    setDateTo(null);
     setAppliedFrom("");
     setAppliedTo("");
     setCurrentPage(1);
@@ -263,33 +266,55 @@ const ResultPublishLogs: React.FC = () => {
                 >
                   From
                 </small>
-                <input
-                  type="date"
-                  value={dateFrom}
-                  max={dateTo || today}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setDateFrom(val);
-                    if (!val) {
-                      setDateTo("");
-                      setAppliedFrom("");
-                      setAppliedTo("");
-                      setCurrentPage(1);
-                    }
-                  }}
+                <div
                   style={{
-                    fontSize: "12.5px",
-                    border: `1px solid ${isFiltered ? "#93c5fd" : "#d0d5dd"}`,
-                    borderRadius: "7px",
-                    padding: "4px 8px",
-                    color: "#344054",
-                    outline: "none",
-                    backgroundColor: isFiltered ? "#eff6ff" : "#fff",
-                    cursor: "pointer",
                     height: "30px",
-                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: "7px",
+                    border: `1px solid ${isFiltered ? "#93c5fd" : "#d0d5dd"}`,
+                    backgroundColor: isFiltered ? "#eff6ff" : "#fff",
+                    width: 140,
                   }}
-                />
+                >
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={dateFrom}
+                      onChange={(newValue) => {
+                        setDateFrom(newValue);
+                        if (!newValue) {
+                          setDateTo(null);
+                          setAppliedFrom("");
+                          setAppliedTo("");
+                          setCurrentPage(1);
+                        }
+                      }}
+                      maxDate={dateTo ?? dayjs()}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: {
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "12.5px",
+                              backgroundColor: "transparent",
+                              "& fieldset": { border: "none" },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "0 0 0 8px",
+                              fontSize: "12.5px",
+                              color: "#344054",
+                            },
+                            "& .MuiIconButton-root": {
+                              padding: "0 4px",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
               </div>
 
               {/* To date */}
@@ -304,42 +329,56 @@ const ResultPublishLogs: React.FC = () => {
                 >
                   To
                 </small>
-                <input
-                  type="date"
-                  value={dateTo}
-                  min={dateFrom || undefined}
-                  max={today}
-                  disabled={!dateFrom}
-                  onChange={(e) => setDateTo(e.target.value)}
+                <div
                   style={{
-                    fontSize: "12.5px",
-                    border: `1px solid ${isFiltered ? "#93c5fd" : dateFrom ? "#d0d5dd" : "#e9ecef"}`,
+                    height: "30px",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
                     borderRadius: "7px",
-                    padding: "4px 8px",
-                    color: dateFrom ? "#344054" : "#adb5bd",
-                    outline: "none",
+                    border: `1px solid ${isFiltered ? "#93c5fd" : dateFrom ? "#d0d5dd" : "#e9ecef"}`,
                     backgroundColor: isFiltered
                       ? "#eff6ff"
                       : dateFrom
                         ? "#fff"
                         : "#f8f9fa",
-                    cursor: dateFrom ? "pointer" : "not-allowed",
-                    height: "30px",
-                    boxSizing: "border-box",
+                    width: 140,
                     opacity: dateFrom ? 1 : 0.6,
+                    pointerEvents: dateFrom ? "auto" : "none",
                   }}
-                />
+                >
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={dateTo}
+                      onChange={(newValue) => setDateTo(newValue)}
+                      minDate={dateFrom ?? undefined}
+                      maxDate={dayjs()}
+                      disabled={!dateFrom}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: {
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "12.5px",
+                              backgroundColor: "transparent",
+                              "& fieldset": { border: "none" },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "0 0 0 8px",
+                              fontSize: "12.5px",
+                              color: dateFrom ? "#344054" : "#adb5bd",
+                            },
+                            "& .MuiIconButton-root": {
+                              padding: "0 4px",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </div>
               </div>
-
-              {/* Divider */}
-              <div
-                style={{
-                  width: "1px",
-                  height: "22px",
-                  background: "#e5e7eb",
-                  flexShrink: 0,
-                }}
-              />
 
               {/* Preview Results */}
               <Button
