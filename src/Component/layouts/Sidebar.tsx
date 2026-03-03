@@ -15,6 +15,7 @@ import {
   FaBook,
   FaGraduationCap,
   FaSlidersH,
+  FaFileAlt,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -88,19 +89,26 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaClipboardList />,
             path: "/admin/management",
           },
+
+          {
+            id: 10,
+            label: "Result",
+            icon: <FaChartBar />,
+            path: "/admin/result",
+          },
+          {
+            id: 11,
+            label: "Notices Board",
+            icon: <FaCalendarAlt />,
+            path: "/exams",
+          },
+
           {
             id: 9,
             label: "Profile Settings",
             icon: <FaCog />,
             path: "/profile",
           },
-          {
-            id: 10,
-            label: "Result",
-            icon: <FaClipboardList />,
-            path: "/admin/result",
-          },
-          { id: 11, label: "Exams", icon: <FaBookOpen />, path: "/exams" },
         ];
 
       case "teacher":
