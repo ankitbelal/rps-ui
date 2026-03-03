@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, Spinner } from "react-bootstrap";
-import { 
-  FaHistory,  
+import {
+  FaHistory,
   FaGraduationCap,
   FaUser,
-  FaChartLine
+  FaChartLine,
 } from "react-icons/fa";
 import PromoteStudentsModal from "./PromoteStudentsModal";
-import { useGetPromotionLogsQuery, usePromoteStudentMutation } from "../../../../features/admin/management/mamagementApi";
+import {
+  useGetAuditLogsQuery,
+  usePromoteStudentMutation,
+} from "../../../../features/admin/management/mamagementApi";
 import PaginationComponent from "../../../../Component/common/Pagination";
 import toast from "react-hot-toast";
 
@@ -18,18 +21,21 @@ const StudentPromotionLogs: React.FC = () => {
 
   const queryParams = useMemo(
     () => ({
-      type:"promotion",
+      type: "promotion",
       page: currentPage,
       limit: itemsPerPage,
     }),
-    [
-      currentPage,
-      itemsPerPage,
-    ],
+    [currentPage, itemsPerPage],
   );
-  
-  const [promoteStudent,{isLoading:isPromoting}] = usePromoteStudentMutation();
-  const {data:logsData, isLoading, isFetching,refetch} = useGetPromotionLogsQuery(queryParams);
+
+  const [promoteStudent, { isLoading: isPromoting }] =
+    usePromoteStudentMutation();
+  const {
+    data: logsData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetAuditLogsQuery(queryParams);
   const logs = logsData?.data || [];
 
   // Calculate pagination
@@ -38,13 +44,8 @@ const StudentPromotionLogs: React.FC = () => {
   let totalCount = 0;
   if (logsData) {
     startIndex =
-      logsData?.total === 0
-        ? 0
-        : (logsData?.page - 1) * logsData?.limit + 1;
-    endIndex = Math.min(
-      logsData?.page * logsData?.limit,
-      logsData?.total,
-    );
+      logsData?.total === 0 ? 0 : (logsData?.page - 1) * logsData?.limit + 1;
+    endIndex = Math.min(logsData?.page * logsData?.limit, logsData?.total);
     totalCount = logsData?.total;
   }
 
@@ -74,24 +75,25 @@ const StudentPromotionLogs: React.FC = () => {
   };
 
   const handleConfirmPromotion = async (id: string) => {
-    if(!id) return;
+    if (!id) return;
 
-    try{
-      const data ={
-        programId:Number(id)
-      }
+    try {
+      const data = {
+        programId: Number(id),
+      };
 
       console.log("request body: ", data);
 
-      const response = await toast.promise(promoteStudent(data).unwrap(),{
-        loading:"Promoting students..."
+      const response = await toast.promise(promoteStudent(data).unwrap(), {
+        loading: "Promoting students...",
       });
-      if(response.success){
+      if (response.success) {
         toast.success(response.message);
         setShowPromoteModal(false);
       }
-    }catch(error:any){
-      const errorMessage = error?.data?.message || "Failed to promote students.";
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message || "Failed to promote students.";
       toast.error(errorMessage);
     }
   };
@@ -101,7 +103,7 @@ const StudentPromotionLogs: React.FC = () => {
     const date = new Date(dateString);
     // const now = new Date();
     // const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     // if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
     // if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
     // if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
@@ -160,14 +162,17 @@ const StudentPromotionLogs: React.FC = () => {
 
         <Card.Body className="p-0">
           {/* Loader while fetching */}
-          {(isLoading || isFetching) ? (
+          {isLoading || isFetching ? (
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" />
               <p className="mt-3 text-muted">Loading logs...</p>
             </div>
           ) : (
             /* Logs List */
-            <div className="logs-container" style={{ maxHeight: "500px", overflowY: "auto" }}>
+            <div
+              className="logs-container"
+              style={{ maxHeight: "500px", overflowY: "auto" }}
+            >
               {logs.length > 0 ? (
                 logs.map((log) => (
                   <div
@@ -177,8 +182,10 @@ const StudentPromotionLogs: React.FC = () => {
                     <div className="d-flex gap-3">
                       {/* Icon */}
                       <div className="flex-shrink-0">
-                        <div className="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" 
-                             style={{ width: "40px", height: "40px" }}>
+                        <div
+                          className="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center"
+                          style={{ width: "40px", height: "40px" }}
+                        >
                           <FaChartLine />
                         </div>
                       </div>
@@ -188,15 +195,15 @@ const StudentPromotionLogs: React.FC = () => {
                         <div className="d-flex justify-content-between align-items-start mb-1">
                           <h6 className="fw-bold mb-0">{log.action}</h6>
                         </div>
-                        
+
                         <p className="text-muted small mb-2">{log.comment}</p>
-                        
+
                         <div className="d-flex align-items-center gap-3">
                           <small className="text-muted">
                             <i className="far fa-clock me-1"></i>
                             {getRelativeTime(log.createdAt)}
                           </small>
-                          
+
                           <small className="text-muted d-flex align-items-center gap-1">
                             <FaUser size={10} />
                             {log.user.name}

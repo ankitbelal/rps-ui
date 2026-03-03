@@ -46,6 +46,7 @@ export interface ProgramList {
   id: number;
   code: string;
   name: string;
+  totalSemesters: number;
 }
 
 export interface ProgramListApiResponse {

@@ -72,7 +72,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
     watch,
     setValue,
     setError,
-    formState: { errors, isDirty },
+    formState: { errors, dirtyFields, isDirty },
   } = useForm<EditStudentFormData>({
     resolver: yupResolver(studentSchema as any),
     mode: "onChange",
@@ -402,7 +402,12 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
                   <SearchableDropdown
                     options={semesterOptions}
                     value={watch("currentSemester") || 1}
-                    onChange={(value) => setValue("currentSemester", value)}
+                    onChange={(value) => {
+                      setValue("currentSemester", value, {
+                        shouldDirty: true, // This is key - marks the field as dirty
+                        shouldValidate: true,
+                      });
+                    }}
                     placeholder="Select Semester (Optional)"
                     enableSearch={false}
                     error={errors.currentSemester?.message}
@@ -419,7 +424,12 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
                   <SearchableDropdown
                     options={programOptions}
                     value={watch("programId") || 0}
-                    onChange={(value) => setValue("programId", value)}
+                    onChange={(value) => {
+                      setValue("programId", value, {
+                        shouldDirty: true, // This is key - marks the field as dirty
+                        shouldValidate: true,
+                      });
+                    }}
                     placeholder="Select Program (Optional)"
                     enableSearch={programs.length > 5}
                     searchPlaceholder="Search programs..."

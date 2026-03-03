@@ -1,45 +1,54 @@
 export interface GradeRange {
-    id:number;
-    minGPA:string;
-    maxGPA:string;
-    grade:string;
-    remarks:string;
-    createdAt:string;
+  id: number;
+  minGPA: string;
+  maxGPA: string;
+  grade: string;
+  remarks: string;
+  createdAt: string;
 }
 
 export interface ListGradeResponse {
-    success:boolean;
-    statusCode:number;
-    message:string;
-    data:GradeRange[];
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: GradeRange[];
 }
 
 interface User {
-    name:string;
+  name: string;
 }
 
-export interface PromotionLogs{
-    id:number;
-    actCode:string;
-    action:string;
-    comment:string;
-    user:User;
-    createdAt:string;
+export interface PromotionLogs {
+  id: number;
+  actCode: string;
+  action: string;
+  comment: string;
+  user: User;
+  createdAt: string;
 }
 
 export interface PromotionApiResponse {
-    success:boolean;
-    statusCode:number;
-    message:string;
-    data:PromotionLogs[];
-    total:number;
-    page:number;
-    lastPage:number;
-    limit:number;
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: PromotionLogs[];
+  total: number;
+  page: number;
+  lastPage: number;
+  limit: number;
 }
 
 export interface Params {
-    type:string;
-    page:number;
-    limit:number;
+  type: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page: number;
+  limit: number;
+}
+
+export interface publishResultPayload {
+  programId: string;
+  semesters: number[];
+  withReport: boolean;
+  examTerm: "F" | "S" | "FINAL";
 }

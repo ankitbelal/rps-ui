@@ -109,6 +109,16 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/result"
+          element={
+            <ProtectedRoute requiredRole={["admin", "superadmin"]}>
+              <DashboardLayout>
+                <StudentManagement />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/admin/teachers"
@@ -245,10 +255,12 @@ const AppRouter = () => {
           }
         />
 
-        <Route 
+        <Route
           path="/profile"
           element={
-            <ProtectedRoute requiredRole={["teacher","student","admin","superadmin"]}>
+            <ProtectedRoute
+              requiredRole={["teacher", "student", "admin", "superadmin"]}
+            >
               <DashboardLayout>
                 <ProfilePage />
               </DashboardLayout>

@@ -96,9 +96,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 10,
-            label: "Attendance",
+            label: "Result",
             icon: <FaClipboardList />,
-            path: "/attendance",
+            path: "/admin/result",
           },
           { id: 11, label: "Exams", icon: <FaBookOpen />, path: "/exams" },
         ];

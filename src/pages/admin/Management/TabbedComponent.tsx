@@ -6,6 +6,7 @@ import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import { FaTachometerAlt } from "react-icons/fa";
 import StudentPromotionLogs from "./partials/StudentPromotionLogs";
 import GradeRanges from "./partials/GradeRanges";
+import ResultPublishLogs from "./partials/ResultPublishLogs";
 
 // Generic Tab interface for better type safety
 export interface TabConfig {
@@ -38,7 +39,7 @@ const TabbedContainer: React.FC<TabbedContainerProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const [activeTabId, setActiveTabId] = useState<string>(
-    defaultTabId || (tabs.length > 0 ? tabs[0].id : "")
+    defaultTabId || (tabs.length > 0 ? tabs[0].id : ""),
   );
 
   useEffect(() => {
@@ -54,8 +55,8 @@ const TabbedContainer: React.FC<TabbedContainerProps> = ({
     setActiveTabId(tabId);
   };
 
-  const activeComponent = tabs.find(tab => tab.id === activeTabId)?.component;
-  
+  const activeComponent = tabs.find((tab) => tab.id === activeTabId)?.component;
+
   // Default breadcrumb if not provided
   const defaultBreadcrumb = [
     {
@@ -71,15 +72,15 @@ const TabbedContainer: React.FC<TabbedContainerProps> = ({
 
   return (
     <div className="mb-4">
-      <CommonBreadCrumb
-        items={breadcrumbItems || defaultBreadcrumb}
-      />
+      <CommonBreadCrumb items={breadcrumbItems || defaultBreadcrumb} />
 
       {/* ProfilePage-style Tabs */}
       <Card className="border-0 shadow-sm mb-0 rounded-bottom-0">
         <Card.Body className="p-0">
-          <div className="d-flex border-bottom bg-white overflow-auto" 
-               style={{ scrollbarWidth: "thin" }}>
+          <div
+            className="d-flex border-bottom bg-white overflow-auto"
+            style={{ scrollbarWidth: "thin" }}
+          >
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
@@ -88,27 +89,29 @@ const TabbedContainer: React.FC<TabbedContainerProps> = ({
                 className={`
                   text-decoration-none px-4 py-3 position-relative 
                   d-flex align-items-center gap-2
-                  ${activeTabId === tab.id 
-                    ? 'text-primary fw-bold' 
-                    : 'text-muted'
+                  ${
+                    activeTabId === tab.id
+                      ? "text-primary fw-bold"
+                      : "text-muted"
                   }
-                  ${tab.disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                  ${tab.disabled ? "opacity-50 cursor-not-allowed" : ""}
                 `}
                 onClick={() => !tab.disabled && handleTabChange(tab.id)}
-                style={{ 
-                  borderBottom: activeTabId === tab.id 
-                    ? '2px solid var(--bs-primary)' 
-                    : 'none',
-                  marginBottom: '-1px',
+                style={{
+                  borderBottom:
+                    activeTabId === tab.id
+                      ? "2px solid var(--bs-primary)"
+                      : "none",
+                  marginBottom: "-1px",
                   borderRadius: 0,
-                  minWidth: 'fit-content',
+                  minWidth: "fit-content",
                 }}
               >
                 {tab.icon && <span className="fs-5">{tab.icon}</span>}
                 <span>{tab.title}</span>
-                
+
                 {activeTabId === tab.id && (
-                  <div 
+                  <div
                     className="position-absolute bottom-0 start-0 w-100"
                     style={{
                       height: "2px",
@@ -124,9 +127,7 @@ const TabbedContainer: React.FC<TabbedContainerProps> = ({
 
       {/* Active Component Content */}
       <Card className="border-0 shadow-sm rounded-top-0">
-        <Card.Body className="p-4">
-          {activeComponent}
-        </Card.Body>
+        <Card.Body className="p-4">{activeComponent}</Card.Body>
       </Card>
     </div>
   );
@@ -137,16 +138,22 @@ const TabbedComponent: React.FC = () => {
   // Define your tabs statically
   const tabs: TabConfig[] = [
     {
+      id: "result",
+      title: "Result Publish",
+      icon: <i className="fas fa-bullhorn"></i>,
+      component: <ResultPublishLogs />,
+    },
+    {
       id: "logs",
-      title: "Promotion Logs",
+      title: "Student Promotion",
       icon: <i className="fas fa-table"></i>,
       component: <StudentPromotionLogs />,
     },
     {
-      id:"grades",
-      title:"Grade Management",
+      id: "grades",
+      title: "Grade Management",
       icon: <i className="fas fa-star"></i>,
-      component:<GradeRanges/>
+      component: <GradeRanges />,
     },
   ];
 
@@ -155,7 +162,7 @@ const TabbedComponent: React.FC = () => {
       title="Management List"
       subtitle="Multi-tab management section"
       tabs={tabs}
-      defaultTabId="logs"
+      defaultTabId="result"
     />
   );
 };
