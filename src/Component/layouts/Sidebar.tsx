@@ -91,20 +91,20 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
 
           {
-            id: 10,
+            id: 9,
             label: "Result",
             icon: <FaChartBar />,
             path: "/admin/result",
           },
           {
-            id: 11,
+            id: 10,
             label: "Notices Board",
             icon: <FaCalendarAlt />,
             path: "/exams",
           },
 
           {
-            id: 9,
+            id: 11,
             label: "Profile Settings",
             icon: <FaCog />,
             path: "/profile",
@@ -131,33 +131,22 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             icon: <FaBookOpen />,
             path: "/teacher/subjects",
           },
-          { id: 4, label: "Marks Entry", icon: <FaChartBar />, path: "/marks" },
+
+          {
+            id: 4,
+            label: "Result",
+            icon: <FaChartBar />,
+            path: "/teacher/result",
+          },
           {
             id: 5,
-            label: "Schedule",
+            label: "Notices Board",
             icon: <FaCalendarAlt />,
-            path: "/schedule",
+            path: "/exams",
           },
+
           {
             id: 6,
-            label: "Reports",
-            icon: <FaClipboardList />,
-            path: "/reports",
-          },
-          {
-            id: 7,
-            label: "Attendance",
-            icon: <FaClipboardList />,
-            path: "/attendance",
-          },
-          {
-            id: 8,
-            label: "Assignments",
-            icon: <FaClipboardList />,
-            path: "/assignments",
-          },
-          {
-            id: 9,
             label: "Profile Settings",
             icon: <FaCog />,
             path: "/profile",

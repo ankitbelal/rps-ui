@@ -136,12 +136,6 @@ const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 
         <Modal.Footer className="d-flex justify-content-between align-items-center">
           <div>
-            <span className="text-muted">
-              {selectedRecipients.length} recipient
-              {selectedRecipients.length !== 1 ? "s" : ""} selected
-            </span>
-          </div>
-          <div>
             <Button variant="secondary" onClick={onHide} className="me-2">
               Cancel
             </Button>

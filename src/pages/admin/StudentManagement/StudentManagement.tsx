@@ -614,26 +614,31 @@ const StudentManagement: React.FC = () => {
                                       <i className="fas fa-edit"></i>
                                     </Button>
                                   )}
-                                  <Button
-                                    variant={
-                                      item.status === "S"
-                                        ? "outline-success"
-                                        : "outline-danger"
-                                    }
-                                    size="sm"
-                                    onClick={() => handleDeleteClick(item)}
-                                    title={
-                                      item.status === "S" ? "Restore" : "Delete"
-                                    }
-                                  >
-                                    <i
-                                      className={
+
+                                  {userRole === "admin" && (
+                                    <Button
+                                      variant={
                                         item.status === "S"
-                                          ? "fas fa-undo"
-                                          : "fas fa-trash"
+                                          ? "outline-success"
+                                          : "outline-danger"
                                       }
-                                    ></i>
-                                  </Button>
+                                      size="sm"
+                                      onClick={() => handleDeleteClick(item)}
+                                      title={
+                                        item.status === "S"
+                                          ? "Restore"
+                                          : "Delete"
+                                      }
+                                    >
+                                      <i
+                                        className={
+                                          item.status === "S"
+                                            ? "fas fa-undo"
+                                            : "fas fa-trash"
+                                        }
+                                      ></i>
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="outline-info"
                                     size="sm"
