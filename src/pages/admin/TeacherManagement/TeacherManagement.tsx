@@ -22,6 +22,7 @@ import CommonBreadCrumb from "../../../Component/common/BreadCrumb";
 import AssignSubjectsModal from "./Partials/AssignSubjects";
 import PaginationComponent from "../../../Component/common/Pagination";
 import { UseFormSetError } from "react-hook-form";
+import SendNotificationModal from "../StudentManagement/partials/SendNoticeModal";
 
 const TeacherManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -46,6 +47,7 @@ const TeacherManagement: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<{
     id: number;
     name: string;
@@ -254,6 +256,15 @@ const TeacherManagement: React.FC = () => {
     setSelectedTeacher({ id: teacherId, name: teacherName });
     setShowAssignModal(true);
   };
+  const handleCloseNotifyModal = () => {
+    setShowNotifyModal(false);
+  };
+  const handleNotify = (teacher: Teacher) => {
+    setViewingTeacherId(teacher.id);
+    setShowNotifyModal(true);
+  };
+
+  const handleSendNotification = () => {};
 
   return (
     <>
@@ -514,6 +525,19 @@ const TeacherManagement: React.FC = () => {
                                   >
                                     <i className="fas fa-eye"></i>
                                   </Button>
+
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => handleNotify(item)}
+                                    title="Notify"
+                                    style={{
+                                      color: "royalblue",
+                                      borderColor: "royalblue",
+                                    }} // blue color
+                                  >
+                                    <i className="fas fa-envelope"></i>
+                                  </Button>
                                 </div>
                               </td>
                             </tr>
@@ -598,6 +622,12 @@ const TeacherManagement: React.FC = () => {
             : ""
         }
         isLoading={isDeleting}
+      />
+      <SendNotificationModal
+        show={showNotifyModal}
+        onHide={handleCloseNotifyModal}
+        onSend={handleSendNotification}
+        user={teacherDetailsData?.data?.[0]}
       />
     </>
   );

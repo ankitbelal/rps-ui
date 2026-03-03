@@ -27,6 +27,7 @@ import { RootState } from "../../../app/store";
 import { getRoleByType } from "../../../helper";
 import PaginationComponent from "../../../Component/common/Pagination";
 import { UseFormSetError } from "react-hook-form";
+import SendNotificationModal from "./partials/SendNoticeModal";
 
 const StudentManagement: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -46,6 +47,7 @@ const StudentManagement: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [viewingStudentId, setViewingStudentId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -172,6 +174,11 @@ const StudentManagement: React.FC = () => {
     setViewingStudentId(null);
   };
 
+  const handleCloseNotifyModal = () => {
+    setShowNotifyModal(false);
+  };
+
+  const handleSendNotification = () => {};
   const handleEditConfirm = async (
     data: EditStudentFormData,
     setError: UseFormSetError<EditStudentFormData>,
@@ -236,7 +243,10 @@ const StudentManagement: React.FC = () => {
     setViewingStudentId(student.id);
     setShowViewModal(true);
   };
-
+  const handleNotify = (student: Student) => {
+    setViewingStudentId(student.id);
+    setShowNotifyModal(true);
+  };
   const handleCloseViewModal = () => {
     setShowViewModal(false);
     setViewingStudentId(null);
@@ -653,8 +663,25 @@ const StudentManagement: React.FC = () => {
                                       })
                                     }
                                     title="View Result"
+                                    style={{
+                                      color: "goldenrod",
+                                      borderColor: "goldenrod",
+                                    }} // golden color
                                   >
                                     <i className="fas fa-award"></i>
+                                  </Button>
+
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() => handleNotify(item)}
+                                    title="Notify"
+                                    style={{
+                                      color: "royalblue",
+                                      borderColor: "royalblue",
+                                    }} // blue color
+                                  >
+                                    <i className="fas fa-envelope"></i>
                                   </Button>
                                 </div>
                               </td>
@@ -693,7 +720,6 @@ const StudentManagement: React.FC = () => {
           </Card.Body>
         </Card>
       </div>
-
       {/* Form Modal */}
       <StudentFormModal
         show={showFormModal}
@@ -702,7 +728,6 @@ const StudentManagement: React.FC = () => {
         isLoading={isAddingStudent}
         programs={programData?.data || []}
       />
-
       <DeleteConfirmationModal
         show={showDeleteModal}
         onHide={handleCloseDeleteModal}
@@ -715,7 +740,6 @@ const StudentManagement: React.FC = () => {
         status={deletingStudent ? deletingStudent.status : "A"}
         isLoading={isDeleting}
       />
-
       <ViewStudentDetailsModal
         show={showViewModal}
         onHide={handleCloseViewModal}
@@ -730,6 +754,12 @@ const StudentManagement: React.FC = () => {
         isGettingData={isLoadingDetails || isStudentDetailsFetching}
         programs={programData?.data || []}
         studentData={studentDetailsData?.data?.[0]}
+      />
+      <SendNotificationModal
+        show={showNotifyModal}
+        onHide={handleCloseNotifyModal}
+        onSend={handleSendNotification}
+        user={studentDetailsData?.data?.[0]}
       />
     </>
   );
