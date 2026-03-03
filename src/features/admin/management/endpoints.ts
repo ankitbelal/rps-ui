@@ -8,6 +8,6 @@ export const ManagementApiEndpoints: EndPointType = {
   PROMOTION_LOGS: "/audit-trail",
   PROMOTE_STUDENT: "/students/promote-students",
   BULK_PUBLISH_RESULT: "result/bulk-publish",
-  BULK_PUBLISH_RESULT_REPORT: "bulk-publish-missing-report",
+  BULK_PUBLISH_RESULT_REPORT: "result/bulk-publish-missing-report",
   SINGLE_PUBLISH_RESULT: "result/single-publish",
 };

@@ -1,7 +1,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import baseQuery from "../../api/apislice";
 import { ManagementApiEndpoints } from "./endpoints";
-import { ListGradeResponse, PromotionApiResponse, Params } from "./utils";
+import {
+  ListGradeResponse,
+  PromotionApiResponse,
+  Params,
+  publishResultPayload,
+} from "./utils";
 
 export const managementApi = createApi({
   reducerPath: "managementApi",
@@ -49,10 +54,17 @@ export const managementApi = createApi({
       invalidatesTags: (result) => (result?.success ? ["promotionLogs"] : []),
     }),
 
-    bulkPublishMissingReport: builder.query<Blob, Params>({
+    bulkPublishMissingReport: builder.query<Blob, publishResultPayload>({
       query: (data) => ({
-        url: ManagementApiEndpoints.BULK_PUBLISH_RESULT,
+        url: ManagementApiEndpoints.BULK_PUBLISH_RESULT_REPORT,
         method: "GET",
+        params: {
+          programId: data.programId,
+          semesters: data.semesters,
+          examTerm: data.examTerm,
+          withReport: true,
+        },
+        responseHandler: (response) => response.blob(),
       }),
     }),
   }),

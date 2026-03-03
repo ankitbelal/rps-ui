@@ -12,29 +12,33 @@ import {
 import {
   useGetAuditLogsQuery,
   useBulkPublishResultMutation,
+  useLazyBulkPublishMissingReportQuery, 
 } from "../../../../features/admin/management/mamagementApi";
 import PaginationComponent from "../../../../Component/common/Pagination";
 import toast from "react-hot-toast";
 import ResultPublishModal from "./ResultPublishModal";
+import MissingReportModal from "./MissingResultDIalog";
 import { publishResultPayload } from "../../../../features/admin/management/utils";
 
 const ResultPublishLogs: React.FC = () => {
   const [showPromoteModal, showPublishModal] = useState(false);
+  const [showMissingReportModal, setShowMissingReportModal] = useState(false);
+  const [missingReportData, setMissingReportData] = useState<{
+    message: string;
+    payload: publishResultPayload;
+  } | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
 
-  /* ── Date range filter ── */
-  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const today = new Date().toISOString().split("T")[0];
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
 
-  // Only these committed values are sent to the API (search fires when both are filled)
   const [appliedFrom, setAppliedFrom] = useState<string>("");
   const [appliedTo, setAppliedTo] = useState<string>("");
   const isFiltered = !!(appliedFrom || appliedTo);
 
-  // When both dates are filled, commit them to the query
   useEffect(() => {
     if (dateFrom && dateTo) {
       setAppliedFrom(dateFrom);
@@ -56,6 +60,9 @@ const ResultPublishLogs: React.FC = () => {
 
   const [publishResult, { isLoading: isPromoting }] =
     useBulkPublishResultMutation();
+  const [exportMissingReport, { isLoading: isExporting }] =
+    useLazyBulkPublishMissingReportQuery();
+
   const {
     data: logsData,
     isLoading,
@@ -87,7 +94,6 @@ const ResultPublishLogs: React.FC = () => {
     setItemsPerPage(Number(event.target.value));
   };
 
-  /* Refresh also clears date filters */
   const handleRefresh = () => {
     setDateFrom("");
     setDateTo("");
@@ -100,8 +106,46 @@ const ResultPublishLogs: React.FC = () => {
   const handlePublishClick = () => {
     showPublishModal(true);
   };
+
   const handleCloseModal = () => {
     showPublishModal(false);
+  };
+
+  const handleCloseMissingReportModal = () => {
+    setShowMissingReportModal(false);
+    setMissingReportData(null);
+  };
+
+  const handleDownloadMissingReport = async () => {
+    if (!missingReportData) return;
+
+    try {
+      const reportPayload = {
+        ...missingReportData.payload,
+        semesters: Array.isArray(missingReportData.payload.semesters)
+          ? missingReportData.payload.semesters
+          : [missingReportData.payload.semesters],
+        withReport: true,
+      };
+
+      console.log("Final Report Payload:", reportPayload);
+
+      const blob = await exportMissingReport(reportPayload).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "MissingMarksorResult.xlsx";
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Missing report downloaded successfully!");
+      handleCloseMissingReportModal();
+    } catch (err: any) {
+      console.error("Error downloading report:", err);
+      toast.error(err?.data?.message || "Failed to download missing report.");
+    }
   };
 
   const handleConfirmPublish = async (
@@ -121,29 +165,68 @@ const ResultPublishLogs: React.FC = () => {
         examTerm: examTermValue,
       };
 
-      const promise = publishResult(data).unwrap();
 
-      toast.promise(promise, {
-        loading: "Publishing results...",
-        success: "Results published successfully!",
-        error: (err) => {
-          return (
-            err?.data?.message || err?.message || "Failed to publish results"
+      try {
+        const response = await publishResult(data).unwrap();
+
+        if (response.success) {
+          toast.success("Results published successfully!");
+          showPublishModal(false);
+          refetch();
+        }
+      } catch (error: any) {
+        console.log("Full error object:", error); 
+
+     
+        const is409Error =
+          error?.status === 409 ||
+          error?.originalStatus === 409 ||
+          error?.data?.statusCode === 409;
+
+        const hasMissingCount =
+          error?.data?.missingCount > 0 || error?.missingCount > 0;
+        const hasIncompleteCount =
+          error?.data?.incompleteCount > 0 || error?.incompleteCount > 0;
+
+        if (is409Error && (hasMissingCount || hasIncompleteCount)) {
+          let errorMessage = "";
+          let count = 0;
+
+          if (hasMissingCount) {
+            count = error?.data?.missingCount || error?.missingCount || 0;
+            errorMessage =
+              error?.data?.message || "Some students are missing term results";
+          } else if (hasIncompleteCount) {
+            count = error?.data?.incompleteCount || error?.incompleteCount || 0;
+            errorMessage =
+              error?.data?.message || "Some students have incomplete marks";
+          }
+
+          console.log("Error detected:", { count, errorMessage, examTerm });
+
+          setMissingReportData({
+            message: `${errorMessage} (${count} students)`,
+            payload: {
+              programId: programId,
+              semesters: semesters,
+              examTerm: examTerm as "F" | "S" | "FINAL",
+              withReport: true, 
+            },
+          });
+
+          showPublishModal(false);
+          setShowMissingReportModal(true);
+        } else {
+        
+          toast.error(
+            error?.data?.message ||
+              error?.message ||
+              "Failed to publish results",
           );
-        },
-      });
-
-      // Wait for the promise to complete
-      const response = await promise;
-
-      if (response.success) {
-        showPublishModal(false);
-        refetch();
+        }
       }
-    } catch (error: any) {
-      // This catch block might not be needed if toast.promise handles it
-      // But it's good as a fallback
-      console.error("Publish error:", error);
+    } catch (error) {
+      console.error("Unexpected error:", error);
     }
   };
 
@@ -472,6 +555,14 @@ const ResultPublishLogs: React.FC = () => {
         onHide={handleCloseModal}
         onConfirm={handleConfirmPublish}
         isLoading={isPromoting}
+      />
+
+      <MissingReportModal
+        show={showMissingReportModal}
+        onHide={handleCloseMissingReportModal}
+        onConfirm={handleDownloadMissingReport}
+        message={missingReportData?.message || ""}
+        isLoading={isExporting}
       />
     </>
   );
