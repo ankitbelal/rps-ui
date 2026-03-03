@@ -473,3 +473,38 @@
   margin: 0;
   text-align: center;
 }
+/* Add to your existing CSS */
+
+.slb-student.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.slb-student.clickable:hover {
+  background: #f3f4f6;
+  transform: translateX(2px);
+}
+
+.slb-student.clickable:hover .slb-avatar {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Tooltip styling */
+.tooltip {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.tooltip .tooltip-inner {
+  background-color: #1e293b;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  max-width: 200px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #1e293b;
+}

@@ -19,6 +19,7 @@ import Parameter from "../pages/admin/EvaluationParameter/Parameter";
 import ProfilePage from "../Component/common/ProfilePage";
 import TabbedComponent from "../pages/admin/Management/TabbedComponent";
 import { RootState } from "../app/store";
+import StudentResult from "../Component/Marks/ResultPage";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -182,6 +183,17 @@ const AppRouter = () => {
             <ProtectedRoute requiredRole={["admin", "teacher", "superadmin"]}>
               <DashboardLayout>
                 <MarksEntryPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/students/result"
+          element={
+            <ProtectedRoute requiredRole={["admin", "teacher", "superadmin"]}>
+              <DashboardLayout>
+                <StudentResult />
               </DashboardLayout>
             </ProtectedRoute>
           }

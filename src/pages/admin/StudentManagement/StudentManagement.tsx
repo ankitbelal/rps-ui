@@ -644,6 +644,18 @@ const StudentManagement: React.FC = () => {
                                   >
                                     <i className="fas fa-file-alt"></i>
                                   </Button>
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
+                                    onClick={() =>
+                                      navigate("/admin/students/result", {
+                                        state: { id: item.id },
+                                      })
+                                    }
+                                    title="View Result"
+                                  >
+                                    <i className="fas fa-award"></i>
+                                  </Button>
                                 </div>
                               </td>
                             </tr>

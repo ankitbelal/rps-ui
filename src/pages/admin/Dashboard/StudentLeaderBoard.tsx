@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
-import { Card } from "react-bootstrap";
+import { Card, OverlayTrigger, Tooltip } from "react-bootstrap";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useGetTopStudentsQuery } from "../../../features/admin/dashboard/dahboardApi";
@@ -7,6 +7,7 @@ import { useGetProgramsQuery } from "../../../features/admin/students/studentApi
 import "./css/StudentLeaderBoard.css";
 import { StudentWithResult } from "../../../features/admin/dashboard/utils";
 import { ProgramList } from "../../../features/admin/students/utils";
+import { useNavigate } from "react-router-dom";
 
 /* ─────────────────────────────────────────────
    TYPES
@@ -144,6 +145,7 @@ const EmptyState: React.FC = () => (
    COMPONENT
 ───────────────────────────────────────────── */
 const StudentLeaderboard: React.FC = () => {
+  const navigate = useNavigate();
   const [active, setActive] = useState("all");
   const [examTerm, setExamTerm] = useState<ExamTermOption>("FINAL");
 
@@ -168,13 +170,11 @@ const StudentLeaderboard: React.FC = () => {
     return [ALL_PROGRAM, ...dynamic];
   }, [programsRes]);
 
-  /* ── Active program object ── */
   const prog = useMemo(
     () => programs.find((p) => p.id === active) ?? ALL_PROGRAM,
     [programs, active],
   );
 
-  /* ── Top Students API ── */
   const { data: topStudentsRes, isLoading: studentsLoading } =
     useGetTopStudentsQuery(
       {
@@ -186,11 +186,9 @@ const StudentLeaderboard: React.FC = () => {
 
   const students: StudentWithResult[] = topStudentsRes?.data ?? [];
 
-  /* ── Lookup program by apiId ── */
   const getProgramByApiId = (apiId: number): Program =>
     programs.find((p) => p.apiId === apiId) ?? ALL_PROGRAM;
 
-  /* ── Scroll + drag ── */
   const scroll = (dir: number) =>
     pillsRef.current?.scrollBy({ left: dir * 150, behavior: "smooth" });
 
@@ -215,9 +213,13 @@ const StudentLeaderboard: React.FC = () => {
 
   const isLoading = programsLoading || studentsLoading;
 
-  /* ─────────────────────────────────────────
-     RENDER
-  ───────────────────────────────────────── */
+  // Handle navigation to student result page
+  const handleViewResult = (student: StudentWithResult) => {
+    navigate("/admin/students/result", {
+      state: { id: student.studentId },
+    });
+  };
+
   return (
     <SkeletonTheme baseColor="#f3f4f6" highlightColor="#e9eaf0">
       <div className="slb-wrap">
@@ -432,31 +434,45 @@ const StudentLeaderboard: React.FC = () => {
                       className="slb-row"
                       style={{ animationDelay: `${i * 40}ms` }}
                     >
-                      <div className="slb-student">
+                      {/* Student column with tooltip and click handler */}
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip id={`tooltip-view-${s.studentId}`}>
+                            Click to view {s.name}'s result
+                          </Tooltip>
+                        }
+                      >
                         <div
-                          className="slb-avatar"
-                          style={{
-                            background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`,
-                          }}
+                          className="slb-student clickable"
+                          onClick={() => handleViewResult(s)}
+                          style={{ cursor: "pointer" }}
                         >
-                          {getInitials(s.name)}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div className="slb-sname">{s.name}</div>
-                          <div className="slb-smeta">
-                            <span className="slb-sid">#{s.rollNumber}</span>
-                            <span
-                              className="slb-stag"
-                              style={{ background: sp.bg, color: sp.color }}
-                            >
-                              {sp.code}
-                            </span>
-                            <span className="slb-ssem">
-                              {semLabel(s.semester)}
-                            </span>
+                          <div
+                            className="slb-avatar"
+                            style={{
+                              background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`,
+                            }}
+                          >
+                            {getInitials(s.name)}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="slb-sname">{s.name}</div>
+                            <div className="slb-smeta">
+                              <span className="slb-sid">#{s.rollNumber}</span>
+                              <span
+                                className="slb-stag"
+                                style={{ background: sp.bg, color: sp.color }}
+                              >
+                                {sp.code}
+                              </span>
+                              <span className="slb-ssem">
+                                {semLabel(s.semester)}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </OverlayTrigger>
 
                       <div className="slb-gpa">
                         {s.gpa != null ? s.gpa.toFixed(2) : "—"}
