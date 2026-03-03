@@ -8,8 +8,13 @@ import SearchableDropdown, {
 } from "../../../../Component/common/SearchableDropdown";
 import { studentSchema } from "../validations/studentSchema";
 import { StudentForm } from "../../../../features/admin/students/utils";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface StudentFormModalProps {
+
   show: boolean;
   onHide: () => void;
   // setError is passed so parent can map API errors back to fields
@@ -280,16 +285,27 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                   <Form.Label className="fw-semibold">
                     Date of Birth <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Control
-                    type="date"
-                    {...register("DOB")}
-                    isInvalid={!!errors.DOB}
-                    className="py-2"
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.DOB?.message}
-                  </Form.Control.Feedback>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      value={watch("DOB") ? dayjs(watch("DOB")) : null}
+                      onChange={(newValue) =>
+                        setValue(
+                          "DOB",
+                          newValue ? newValue.format("YYYY-MM-DD") : "",
+                          { shouldValidate: true }
+                        )
+                      }
+                      maxDate={dayjs()}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: !!errors.DOB,
+                          helperText: errors.DOB?.message,
+                          size: "small",
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
                 </Form.Group>
               </Col>
             </Row>
@@ -346,16 +362,37 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                   <Form.Label className="fw-semibold">
                     Enrollment Date <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Control
+                  {/* <Form.Control
                     type="date"
                     {...register("enrollmentDate")}
                     isInvalid={!!errors.enrollmentDate}
                     className="py-2"
                     max={new Date().toISOString().split("T")[0]}
-                  />
-                  <Form.Control.Feedback type="invalid">
+                  /> */}
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                       <DatePicker
+                                         value={watch("enrollmentDate") ? dayjs(watch("enrollmentDate")) : null}
+                                         onChange={(newValue) =>
+                                           setValue(
+                                             "enrollmentDate",
+                                             newValue ? newValue.format("YYYY-MM-DD") : "",
+                                             { shouldValidate: true }
+                                           )
+                                         }
+                                         maxDate={dayjs()}
+                                         slotProps={{
+                                           textField: {
+                                             fullWidth: true,
+                                             error: !!errors.enrollmentDate,
+                                             helperText: errors.enrollmentDate?.message,
+                                             size: "small",
+                                           },
+                                         }}
+                                       />
+                                     </LocalizationProvider>
+                  {/* <Form.Control.Feedback type="invalid">
                     {errors.enrollmentDate?.message}
-                  </Form.Control.Feedback>
+                  </Form.Control.Feedback> */}
                   <Form.Text className="text-muted">
                     Cannot be a future date
                   </Form.Text>
