@@ -234,7 +234,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                       type="tel"
                       {...register("phone")}
                       isInvalid={!!errors.phone}
-                      placeholder="9876543210"
+                      placeholder="Enter 10 digits phone number"
                       className="py-2"
                       maxLength={10}
                       onKeyDown={phoneKeyDown}
@@ -250,7 +250,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                     </div>
                   )}
                   <Form.Text className="text-muted">
-                    10-15 digits only
+                    10 digits only
                   </Form.Text>
                 </Form.Group>
               </Col>

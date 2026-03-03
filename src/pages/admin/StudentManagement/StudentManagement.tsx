@@ -452,7 +452,7 @@ const StudentManagement: React.FC = () => {
 
             {/* Clear Filters Button */}
             {(searchTerm ||
-              statusFilter !== "" ||
+              statusFilter !== "A" ||
               programFilter !== "" ||
               semesterFilter !== "") && (
               <div className="mt-3">

@@ -27,7 +27,7 @@ export const editStudentSchema = yup.object({
   phone: yup
     .string()
     .optional()
-    .matches(/^[0-9]{10,15}$/, 'Phone number must be 10-15 digits')
+    .matches(/^[0-9]{10,15}$/, 'Phone number must be 10 digits')
     .transform((value) => value?.replace(/[^\d]/g, '')),
   
   rollNumber: yup

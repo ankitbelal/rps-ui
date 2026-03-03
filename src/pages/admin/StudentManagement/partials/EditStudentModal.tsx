@@ -267,7 +267,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
                       type="tel"
                       {...register("phone")}
                       isInvalid={!!errors.phone}
-                      placeholder="9876543210"
+                      placeholder="Enter 10 digits phone number."
                       className="py-2"
                       maxLength={10}
                       onKeyDown={phoneKeyDown}

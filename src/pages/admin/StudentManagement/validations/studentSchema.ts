@@ -27,7 +27,7 @@ export const studentSchema = yup.object({
   phone: yup
     .string()
     .required('Phone number is required')
-    .matches(/^[0-9]{10,15}$/, 'Phone number must be 10-15 digits')
+    .matches(/^[0-9]{10,15}$/, 'Phone number must be 10 digits')
     .transform((value) => value?.replace(/[^\d]/g, '')), // Remove non-digits
   
   rollNumber: yup
