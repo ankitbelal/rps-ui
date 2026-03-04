@@ -67,6 +67,13 @@ export const managementApi = createApi({
         responseHandler: (response) => response.blob(),
       }),
     }),
+    sendSingleUserNotice:builder.mutation({
+      query:(data)=>({
+        url:ManagementApiEndpoints.SINGLE_USER_NOTICE,
+        method:"POST",
+        body:data
+      })
+    })
   }),
 });
 
@@ -77,4 +84,5 @@ export const {
   useGetAuditLogsQuery,
   useBulkPublishResultMutation,
   useLazyBulkPublishMissingReportQuery,
+  useSendSingleUserNoticeMutation
 } = managementApi;

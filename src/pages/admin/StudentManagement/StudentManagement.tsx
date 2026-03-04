@@ -176,9 +176,9 @@ const StudentManagement: React.FC = () => {
 
   const handleCloseNotifyModal = () => {
     setShowNotifyModal(false);
+    setViewingStudentId(null);
   };
 
-  const handleSendNotification = () => {};
   const handleEditConfirm = async (
     data: EditStudentFormData,
     setError: UseFormSetError<EditStudentFormData>,
@@ -763,7 +763,8 @@ const StudentManagement: React.FC = () => {
       <SendNotificationModal
         show={showNotifyModal}
         onHide={handleCloseNotifyModal}
-        onSend={handleSendNotification}
+        id={viewingStudentId}
+        userType="S"
         user={studentDetailsData?.data?.[0]}
       />
     </>

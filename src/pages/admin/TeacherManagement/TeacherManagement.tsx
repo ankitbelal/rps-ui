@@ -264,8 +264,6 @@ const TeacherManagement: React.FC = () => {
     setShowNotifyModal(true);
   };
 
-  const handleSendNotification = () => {};
-
   return (
     <>
       <div className="mb-4">
@@ -626,7 +624,8 @@ const TeacherManagement: React.FC = () => {
       <SendNotificationModal
         show={showNotifyModal}
         onHide={handleCloseNotifyModal}
-        onSend={handleSendNotification}
+        id={viewingTeacherId}
+        userType="T"
         user={teacherDetailsData?.data?.[0]}
       />
     </>
