@@ -20,6 +20,7 @@ import ProfilePage from "../Component/common/ProfilePage";
 import TabbedComponent from "../pages/admin/Management/TabbedComponent";
 import { RootState } from "../app/store";
 import StudentResult from "../Component/Marks/ResultPage";
+import ResultListing from "../pages/admin/StudentManagement/ResultManagement/ResultListing";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -115,7 +116,7 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requiredRole={["admin", "superadmin"]}>
               <DashboardLayout>
-                <StudentManagement />
+                <ResultListing />
               </DashboardLayout>
             </ProtectedRoute>
           }
