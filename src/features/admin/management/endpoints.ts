@@ -10,5 +10,6 @@ export const ManagementApiEndpoints: EndPointType = {
   BULK_PUBLISH_RESULT: "result/bulk-publish",
   BULK_PUBLISH_RESULT_REPORT: "result/bulk-publish-missing-report",
   SINGLE_PUBLISH_RESULT: "result/single-publish",
-  SINGLE_USER_NOTICE:"/notice/single-user"
+  SINGLE_USER_NOTICE:"/notice/single-user",
+  GET_BULK_RESULT:"/result/bulk-result"
 };

@@ -6,6 +6,8 @@ import {
   PromotionApiResponse,
   Params,
   publishResultPayload,
+  BulkResultApiResponse,
+  BulkApiParams
 } from "./utils";
 
 export const managementApi = createApi({
@@ -73,6 +75,13 @@ export const managementApi = createApi({
         method:"POST",
         body:data
       })
+    }),
+    getBulkResult:builder.query<BulkResultApiResponse,BulkApiParams>({
+      query:(queryParams)=>({
+        url:ManagementApiEndpoints.GET_BULK_RESULT,
+        method:"GET",
+        params:queryParams
+      })
     })
   }),
 });
@@ -84,5 +93,6 @@ export const {
   useGetAuditLogsQuery,
   useBulkPublishResultMutation,
   useLazyBulkPublishMissingReportQuery,
-  useSendSingleUserNoticeMutation
+  useSendSingleUserNoticeMutation,
+  useGetBulkResultQuery
 } = managementApi;
