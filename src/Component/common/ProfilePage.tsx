@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Row, Col, Form, Alert, Container, Card } from 'react-bootstrap';
+import { Button, Row, Col, Form, Alert, Container, Card, InputGroup } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { profileSchema, passwordSchema } from '../../helper/schema';
@@ -47,6 +47,11 @@ const ProfilePage: React.FC = () => {
     const [profileData,setProfileData] = useState<ProfileData>();
     const {user} = useAppSelector((state:RootState)=>state.auth);
 
+    // Password visibility states
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const {data:adminProfileData,isLoading:isGetingProfileData}=useGetAdminProfileDataQuery(undefined,{skip:role !== "admin" && role !== "superadmin",refetchOnMountOrArgChange:true});
     const {data:teacherProfileData, isLoading:isProfileDataLoading}=useGetTeacherProfileDataQuery(undefined,{skip:role!=="teacher",refetchOnMountOrArgChange:true});
     const [updateAdminProfile,{isLoading:isUpdatingAdmin}]=useUpdateAdminProfileMutation();
@@ -58,17 +63,23 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
       dispatch(
         setPageTitle({
-          title: "Profile Management",
-          subtitle: "Manage your profile information and password",
+          title: role ==="student"?"Password Management":"Profile Management",
+          subtitle: role==="student"?"Manage your password":"Manage your profile information and password",
         }),
       );
-    }, [dispatch]);
+    }, [dispatch,role]);
 
     useEffect(()=>{
         if(user){
             setRole(getRoleByType(user?.UserType));
         }
     },[user])
+
+    useEffect(()=>{
+        if(role && role==="student"){
+            setActiveTab("password")
+        }
+    },[role])
 
     const {
         register: registerProfile,
@@ -141,11 +152,11 @@ const ProfilePage: React.FC = () => {
 
             if(role === "admin" || role === "superadmin"){
                 response = await toast.promise(updateAdminProfile(data).unwrap(),{
-                    loading:"Updatin Profile.."
+                    loading:"Updating Profile.."
                 });
             }else if(role === "teacher"){
                 response = await toast.promise(updateTeacherProfile(data).unwrap(),{
-                    loading:"Updatin Profile.."
+                    loading:"Updating Profile.."
                 });
             }
             if(response.success){
@@ -176,6 +187,10 @@ const ProfilePage: React.FC = () => {
                     password: '',
                     confirmPassword: '',
                 });
+                // Reset password visibility states
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
             }
         } catch (error:any) {
             const errorMessage = error?.data?.message || "Failed to update password";
@@ -195,6 +210,10 @@ const ProfilePage: React.FC = () => {
                 password: '',
                 confirmPassword: '',
             });
+            // Reset password visibility states when switching tabs
+            setShowCurrentPassword(false);
+            setShowNewPassword(false);
+            setShowConfirmPassword(false);
         }
     };
 
@@ -230,13 +249,14 @@ const ProfilePage: React.FC = () => {
                     <i className="fas fa-user-edit text-white fs-3"></i>
                 </div>
                 <div>
-                    <h4 className="mb-1 fw-bold">My Profile</h4>
+                    <h4 className="mb-1 fw-bold">{role==="student"?"Change Password":"My Profile"}</h4>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="mb-4">
                 <div className="d-flex border-bottom">
+                {role!=="student" && (
                     <Button
                         variant="link"
                         className={`text-decoration-none px-4 py-3 position-relative ${activeTab === 'profile' ? 'text-primary fw-bold' : 'text-muted'}`}
@@ -249,6 +269,7 @@ const ProfilePage: React.FC = () => {
                         <i className="fas fa-user me-2"></i>
                         Profile Information
                     </Button>
+                )}
                     <Button
                         variant="link"
                         className={`text-decoration-none px-4 py-3 position-relative ${activeTab === 'password' ? 'text-primary fw-bold' : 'text-muted'}`}
@@ -595,17 +616,47 @@ const ProfilePage: React.FC = () => {
                                         <Form.Label className="fw-semibold">
                                             Current Password <span className="text-danger">*</span>
                                         </Form.Label>
-                                        <Form.Control
-                                            type="password"
-                                            {...registerPassword('currentPassword')}
-                                            isInvalid={!!passwordErrors.currentPassword}
-                                            className="py-2"
-                                            placeholder="Enter current password"
-                                            disabled={isUpdatingPassword}
-                                        />
-                                        <Form.Control.Feedback type="invalid">
-                                            {passwordErrors.currentPassword?.message}
-                                        </Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                {...registerPassword('currentPassword')}
+                                                isInvalid={!!passwordErrors.currentPassword}
+                                                className="py-2 pe-5"
+                                                placeholder="Enter current password"
+                                                disabled={isUpdatingPassword}
+                                                style={{
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e0e0e0',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            />
+                                            <Button
+                                                variant="link"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                className="position-absolute end-0 top-0 h-100 d-flex align-items-center justify-content-center text-muted"
+                                                style={{
+                                                    width: '45px',
+                                                    padding: 0,
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    textDecoration: 'none',
+                                                    zIndex: 5
+                                                }}
+                                                disabled={isUpdatingPassword}
+                                                type="button"
+                                            >
+                                                <i className={`fas fa-${showCurrentPassword ? 'eye' : 'eye-slash'}`} 
+                                                   style={{ 
+                                                       fontSize: '1.1rem',
+                                                       color: showCurrentPassword ? '#0d6efd' : '#6c757d',
+                                                       transition: 'color 0.2s ease'
+                                                   }}>
+                                                </i>
+                                            </Button>
+                                            <Form.Control.Feedback type="invalid">
+                                                {passwordErrors.currentPassword?.message}
+                                            </Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
 
@@ -614,17 +665,47 @@ const ProfilePage: React.FC = () => {
                                         <Form.Label className="fw-semibold">
                                             New Password <span className="text-danger">*</span>
                                         </Form.Label>
-                                        <Form.Control
-                                            type="password"
-                                            {...registerPassword('password')}
-                                            isInvalid={!!passwordErrors.password}
-                                            className="py-2"
-                                            placeholder="Enter new password"
-                                            disabled={isUpdatingPassword}
-                                        />
-                                        <Form.Control.Feedback type="invalid">
-                                            {passwordErrors.password?.message}
-                                        </Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type={showNewPassword ? "text" : "password"}
+                                                {...registerPassword('password')}
+                                                isInvalid={!!passwordErrors.password}
+                                                className="py-2 pe-5"
+                                                placeholder="Enter new password"
+                                                disabled={isUpdatingPassword}
+                                                style={{
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e0e0e0',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            />
+                                            <Button
+                                                variant="link"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="position-absolute end-0 top-0 h-100 d-flex align-items-center justify-content-center text-muted"
+                                                style={{
+                                                    width: '45px',
+                                                    padding: 0,
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    textDecoration: 'none',
+                                                    zIndex: 5
+                                                }}
+                                                disabled={isUpdatingPassword}
+                                                type="button"
+                                            >
+                                                <i className={`fas fa-${showNewPassword ? 'eye' : 'eye-slash'}`}
+                                                   style={{ 
+                                                       fontSize: '1.1rem',
+                                                       color: showNewPassword ? '#0d6efd' : '#6c757d',
+                                                       transition: 'color 0.2s ease'
+                                                   }}>
+                                                </i>
+                                            </Button>
+                                            <Form.Control.Feedback type="invalid">
+                                                {passwordErrors.password?.message}
+                                            </Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                     <PasswordStrengthMeter password={newPassword} />
                                 </Col>
@@ -634,17 +715,47 @@ const ProfilePage: React.FC = () => {
                                         <Form.Label className="fw-semibold">
                                             Confirm New Password <span className="text-danger">*</span>
                                         </Form.Label>
-                                        <Form.Control
-                                            type="password"
-                                            {...registerPassword('confirmPassword')}
-                                            isInvalid={!!passwordErrors.confirmPassword}
-                                            className="py-2"
-                                            placeholder="Confirm new password"
-                                            disabled={isUpdatingPassword}
-                                        />
-                                        <Form.Control.Feedback type="invalid">
-                                            {passwordErrors.confirmPassword?.message}
-                                        </Form.Control.Feedback>
+                                        <div className="position-relative">
+                                            <Form.Control
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                {...registerPassword('confirmPassword')}
+                                                isInvalid={!!passwordErrors.confirmPassword}
+                                                className="py-2 pe-5"
+                                                placeholder="Confirm new password"
+                                                disabled={isUpdatingPassword}
+                                                style={{
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e0e0e0',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            />
+                                            <Button
+                                                variant="link"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="position-absolute end-0 top-0 h-100 d-flex align-items-center justify-content-center text-muted"
+                                                style={{
+                                                    width: '45px',
+                                                    padding: 0,
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    textDecoration: 'none',
+                                                    zIndex: 5
+                                                }}
+                                                disabled={isUpdatingPassword}
+                                                type="button"
+                                            >
+                                                <i className={`fas fa-${showConfirmPassword ? 'eye' : 'eye-slash'}`}
+                                                   style={{ 
+                                                       fontSize: '1.1rem',
+                                                       color: showConfirmPassword ? '#0d6efd' : '#6c757d',
+                                                       transition: 'color 0.2s ease'
+                                                   }}>
+                                                </i>
+                                            </Button>
+                                            <Form.Control.Feedback type="invalid">
+                                                {passwordErrors.confirmPassword?.message}
+                                            </Form.Control.Feedback>
+                                        </div>
                                     </Form.Group>
                                 </Col>
 

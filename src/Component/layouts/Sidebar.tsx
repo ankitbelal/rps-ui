@@ -157,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
         return [
           {
             id: 1,
-            label: "Dashboard",
+            label: "My Information",
             icon: <FaTachometerAlt />,
             path: "/student/dashboard",
           },

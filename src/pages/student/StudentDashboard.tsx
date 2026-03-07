@@ -1,414 +1,191 @@
-import { useState, FC } from "react";
+import { FC } from "react";
+import { Card, Row, Col } from "react-bootstrap";
+import { FaUserGraduate, FaEnvelope, FaPhone, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { useGetStudentByuserIdQuery } from "../../features/admin/students/studentApi";
 
-interface Student {
-  id: string;
-  registrationNumber: string;
-  rollNumber: string;
-  name: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  department: string;
-  course: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-}
 
-const studentData: Student = {
-  id: "STU-2024-0042",
-  registrationNumber: "REG/2024/CSE/0042",
-  rollNumber: "24CSE042",
-  name: "Aryan Mehta",
-  email: "aryan.mehta@university.edu",
-  phone: "+91 98765 43210",
-  dateOfBirth: "15 March 2004",
-  department: "Computer Science & Engineering",
-  course: "B.Tech (CSE)",
-  address: "204, Shree Residency, Near City Mall",
-  city: "Ahmedabad",
-  state: "Gujarat",
-  pincode: "380015",
-};
 
 interface InfoFieldProps {
   label: string;
   value: string;
   accent?: boolean;
+  icon?: React.ReactNode;
 }
 
-const InfoField: FC<InfoFieldProps> = ({ label, value, accent = false }) => (
-  <div className="info-field">
-    <span className="info-label">{label}</span>
-    <span className={`info-value ${accent ? "accent" : ""}`}>{value}</span>
+const InfoField: FC<InfoFieldProps> = ({ label, value, accent = false, icon }) => (
+  <div className="mb-3 pb-2 border-bottom border-light">
+    <div className="d-flex align-items-center mb-1">
+      {icon && <span className="text-primary me-2" style={{ fontSize: "0.8rem" }}>{icon}</span>}
+      <small className="text-muted text-uppercase" style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}>
+        {label}
+      </small>
+    </div>
+    <div className={accent ? "fw-semibold text-dark" : "text-secondary"} style={{ fontSize: "0.92rem" }}>
+      {value}
+    </div>
   </div>
 );
 
 const StudentDashboard: FC = () => {
-  const [student] = useState<Student>(studentData);
+
+  const {data, isLoading} = useGetStudentByuserIdQuery();
+  const studentData = data?.data[0];
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* Root fills entire parent — no max-width, no centering */
-        .dashboard-root {
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-          background: #f1f5f9;
-          padding: 1.5rem 2rem;
-          display: flex;
-          flex-direction: column;
-          font-family: 'DM Sans', sans-serif;
-        }
-
-        /* Card stretches to fill all remaining space */
-        .card {
-          width: 100%;
-          flex: 1;
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 1.25rem;
-          overflow: hidden;
-          box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-          display: flex;
-          flex-direction: column;
-        }
-
-        /* ── Hero ── */
-        .card-hero {
-          background: linear-gradient(135deg, #eff6ff 0%, #f8faff 60%, #f0f9ff 100%);
-          padding: 2rem 2.5rem 0;
-          position: relative;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        .card-hero::before {
-          content: '';
-          position: absolute;
-          top: -60px; right: -60px;
-          width: 280px; height: 280px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
-        .card-hero::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #bfdbfe 40%, #bfdbfe 60%, transparent);
-        }
-
-        .hero-inner {
-          display: flex;
-          align-items: flex-end;
-          gap: 2rem;
-          position: relative;
-          z-index: 1;
-        }
-
-        .avatar-wrap {
-          flex-shrink: 0;
-          position: relative;
-          padding-bottom: 1.8rem;
-        }
-
-        .avatar-ring {
-          width: 88px; height: 88px;
-          border-radius: 50%;
-          padding: 3px;
-          background: linear-gradient(135deg, #2563eb, #60a5fa);
-          box-shadow: 0 4px 20px rgba(37,99,235,0.2);
-        }
-
-        .avatar-img {
-          width: 100%; height: 100%;
-          border-radius: 50%;
-          background: #dbeafe;
-          display: block;
-          object-fit: cover;
-        }
-
-        .avatar-status {
-          position: absolute;
-          bottom: 1.95rem; right: 2px;
-          width: 14px; height: 14px;
-          border-radius: 50%;
-          background: #22c55e;
-          border: 2px solid #fff;
-          box-shadow: 0 0 6px rgba(34,197,94,0.5);
-        }
-
-        .hero-text {
-          padding-bottom: 1.8rem;
-          flex: 1;
-        }
-
-        .hero-tag {
-          font-size: 0.65rem;
-          font-weight: 600;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: #2563eb;
-          margin-bottom: 0.35rem;
-        }
-
-        .hero-name {
-          font-family: 'Syne', sans-serif;
-          font-weight: 700;
-          font-size: 2rem;
-          color: #0f172a;
-          line-height: 1.15;
-          margin-bottom: 0.55rem;
-        }
-
-        .hero-meta {
-          display: flex;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-        }
-
-        .hero-chip {
-          font-size: 0.74rem;
-          color: #475569;
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
-          padding: 0.28rem 0.8rem;
-          border-radius: 999px;
-        }
-
-        /* ── ID Strip ── */
-        .id-strip {
-          display: flex;
-          border-top: 1px solid #e2e8f0;
-          background: #f8fafc;
-          flex-shrink: 0;
-        }
-
-        .id-item {
-          flex: 1;
-          padding: 1rem 2.5rem;
-          border-right: 1px solid #e2e8f0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.2rem;
-        }
-
-        .id-item:last-child { border-right: none; }
-
-        .id-label {
-          font-size: 0.62rem;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: #94a3b8;
-          font-weight: 500;
-        }
-
-        .id-value {
-          font-family: 'Syne', sans-serif;
-          font-size: 0.92rem;
-          font-weight: 700;
-          color: #2563eb;
-          letter-spacing: 0.03em;
-        }
-
-        /* ── Body grid — flex:1 fills remaining height ── */
-        .card-body {
-          padding: 2rem 2.5rem;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem 3rem;
-          flex: 1;
-          align-content: start;
-        }
-
-        .section { display: flex; flex-direction: column; }
-
-        .section-title {
-          font-size: 0.62rem;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: #94a3b8;
-          font-weight: 700;
-          font-family: 'Syne', sans-serif;
-          margin-bottom: 0.75rem;
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-        }
-
-        .section-title::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: linear-gradient(90deg, #e2e8f0, transparent);
-        }
-
-        .info-field {
-          display: flex;
-          flex-direction: column;
-          padding: 0.65rem 0;
-          border-bottom: 1px solid #f1f5f9;
-          gap: 0.18rem;
-        }
-
-        .info-field:last-child { border-bottom: none; }
-
-        .info-label {
-          font-size: 0.65rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #94a3b8;
-          font-weight: 500;
-        }
-
-        .info-value {
-          font-size: 0.92rem;
-          color: #475569;
-          font-weight: 400;
-          line-height: 1.4;
-        }
-
-        .info-value.accent {
-          color: #0f172a;
-          font-weight: 600;
-        }
-
-        .full-width { grid-column: 1 / -1; }
-
-        .address-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 0 2rem;
-        }
-
-        /* ── Footer ── */
-        .card-footer {
-          padding: 1rem 2.5rem;
-          border-top: 1px solid #f1f5f9;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #fafbfc;
-          flex-shrink: 0;
-        }
-
-        .footer-note {
-          font-size: 0.72rem;
-          color: #94a3b8;
-          letter-spacing: 0.04em;
-        }
-
-        .footer-dot {
-          width: 5px; height: 5px;
-          border-radius: 50%;
-          background: #2563eb;
-          opacity: 0.35;
-        }
-
-        @media (max-width: 768px) {
-          .dashboard-root { padding: 1rem; }
-          .card-hero { padding: 1.5rem 1.5rem 0; }
-          .hero-name { font-size: 1.5rem; }
-          .card-body { grid-template-columns: 1fr; padding: 1.5rem; gap: 1.5rem; }
-          .full-width { grid-column: 1; }
-          .address-grid { grid-template-columns: 1fr 1fr; }
-          .id-item { padding: 0.8rem 1rem; }
-          .card-footer { padding: 0.8rem 1.5rem; }
-          .avatar-ring { width: 68px; height: 68px; }
-        }
-      `}</style>
-
-      <div className="dashboard-root">
-        <div className="card">
-          {/* Hero */}
-          <div className="card-hero">
-            <div className="hero-inner">
-              <div className="avatar-wrap">
-                <div className="avatar-ring">
-                  <img
-                    className="avatar-img"
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aryan&backgroundColor=dbeafe"
-                    alt={student.name}
-                  />
+    <div className="p-3 p-md-4 bg-light min-vh-100">
+      <Card className="border-0 shadow-sm overflow-hidden">
+        {/* Hero Section with Gradient */}
+        <div className="bg-gradient-primary p-4 p-md-5 pb-0 position-relative">
+          <div 
+            className="position-absolute top-0 end-0 w-50 h-100 opacity-10"
+            style={{
+              background: "radial-gradient(circle at top right, rgba(255,255,255,0.8) 0%, transparent 70%)",
+              pointerEvents: "none"
+            }}
+          />
+          
+          <Row className="align-items-end g-4">
+            <Col xs="auto">
+              <div className="position-relative">
+                <div className="bg-white p-1 rounded-circle shadow-sm">
+                  <div 
+                    className="rounded-circle bg-primary d-flex align-items-center justify-content-center"
+                    style={{ width: "80px", height: "80px" }}
+                  >
+                    <FaUserGraduate size={40} className="text-white" />
+                  </div>
                 </div>
-                <div className="avatar-status" title="Active" />
+                {/* <div 
+                  className="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
+                  style={{ width: "14px", height: "14px" }}
+                /> */}
               </div>
-              <div className="hero-text">
-                <div className="hero-name">{student.name}</div>
-                <div className="hero-meta">
-                  <span className="hero-chip">{student.course}</span>
-                  <span className="hero-chip">{student.department}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ID Strip */}
-          <div className="id-strip">
-            <div className="id-item">
-              <span className="id-label">Student ID</span>
-              <span className="id-value">{student.id}</span>
-            </div>
-            <div className="id-item">
-              <span className="id-label">Registration No.</span>
-              <span className="id-value">{student.registrationNumber}</span>
-            </div>
-            <div className="id-item">
-              <span className="id-label">Roll Number</span>
-              <span className="id-value">{student.rollNumber}</span>
-            </div>
-          </div>
-
-          {/* Body */}
-          <div className="card-body">
-            <div className="section">
-              <div className="section-title">Personal Info</div>
-              <InfoField label="Full Name" value={student.name} accent />
-              <InfoField label="Date of Birth" value={student.dateOfBirth} />
-              <InfoField label="Email Address" value={student.email} />
-              <InfoField label="Phone Number" value={student.phone} />
-            </div>
-
-            <div className="section">
-              <div className="section-title">Academic Info</div>
-              <InfoField label="Course" value={student.course} accent />
-              <InfoField label="Department" value={student.department} />
-              <InfoField
-                label="Registration No."
-                value={student.registrationNumber}
-              />
-              <InfoField label="Roll Number" value={student.rollNumber} />
-            </div>
-
-            <div className="section full-width">
-              <div className="section-title">Address</div>
-              <InfoField label="Street Address" value={student.address} />
-              <div className="address-grid">
-                <InfoField label="City" value={student.city} />
-                <InfoField label="State" value={student.state} />
-                <InfoField label="Pincode" value={student.pincode} />
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="card-footer">
-            <span className="footer-note">Last updated: March 2026</span>
-            <div className="footer-dot" />
-            <span className="footer-note">Profile verified ✓</span>
-          </div>
+            </Col>
+            
+            <Col>
+              <h1 className="display-6 fw-bold mb-2 text-dark">{studentData?.firstName} {studentData?.lastName}</h1>
+              {/* <div className="d-flex flex-wrap gap-2 mb-3">
+                <Badge bg="light" text="dark" className="px-3 py-2 rounded-pill">
+                  {"Test course"}
+                </Badge>
+                <Badge bg="light" text="dark" className="px-3 py-2 rounded-pill">
+                  {"Test Department"}
+                </Badge>
+              </div> */}
+            </Col>
+          </Row>
         </div>
-      </div>
-    </>
+
+        {/* ID Strip */}
+        <Row className="g-0 bg-light border-top border-bottom">
+          <Col xs={12} sm={4} className="p-3 text-center text-sm-start border-end-sm">
+            <small className="text-muted text-uppercase d-block" style={{ fontSize: "0.7rem" }}>
+              Registration No.
+            </small>
+            <span className="fw-bold text-primary">{studentData?.registrationNumber}</span>
+          </Col>
+          <Col xs={12} sm={4} className="p-3 text-center text-sm-start">
+            <small className="text-muted text-uppercase d-block" style={{ fontSize: "0.7rem" }}>
+              Roll Number
+            </small>
+            <span className="fw-bold text-primary">{studentData?.rollNumber}</span>
+          </Col>
+        </Row>
+
+        {/* Main Content */}
+        <Card.Body className="p-4 p-md-5">
+          <Row className="g-4 g-md-5">
+            {/* Personal Info */}
+            <Col md={6}>
+              <div className="d-flex align-items-center mb-3">
+                <h6 className="text-uppercase text-muted mb-0" style={{ fontSize: "0.7rem", letterSpacing: "1px" }}>
+                  Personal Information
+                </h6>
+                <hr className="flex-grow-1 ms-3 mb-0" />
+              </div>
+              
+              <InfoField 
+                label="Full Name" 
+                value={`${studentData?.firstName} ${studentData?.lastName}`} 
+                accent 
+                icon={<FaUserGraduate />}
+              />
+              <InfoField 
+                label="Date of Birth" 
+                value={studentData?.DOB?? "N/A"} 
+                icon={<FaCalendarAlt />}
+              />
+              <InfoField 
+                label="Email Address" 
+                value={studentData?.email?? "N/A"} 
+                icon={<FaEnvelope />}
+              />
+              <InfoField 
+                label="Phone Number" 
+                value={studentData?.phone??"N/A"} 
+                icon={<FaPhone />}
+              />
+            </Col>
+
+            {/* Academic Info */}
+            <Col md={6}>
+              <div className="d-flex align-items-center mb-3">
+                <h6 className="text-uppercase text-muted mb-0" style={{ fontSize: "0.7rem", letterSpacing: "1px" }}>
+                  Academic Information
+                </h6>
+                <hr className="flex-grow-1 ms-3 mb-0" />
+              </div>
+              
+              <InfoField label="Program" value={studentData?.program?.name??"N/A"} accent />
+              <InfoField label="Registration No." value={studentData?.registrationNumber??"N/A"} />
+              <InfoField label="Roll Number" value={studentData?.rollNumber??"N/A"} />
+              <InfoField label="Current Semester" value={`Semester ${studentData?.currentSemester}`} />
+            </Col>
+
+            {/* Address - Full Width */}
+            <Col xs={12}>
+              <div className="d-flex align-items-center mb-3">
+                <h6 className="text-uppercase text-muted mb-0" style={{ fontSize: "0.7rem", letterSpacing: "1px" }}>
+                  Address
+                </h6>
+                <hr className="flex-grow-1 ms-3 mb-0" />
+              </div>
+              
+              <InfoField 
+                label="Street Address" 
+                value={studentData?.address1??"N/A"} 
+                icon={<FaMapMarkerAlt />}
+              />
+              
+            </Col>
+          </Row>
+        </Card.Body>
+
+        {/* Footer
+        <Card.Footer className="bg-light px-4 px-md-5 py-3 d-flex justify-content-between align-items-center">
+          <small className="text-muted">Last updated: March 2026</small>
+          <span className="text-primary opacity-50">•</span>
+          <small className="text-muted">Profile verified ✓</small>
+        </Card.Footer> */}
+      </Card>
+
+      {/* Custom CSS for gradient */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .bg-gradient-primary {
+            background: linear-gradient(135deg, #eff6ff 0%, #f8faff 60%, #f0f9ff 100%);
+          }
+          .border-end-sm {
+            border-right: none;
+          }
+          @media (min-width: 576px) {
+            .border-end-sm {
+              border-right: 1px solid #dee2e6 !important;
+            }
+          }
+        `
+      }} />
+    </div>
   );
 };
 
