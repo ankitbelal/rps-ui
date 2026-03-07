@@ -156,6 +156,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
       case "student":
         return [
           {
+            id: 1,
+            label: "Dashboard",
+            icon: <FaTachometerAlt />,
+            path: "/student/dashboard",
+          },
+          {
             id: 2,
             label: "My Courses",
             icon: <FaBookOpen />,

@@ -21,6 +21,7 @@ import TabbedComponent from "../pages/admin/Management/TabbedComponent";
 import { RootState } from "../app/store";
 import StudentResult from "../Component/Marks/ResultPage";
 import ResultListing from "../pages/admin/StudentManagement/ResultManagement/ResultListing";
+import StudentDashboard from "../pages/student/StudentDashboard";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -251,7 +252,7 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
-                <div>Comin soon</div>
+                <StudentDashboard/>
               </DashboardLayout>
             </ProtectedRoute>
           }
