@@ -171,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             id: 3,
             label: "Results",
             icon: <FaChartBar />,
-            path: "/my-results",
+            path: "/student/result",
           },
           {
             id: 4,

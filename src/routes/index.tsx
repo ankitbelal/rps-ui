@@ -22,6 +22,7 @@ import { RootState } from "../app/store";
 import StudentResult from "../Component/Marks/ResultPage";
 import ResultListing from "../pages/admin/StudentManagement/ResultManagement/ResultListing";
 import StudentDashboard from "../pages/student/StudentDashboard";
+import StudentResultTimeline from "../pages/admin/StudentManagement/partials/StudentResultTimeline";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -252,18 +253,18 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
-                <StudentDashboard/>
+                <StudentDashboard />
               </DashboardLayout>
             </ProtectedRoute>
           }
         />
 
         <Route
-          path="/students/results"
+          path="/student/result"
           element={
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
-                <StudentResults />
+                <StudentResultTimeline />
               </DashboardLayout>
             </ProtectedRoute>
           }
