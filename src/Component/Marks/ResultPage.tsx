@@ -162,7 +162,7 @@ const StudentResult: React.FC = () => {
                 </Col>
               </Row>
             </Col>
-
+          {userRole !=="student" && (
             <Col className="d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
               <Button
                 variant="success"
@@ -177,6 +177,7 @@ const StudentResult: React.FC = () => {
                 Marks Entry
               </Button>
             </Col>
+          )}
           </Row>
         </Card.Body>
       </Card>
