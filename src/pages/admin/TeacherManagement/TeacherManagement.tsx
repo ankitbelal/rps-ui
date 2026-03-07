@@ -525,14 +525,10 @@ const TeacherManagement: React.FC = () => {
                                   </Button>
 
                                   <Button
-                                    variant="outline-success"
+                                    variant="outline-primary"
                                     size="sm"
                                     onClick={() => handleNotify(item)}
                                     title="Notify"
-                                    style={{
-                                      color: "royalblue",
-                                      borderColor: "royalblue",
-                                    }} // blue color
                                   >
                                     <i className="fas fa-envelope"></i>
                                   </Button>

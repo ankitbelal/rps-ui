@@ -174,7 +174,6 @@ const FacultyManagement: React.FC = () => {
     setSearchTerm("");
   };
 
-  // Get badge color based on number of programs
   const getProgramsBadgeColor = (count: number) => {
     if (count === 0) return "secondary";
     if (count <= 3) return "success";
@@ -307,9 +306,6 @@ const FacultyManagement: React.FC = () => {
                                   <div>
                                     <div className="fw-semibold fs-6">
                                       {item.name}
-                                    </div>
-                                    <div className="text-muted small mt-1">
-                                      ID: {item.id}
                                     </div>
                                   </div>
                                 </div>
