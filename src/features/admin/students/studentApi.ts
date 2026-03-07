@@ -118,6 +118,15 @@ export const adminStudentApi = createApi({
       }),
       providesTags: (result, error, id) => [{ type: "Students", id }],
     }),
+
+    getStudentByuserId: builder.query<StudentDetailApiResponse, void>({
+      query: () => ({
+        url: `${AdminStudentEndpoints.GET_STUDENT_BY_USER_ID}`,
+        method: "GET",
+      }),
+      // providesTags: (result, error, id) => [{ type: "Students", id }],
+    }),
+
     getTeacherList: builder.query<TeacherList, void>({
       query: () => ({
         url: AdminStudentEndpoints.TEACHER_LIST,
@@ -222,4 +231,5 @@ export const {
   useLazyStudentReportQuery,
   useGetPublishedResultQuery,
   useRestoreStudentMutation,
+  useGetStudentByuserIdQuery,
 } = adminStudentApi;

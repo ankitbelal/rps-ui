@@ -264,7 +264,7 @@ const AppRouter = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <DashboardLayout>
-                <StudentResultTimeline />
+                <StudentResult />
               </DashboardLayout>
             </ProtectedRoute>
           }
