@@ -150,6 +150,7 @@ export interface NoticeCounts {
   unread: number;
   admin: number;
   teacher: number;
+  student:number;
 }
 
 /* ── Full paginated response ── */
