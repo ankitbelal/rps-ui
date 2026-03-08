@@ -106,7 +106,7 @@ const NotificationsPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterPill>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
 
   const { data, isLoading, isFetching, refetch } = useGetNotificationQuery({
     page,
@@ -168,6 +168,11 @@ const NotificationsPage: React.FC = () => {
     setPage(1);
   };
 
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when changing limit
+  };
+
   /* ── Group by date ── */
   const grouped = notices.reduce<Record<string, SingleNotice[]>>((acc, n) => {
     const label = formatDate(n.createdAt);
@@ -193,6 +198,9 @@ const NotificationsPage: React.FC = () => {
     { key: "teacher", label: "Teachers", emoji: "👨‍🏫", count: counts.teacher },
     {key:"student",label:"Student",emoji:"🧑‍🎓",count:counts.student}
   ];
+
+  /* ── Limit options ── */
+  const limitOptions = [10, 20, 30, 50, 100];
 
   return (
     <div
@@ -265,6 +273,43 @@ const NotificationsPage: React.FC = () => {
 
           {/* Header actions */}
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {/* Per page limit selector */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#fff",
+                border: "1px solid #cbd5e1",
+                borderRadius: "8px",
+                padding: "4px 8px",
+                fontSize: "13px",
+              }}
+            >
+              <span style={{ color: "#64748b" }}>Show:</span>
+              <select
+                value={limit}
+                onChange={(e) => handleLimitChange(Number(e.target.value))}
+                disabled={isFetching}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: "4px 4px 4px 0",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#475569",
+                  cursor: isFetching ? "not-allowed" : "pointer",
+                  outline: "none",
+                }}
+              >
+                {limitOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {counts.unread > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -541,7 +586,7 @@ const NotificationsPage: React.FC = () => {
                                 >
                                   {n.publisherType === NoticeUserType.ADMIN
                                     ? "Admin"
-                                    : "Teacher"}
+                                    : (n.publisherType === NoticeUserType.TEACHER ? "Teacher": "Student")}
                                 </span>
                               </div>
                               <div

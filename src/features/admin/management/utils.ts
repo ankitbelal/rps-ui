@@ -119,9 +119,9 @@ export enum SingleNoticeStatus {
 }
 
 export enum NoticeUserType {
-  ADMIN = "admin",
-  TEACHER = "teacher",
-  STUDENT = "student",
+  ADMIN = "A",
+  TEACHER = "T",
+  STUDENT = "S",
 }
 
 /* ── Publisher (joined relation) ── */
