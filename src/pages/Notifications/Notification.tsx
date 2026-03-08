@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import { getRoleByType } from "../../helper";
 import { RootState } from "../../app/store";
 
-type FilterPill = "all" | "unread" | "admin" | "teacher";
+type FilterPill = "all" | "unread" | "admin" | "teacher" | "student";
 
 interface TypeConfig {
   emoji: string;
@@ -110,7 +110,6 @@ const NotificationsPage: React.FC = () => {
   const limit = 20;
 
   const { data, isLoading, isFetching, refetch } = useGetNotificationQuery({
-    userId,
     page,
     limit,
     filter: activeFilter === "all" ? undefined : (activeFilter as NoticeFilter),
@@ -124,6 +123,7 @@ const NotificationsPage: React.FC = () => {
     unread: 0,
     admin: 0,
     teacher: 0,
+    student:0,
   };
   const lastPage: number = data?.lastPage ?? 1;
 
@@ -147,17 +147,21 @@ const NotificationsPage: React.FC = () => {
 
   const handleMarkAllRead = async () => {
     // type: "A" for admin filter, "T" for teacher filter, omit for all/unread
-    const payload: { all: boolean; userId: number; type?: "A" | "T" } = {
+    const payload: { all: boolean; type?: "A" | "T" } = {
       all: true,
-      userId,
     };
     if (activeFilter === "admin") payload.type = "A";
     if (activeFilter === "teacher") payload.type = "T";
 
     try {
-      await markAsRead(payload).unwrap();
-      refetch();
-    } catch (_) {}
+      const response = await markAsRead(payload).unwrap();
+      if(response.success){
+        toast.success(response.message);
+      }
+    } catch (error:any) {
+      const errorMessage = error?.data.message || "Failed to mark as read";
+      toast.error(errorMessage);
+    }
   };
 
   const handleFilterChange = (key: FilterPill) => {
@@ -188,6 +192,7 @@ const NotificationsPage: React.FC = () => {
     { key: "unread", label: "Unread", emoji: "🔵", count: counts.unread },
     { key: "admin", label: "Admin", emoji: "🏫", count: counts.admin },
     { key: "teacher", label: "Teachers", emoji: "👨‍🏫", count: counts.teacher },
+    {key:"student",label:"Student",emoji:"🧑‍🎓",count:counts.student}
   ];
 
   return (
@@ -368,6 +373,10 @@ const NotificationsPage: React.FC = () => {
             .filter((pill) => {
               if (getRoleByType(userRole) === "teacher") {
                 return pill.key !== "teacher" && pill.key !== "admin";
+              }else if(getRoleByType(userRole)==="admin"){
+                return pill.key !== "admin";
+              }else if(getRoleByType(userRole)==="student"){
+                return pill.key !=="student";
               }
               return true;
             })}
@@ -479,7 +488,7 @@ const NotificationsPage: React.FC = () => {
                               flexShrink: 0,
                             }}
                           >
-                            {cfg.emoji}
+                            {"🔔"}
                           </div>
 
                           <div style={{ flex: 1, minWidth: 0 }}>
