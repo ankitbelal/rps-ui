@@ -25,6 +25,7 @@ import StudentDashboard from "../pages/student/StudentDashboard";
 import StudentResultTimeline from "../pages/admin/StudentManagement/partials/StudentResultTimeline";
 import StudentSubjects from "../pages/student/MySubject";
 import NotificationsPage from "../pages/Notifications/Notification";
+import GradeRanges from "../pages/admin/Management/partials/GradeRanges";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -303,6 +304,19 @@ const AppRouter = () => {
             >
               <DashboardLayout>
                 <NotificationsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/grades"
+          element={
+            <ProtectedRoute
+              requiredRole={["teacher", "admin", "student", "superadmin"]}
+            >
+              <DashboardLayout>
+                <GradeRanges />
               </DashboardLayout>
             </ProtectedRoute>
           }

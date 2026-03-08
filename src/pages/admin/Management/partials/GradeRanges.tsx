@@ -1,13 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Button, Table, Badge } from "react-bootstrap";
 import { FaPlus, FaStar, FaArrowLeft } from "react-icons/fa";
 import { useGetGradeRangeQuery } from "../../../../features/admin/management/mamagementApi";
 import GradeRangeForm from "./GradeRangeForm";
+import { useAppSelector } from "../../../../app/hooks";
+import { RootState } from "../../../../app/store";
+import { getRoleByType } from "../../../../helper";
 
 const GradeRanges: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
-  const { data: gradeData, isLoading, isFetching, refetch } = useGetGradeRangeQuery();
+  const {
+    data: gradeData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetGradeRangeQuery();
   const gradeRanges = gradeData?.data || [];
+  const { user } = useAppSelector((state: RootState) => state.auth);
 
   const handleAddGradeRange = () => {
     setShowForm(true);
@@ -27,6 +36,13 @@ const GradeRanges: React.FC = () => {
     if (grade.includes("C")) return "warning";
     return "danger";
   };
+  const [userRole, setUserRole] = useState<string>("");
+  useEffect(() => {
+    if (user) {
+      const role = getRoleByType(user.UserType);
+      setUserRole(role === "superadmin" ? "admin" : role);
+    }
+  }, [user]);
 
   // Show loading state
   if (isLoading || isFetching) {
@@ -71,15 +87,17 @@ const GradeRanges: React.FC = () => {
                   {gradeRanges.length} grade ranges configured
                 </small>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleAddGradeRange}
-                className="d-flex align-items-center gap-1"
-              >
-                <FaPlus size={12} />
-                <span>Add Grade Range</span>
-              </Button>
+              {userRole !== "student" && userRole !== "teacher" && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleAddGradeRange}
+                  className="d-flex align-items-center gap-1"
+                >
+                  <FaPlus size={12} />
+                  <span>Add Grade Range</span>
+                </Button>
+              )}
             </div>
           </Card.Header>
 
@@ -136,7 +154,7 @@ const GradeRanges: React.FC = () => {
                 </tbody>
               </Table>
             </div>
-            
+
             {/* Simple footer with total count */}
             {gradeRanges.length > 0 && (
               <Card.Footer className="bg-white py-3 border-top">

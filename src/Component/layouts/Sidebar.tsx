@@ -144,17 +144,25 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 5,
-            label: "Notices Board",
-            icon: <FaCalendarAlt />,
-            path: "/exams",
+            label: "Notices",
+            icon: <FaEnvelope />,
+            path: "/notification",
+          },
+          {
+            id: 6,
+            label: "Grading",
+            icon: <FaFileAlt />,
+            path: "/grades",
           },
 
           {
-            id: 6,
+            id: 7,
             label: "Profile Settings",
             icon: <FaCog />,
             path: "/profile",
           },
+
+          { id: 8, label: "Feedback", icon: <FaComment />, path: "/feedback" },
         ];
 
       case "student":
@@ -190,8 +198,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
             path: "/profile",
           },
 
-          { id: 6, label: "Grades", icon: <FaFileAlt />, path: "/grades" },
-          { id: 7, label: "Feedback", icon: <FaComment />, path: "/grades" },
+          {
+            id: 6,
+            label: "Grading",
+            icon: <FaFileAlt />,
+            path: "/grades",
+          },
+          { id: 7, label: "Feedback", icon: <FaComment />, path: "/feedback" },
         ];
 
       default:

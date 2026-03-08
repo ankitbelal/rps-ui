@@ -7,13 +7,15 @@ import {
   Params,
   publishResultPayload,
   BulkResultApiResponse,
-  BulkApiParams
+  BulkApiParams,
+  NoticeQueryParams,
+  GetNoticesResponse,
 } from "./utils";
 
 export const managementApi = createApi({
   reducerPath: "managementApi",
   baseQuery,
-  tagTypes: ["grades", "promotionLogs"],
+  tagTypes: ["grades", "promotionLogs", "notification"],
   endpoints: (builder) => ({
     getGradeRange: builder.query<ListGradeResponse, void>({
       query: () => ({
@@ -69,20 +71,39 @@ export const managementApi = createApi({
         responseHandler: (response) => response.blob(),
       }),
     }),
-    sendSingleUserNotice:builder.mutation({
-      query:(data)=>({
-        url:ManagementApiEndpoints.SINGLE_USER_NOTICE,
-        method:"POST",
-        body:data
-      })
+    sendSingleUserNotice: builder.mutation({
+      query: (data) => ({
+        url: ManagementApiEndpoints.SINGLE_USER_NOTICE,
+        method: "POST",
+        body: data,
+      }),
     }),
-    getBulkResult:builder.query<BulkResultApiResponse,BulkApiParams>({
-      query:(queryParams)=>({
-        url:ManagementApiEndpoints.GET_BULK_RESULT,
-        method:"GET",
-        params:queryParams
-      })
-    })
+
+    getBulkResult: builder.query<BulkResultApiResponse, BulkApiParams>({
+      query: (queryParams) => ({
+        url: ManagementApiEndpoints.GET_BULK_RESULT,
+        method: "GET",
+        params: queryParams,
+      }),
+    }),
+
+    getNotification: builder.query<GetNoticesResponse, NoticeQueryParams>({
+      query: (queryParams) => ({
+        url: ManagementApiEndpoints.NOTICE_MAIN,
+        method: "GET",
+        params: queryParams,
+      }),
+      providesTags:["notification"]
+    }),
+
+    markAsReadNotice: builder.mutation({
+      query: (data) => ({
+        url: ManagementApiEndpoints.NOTICE_MARK_READ,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result) => (result?.success ? ["notification"] : []),
+    }),
   }),
 });
 
@@ -94,5 +115,7 @@ export const {
   useBulkPublishResultMutation,
   useLazyBulkPublishMissingReportQuery,
   useSendSingleUserNoticeMutation,
-  useGetBulkResultQuery
+  useGetBulkResultQuery,
+  useGetNotificationQuery,
+  useMarkAsReadNoticeMutation,
 } = managementApi;
