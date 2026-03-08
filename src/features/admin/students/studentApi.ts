@@ -213,6 +213,14 @@ export const adminStudentApi = createApi({
         params: queryParams,
       }),
     }),
+    downloadGradeSheet:builder.query({
+      query:(queryParams)=>({
+        url:AdminStudentEndpoints.DOWNLOAD_RESULT,
+        method:"GET",
+        params:queryParams,
+        responseHandler:(response) => response.blob()
+      })
+    })
   }),
 });
 
@@ -232,4 +240,5 @@ export const {
   useGetPublishedResultQuery,
   useRestoreStudentMutation,
   useGetStudentByuserIdQuery,
+  useLazyDownloadGradeSheetQuery
 } = adminStudentApi;

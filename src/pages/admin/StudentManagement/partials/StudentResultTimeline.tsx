@@ -8,12 +8,13 @@ import {
   Form,
   Button,
 } from "react-bootstrap";
-import { FaStar, FaChevronDown } from "react-icons/fa";
+import { FaStar, FaChevronDown, FaDownload } from "react-icons/fa";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { useGetPublishedResultQuery } from "../../../../features/admin/students/studentApi";
+import { useGetPublishedResultQuery, useLazyDownloadGradeSheetQuery } from "../../../../features/admin/students/studentApi";
 import { ResultData } from "../../../../features/admin/students/utils";
 import { Clock, Edit } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface StudentResultTimelineProps {
   studentId?: number;
@@ -46,6 +47,8 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
     refetchOnMountOrArgChange: true,
   });
 
+  const [triggerDownload, { isLoading: isDownloading }] = useLazyDownloadGradeSheetQuery();
+
   useEffect(() => {
     if (viewMode === "all") {
       setSemesterFilter("");
@@ -58,6 +61,44 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
 
   const toggleSemester = (id: number) => {
     setOpenSemesterId(openSemesterId === id ? null : id);
+  };
+
+  const handleDownload = async (semester: number, examTerm: string) => {
+    if (!studentId) {
+      toast.error("Student ID not found");
+      return;
+    }
+
+    try {
+      const response = await triggerDownload({
+        studentId,
+        semester,
+        examTerm,
+      }).unwrap();
+
+      // Create a blob from the PDF data
+      const blob = new Blob([response], { type: 'application/pdf' });
+      
+      // Extract filename from Content-Disposition header or use default
+      const filename = `gradesheet_semester_${semester}.pdf`;
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Gradesheet downloaded successfully');
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || 'Failed to download gradesheet';
+      toast.error(errorMessage);
+    }
   };
 
   const getGradeClass = (grade: string): string => {
@@ -325,6 +366,7 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
                     const isOpen = openSemesterId === sem.id;
                     const gpaColor = getGpaColor(sem.gpa);
                     const gpaBg = getGpaBg(sem.gpa);
+                    const isDownloadingThis = isDownloading && openSemesterId === sem.id;
 
                     return (
                       <div
@@ -433,8 +475,8 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
                           {/* Expandable body */}
                           {isOpen && (
                             <div className="border-top">
-                              {/* Stats row */}
-                              <Row className="g-0 bg-light">
+                              {/* Stats row with Download button */}
+                              <Row className="g-0 bg-light align-items-center">
                                 <Col className="p-3 text-center border-end">
                                   <div
                                     className="fw-bold"
@@ -450,13 +492,32 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
                                     Avg Marks
                                   </div>
                                 </Col>
-                                <Col className="p-3 text-center">
+                                <Col className="p-3 text-center border-end">
                                   <div className="fw-bold">
                                     {sem.subjectBreakdown.length}
                                   </div>
                                   <div className="small text-muted">
                                     Subjects
                                   </div>
+                                </Col>
+                                <Col className="p-3 text-center">
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownload(sem.semester, sem.examTerm);
+                                    }}
+                                    disabled={isDownloadingThis}
+                                    className="d-inline-flex align-items-center gap-2"
+                                    style={{
+                                      fontSize: "12px",
+                                      padding: "4px 12px",
+                                    }}
+                                  >
+                                    <FaDownload size={12} />
+                                    {isDownloadingThis ? "Downloading..." : "Download PDF"}
+                                  </Button>
                                 </Col>
                               </Row>
 
@@ -563,7 +624,7 @@ const StudentResultTimeline: React.FC<StudentResultTimelineProps> = ({
         {!isLoading && resultData?.data && resultData.data.length > 0 && (
           <div className="d-block d-md-none text-center mt-4">
             <small className="text-muted fst-italic">
-              ↓ Click any semester to expand results
+              ↓ Click any semester to expand results and download PDF
             </small>
           </div>
         )}

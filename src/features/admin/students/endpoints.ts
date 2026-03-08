@@ -17,6 +17,7 @@ export const AdminStudentEndpoints: EndpointType = {
   STUDENT_MARKS: "/result/student-marks",
   ADD_MARKS: "/result/add-marks",
   PUBLISHED_RESULT: "/result/get-published-result",
+  DOWNLOAD_RESULT:"/result/gradesheet"
 };
 
 export default AdminStudentEndpoints;
