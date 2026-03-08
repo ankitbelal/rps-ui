@@ -1,4 +1,3 @@
-// MarksEntryPage.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Row,
@@ -7,10 +6,9 @@ import {
   Card,
   Accordion,
   Button,
-  ToggleButton,
-  ToggleButtonGroup,
+  Alert,
 } from "react-bootstrap";
-import { Save, Clock, Edit, BarChart2 } from "lucide-react";
+import { Save, BarChart2, AlertTriangle } from "lucide-react";
 import CommonBreadCrumb from "../common/BreadCrumb";
 import { FaTachometerAlt, FaUserGraduate } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -22,15 +20,15 @@ import {
 import { StudentSubjectData } from "../../features/admin/students/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Student } from "../../features/admin/students/utils";
-import StudentResultTimeline from "../../pages/admin/StudentManagement/partials/StudentResultTimeline";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { RootState } from "../../app/store";
 import { setPageTitle } from "../../features/ui/uiSlice";
 import { getRoleByType } from "../../helper";
+import { useSinglePublishResultMutation } from "../../features/admin/management/mamagementApi";
 
 interface SubjectMarks {
   theory: string;
-  [key: string]: string; // For dynamic evaluation parameters
+  [key: string]: string;
 }
 
 interface MarkField {
@@ -66,7 +64,11 @@ const MarksEntryPage: React.FC = () => {
   const [selectedTerminal, setSelectedTerminal] = useState("F");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [marksData, setMarksData] = useState<Record<number, SubjectMarks>>({});
-  const [viewMode, setViewMode] = useState<"entry" | "timeline">("entry"); // Toggle state
+
+  // ─── Separate loading states for each publish button ───────────────────────
+  const [isPublishingFinal, setIsPublishingFinal] = useState(false);
+  const [isPublishingTerminal, setIsPublishingTerminal] = useState(false);
+
   const location = useLocation();
   const studentData = location.state.item as Student;
 
@@ -74,6 +76,20 @@ const MarksEntryPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAppSelector((state: RootState) => state.auth);
   const [userRole, setUserRole] = useState<string>("");
+
+  const [selectedSemester, setSelectedSemester] = useState<number>(
+    studentData.currentSemester!,
+  );
+
+  const isAdminOrSuperAdmin = useMemo(
+    () => userRole === "admin" || userRole === "superadmin",
+    [userRole],
+  );
+
+  const isOlderSemester = useMemo(
+    () => selectedSemester < (studentData.currentSemester ?? 0),
+    [selectedSemester, studentData.currentSemester],
+  );
 
   useEffect(() => {
     dispatch(
@@ -90,19 +106,24 @@ const MarksEntryPage: React.FC = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    setSelectedSubject("");
+    setMarksData({});
+  }, [selectedSemester]);
+
   const params = useMemo(
     () => ({
       examTerm: selectedTerminal,
-      semester: studentData.currentSemester!,
+      semester: selectedSemester,
       studentId: studentData.id!,
     }),
-    [studentData.id, studentData.currentSemester, selectedTerminal],
+    [studentData.id, selectedSemester, selectedTerminal],
   );
 
   const { data: subjectsResponse, isLoading } = useGetStudentSubjectListQuery(
     {
       programId: studentData.program.id!,
-      semester: studentData.currentSemester,
+      semester: selectedSemester,
       studentId: studentData.id,
     },
     { skip: !studentData, refetchOnMountOrArgChange: true },
@@ -111,6 +132,8 @@ const MarksEntryPage: React.FC = () => {
   const { data: studentMarksResponse } = useGetStudentMarksQuery(params);
   const [addStudentMarks, { isLoading: isAddingMarks }] =
     useAddStudentMarksMutation();
+  // ─── Remove isLoading from mutation — we manage it manually per button ──────
+  const [publishSingleResult] = useSinglePublishResultMutation();
 
   const subjects = useMemo(
     () => subjectsResponse?.data || [],
@@ -121,23 +144,19 @@ const MarksEntryPage: React.FC = () => {
     [studentMarksResponse?.data],
   );
 
-  // Initialize marks data when subjects are loaded and existing marks are available
   useEffect(() => {
     if (subjects.length > 0) {
       const initialMarks: Record<number, SubjectMarks> = {};
 
       subjects.forEach((subject) => {
-        // Find existing marks for this subject
         const subjectExistingMarks = existingMarks.find(
           (mark) => mark.subjectId === subject.id,
         );
 
-        // Initialize with theory field
         const subjectMarks: SubjectMarks = {
           theory: subjectExistingMarks?.obtainedMarks?.toString() || "",
         };
 
-        // Initialize evaluation parameters
         subject.evaluationParameters.forEach((param) => {
           const paramKey = `param_${param.id}`;
           const paramMarks = subjectExistingMarks?.extraParametersMarks?.find(
@@ -158,35 +177,26 @@ const MarksEntryPage: React.FC = () => {
     field: string,
     value: string,
   ) => {
-    // Get the subject to find max marks for validation
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject) return;
 
-    // Get the field configuration
     const fieldConfig = getMarkFieldsForSubject(subject).find(
       (f) => f.name === field,
     );
     if (!fieldConfig) return;
 
-    // Validate the input
     const numericValue = parseFloat(value);
 
     if (value === "") {
-      // Allow empty input
       setMarksData((prev) => ({
         ...prev,
-        [subjectId]: {
-          ...prev[subjectId],
-          [field]: value,
-        },
+        [subjectId]: { ...prev[subjectId], [field]: value },
       }));
     } else if (!isNaN(numericValue) && numericValue >= 0) {
-      // Check if value exceeds max marks
       if (numericValue > fieldConfig.maxMarks) {
         toast.error(
           `Marks cannot exceed ${fieldConfig.maxMarks} for ${fieldConfig.label}`,
         );
-        // Set to max marks
         setMarksData((prev) => ({
           ...prev,
           [subjectId]: {
@@ -197,10 +207,7 @@ const MarksEntryPage: React.FC = () => {
       } else {
         setMarksData((prev) => ({
           ...prev,
-          [subjectId]: {
-            ...prev[subjectId],
-            [field]: value,
-          },
+          [subjectId]: { ...prev[subjectId], [field]: value },
         }));
       }
     }
@@ -242,13 +249,10 @@ const MarksEntryPage: React.FC = () => {
     const submissionData = prepareSubmissionDataForSubject(subjectId);
 
     if (submissionData && submissionData.marks.length > 0) {
-      console.log("Transformed submission data for subject:", submissionData);
       try {
         const response = await toast.promise(
           addStudentMarks(submissionData).unwrap(),
-          {
-            loading: "Adding Marks...",
-          },
+          { loading: "Saving Marks..." },
         );
         if (response.success) {
           toast.success(response.message);
@@ -303,13 +307,10 @@ const MarksEntryPage: React.FC = () => {
       return;
     }
 
-    console.log("Transformed submission data for all:", submissionData);
     try {
       const response = await toast.promise(
         addStudentMarks(submissionData).unwrap(),
-        {
-          loading: "Adding Marks...",
-        },
+        { loading: "Saving All Marks..." },
       );
       if (response.success) {
         toast.success(response.message);
@@ -371,7 +372,7 @@ const MarksEntryPage: React.FC = () => {
         parameters.push({
           parameterId: param.id,
           mark: paramValue,
-          fullMarks: param.weight, // ✅ add this
+          fullMarks: param.weight,
         });
       }
     });
@@ -379,15 +380,9 @@ const MarksEntryPage: React.FC = () => {
     if (theoryMarks > 0 || parameters.length > 0) {
       return {
         studentId: studentData.id,
-        semester: studentData.currentSemester,
+        semester: selectedSemester,
         examTerm: selectedTerminal,
-        marks: [
-          {
-            subjectId,
-            obtainedMarks: theoryMarks,
-            parameters,
-          },
-        ],
+        marks: [{ subjectId, obtainedMarks: theoryMarks, parameters }],
       };
     }
 
@@ -420,27 +415,50 @@ const MarksEntryPage: React.FC = () => {
         });
 
         if (theoryMarks > 0 || parameters.length > 0) {
-          marks.push({
-            subjectId,
-            obtainedMarks: theoryMarks,
-            parameters,
-          });
+          marks.push({ subjectId, obtainedMarks: theoryMarks, parameters });
         }
       }
     });
 
     return {
       studentId: studentData.id,
-      semester: studentData.currentSemester,
+      semester: selectedSemester,
       examTerm: selectedTerminal,
       marks,
     };
   };
 
-  const filteredSubjects = useMemo(() => {
-    if (!selectedSubject || selectedSubject === "") {
-      return subjects;
+  // ─── Split into separate handlers with independent loading state ────────────
+  const handlePublish = async (publishFinal: boolean) => {
+    const termToPublish = publishFinal ? "FINAL" : selectedTerminal;
+
+    if (publishFinal) setIsPublishingFinal(true);
+    else setIsPublishingTerminal(true);
+
+    try {
+      const response = await publishSingleResult({
+        studentId: studentData.id,
+        semester: selectedSemester,
+        examTerm: termToPublish,
+      }).unwrap();
+
+      if (response.success) {
+        toast.success(response.message || "Result published successfully");
+        // ─── return immediately after navigate to stop further execution ───
+        // navigate("/admin/students/result", { state: { id: studentData.id } });
+        // return;
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to publish result");
+    } finally {
+      // ─── Always reset the correct button's loading state ─────────────────
+      if (publishFinal) setIsPublishingFinal(false);
+      else setIsPublishingTerminal(false);
     }
+  };
+
+  const filteredSubjects = useMemo(() => {
+    if (!selectedSubject || selectedSubject === "") return subjects;
     return subjects.filter(
       (subject) => subject.id.toString() === selectedSubject,
     );
@@ -454,22 +472,26 @@ const MarksEntryPage: React.FC = () => {
             items={[
               {
                 label: "Dashboard",
-                link: `${userRole === "admin" || userRole == "superadmin" ? "/admin" : "/teacher"}/dashboard`,
+                link: `${
+                  userRole === "admin" || userRole === "superadmin"
+                    ? "/admin"
+                    : "/teacher"
+                }/dashboard`,
                 icon: <FaTachometerAlt />,
               },
               {
                 label: "Student Management",
-                link: `${userRole === "admin" || userRole === "superadmin" ? "/admin" : "/teacher"}/students`,
+                link: `${
+                  userRole === "admin" || userRole === "superadmin"
+                    ? "/admin"
+                    : "/teacher"
+                }/students`,
                 icon: <FaUserGraduate />,
               },
-              {
-                label: viewMode === "entry" ? "Marks Entry" : "Result Timeline",
-                active: true,
-              },
+              { label: "Marks Entry", active: true },
             ]}
           />
         </div>
-        {/* Student Information Card with Toggle */}
         <Card className="border-0 shadow-sm mb-4">
           <Card.Body className="p-4">
             <Row>
@@ -515,13 +537,11 @@ const MarksEntryPage: React.FC = () => {
                 className="d-flex align-items-center justify-content-md-end mt-3 mt-md-0"
               >
                 <Button
-                  id="result timeline"
                   variant="success"
-                  value="timeline"
                   className="d-flex align-items-center gap-2"
                   onClick={() =>
                     navigate("/admin/students/result", {
-                      state: { id: studentData.id }, // Pass your student ID here
+                      state: { id: studentData.id },
                     })
                   }
                 >
@@ -532,213 +552,299 @@ const MarksEntryPage: React.FC = () => {
             </Row>
           </Card.Body>
         </Card>
-        {/* Conditional Rendering based on viewMode */}
-        <>
-          {/* Filter Section */}
-          <Card className="border-0 shadow-sm mb-4">
-            <Card.Body className="p-4">
-              <Row>
-                <Col md={6} className="mb-3 mb-md-0">
+        <Card className="border-0 shadow-sm mb-4">
+          <Card.Body className="p-4">
+            <Row className="g-3">
+              {isAdminOrSuperAdmin && (
+                <Col md={4}>
                   <Form.Group>
-                    <Form.Label className="fw-semibold">Terminal</Form.Label>
+                    <Form.Label className="fw-semibold">Semester</Form.Label>
                     <Form.Select
-                      value={selectedTerminal}
-                      onChange={(e) => setSelectedTerminal(e.target.value)}
+                      value={selectedSemester}
+                      onChange={(e) =>
+                        setSelectedSemester(parseInt(e.target.value))
+                      }
                       className="bg-light border-0"
                     >
-                      <option value="">Select Terminal</option>
-                      <option value="F">Terminal 1</option>
-                      <option value="S">Terminal 2</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label className="fw-semibold">Subject</Form.Label>
-                    <Form.Select
-                      value={selectedSubject}
-                      onChange={(e) => setSelectedSubject(e.target.value)}
-                      className="bg-light border-0"
-                    >
-                      <option value="">All Subjects</option>
-                      {subjects.map((subject) => (
-                        <option key={subject.id} value={subject.id}>
-                          {subject.name} ({subject.code})
+                      {Array.from(
+                        { length: studentData.currentSemester! },
+                        (_, i) => i + 1,
+                      ).map((sem) => (
+                        <option key={sem} value={sem}>
+                          Semester {sem}
+                          {sem === studentData.currentSemester
+                            ? " (Current)"
+                            : ""}
                         </option>
                       ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
-              </Row>
+              )}
+              <Col md={isAdminOrSuperAdmin ? 4 : 6}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">Terminal</Form.Label>
+                  <Form.Select
+                    value={selectedTerminal}
+                    onChange={(e) => setSelectedTerminal(e.target.value)}
+                    className="bg-light border-0"
+                  >
+                    <option value="">Select Terminal</option>
+                    <option value="F">Terminal 1</option>
+                    <option value="S">Terminal 2</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={isAdminOrSuperAdmin ? 4 : 6}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">Subject</Form.Label>
+                  <Form.Select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="bg-light border-0"
+                  >
+                    <option value="">All Subjects</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name} ({subject.code})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+            {isAdminOrSuperAdmin && isOlderSemester && (
+              <Alert
+                variant="warning"
+                className="mt-3 mb-0 d-flex align-items-start gap-2"
+              >
+                <AlertTriangle size={18} className="flex-shrink-0 mt-1" />
+                <span>
+                  You are viewing a{" "}
+                  <strong className="text-danger">
+                    previous semester (Semester {selectedSemester})
+                  </strong>{" "}
+                  record. Kindly use this feature to change marks only for{" "}
+                  <strong className="text-danger">
+                    reconciliation or correction purposes
+                  </strong>
+                  . Changes made here may affect old recorded data and published
+                  results.
+                </span>
+              </Alert>
+            )}
+          </Card.Body>
+        </Card>
+        {isLoading ? (
+          <Card className="border-0 shadow-sm mb-4">
+            <Card.Body className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3">Loading subjects...</p>
             </Card.Body>
           </Card>
+        ) : filteredSubjects.length === 0 ? (
+          <Card className="border-0 shadow-sm mb-4">
+            <Card.Body className="text-center py-5">
+              <i className="fas fa-book fa-2x text-muted mb-3"></i>
+              <p className="text-muted">No subjects found for this student</p>
+            </Card.Body>
+          </Card>
+        ) : (
+          <>
+            <div className="mb-4">
+              {filteredSubjects.map((subject: StudentSubjectData) => {
+                const subjectMarks = getSubjectMarks(subject.id);
+                const markFields = getMarkFieldsForSubject(subject);
 
-          {/* Loading State */}
-          {isLoading ? (
-            <Card className="border-0 shadow-sm mb-4">
-              <Card.Body className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                <p className="mt-3">Loading subjects...</p>
-              </Card.Body>
-            </Card>
-          ) : filteredSubjects.length === 0 ? (
-            <Card className="border-0 shadow-sm mb-4">
-              <Card.Body className="text-center py-5">
-                <i className="fas fa-book fa-2x text-muted mb-3"></i>
-                <p className="text-muted">No subjects found for this student</p>
-              </Card.Body>
-            </Card>
-          ) : (
-            <>
-              {/* Subject Cards - Each Accordion operates independently */}
-              <div className="mb-4">
-                {filteredSubjects.map((subject: StudentSubjectData) => {
-                  const subjectMarks = getSubjectMarks(subject.id);
-                  const markFields = getMarkFieldsForSubject(subject);
-
-                  return (
-                    // Each subject has its own independent Accordion
-                    <Accordion
-                      key={subject.id}
-                      className="mb-3"
-                      defaultActiveKey=""
-                    >
-                      <Card className="border-0 shadow-sm">
-                        <Accordion.Item
-                          eventKey={subject.id.toString()}
-                          className="border-0"
-                        >
-                          <Accordion.Header className="bg-white">
-                            <div className="w-100 d-flex justify-content-between align-items-center pe-3">
-                              <div>
-                                <span className="fw-semibold">
-                                  {subject.name}
-                                </span>
-                                <span className="text-muted ms-2">
-                                  {subject.code}
-                                </span>
-                                <span className="badge bg-secondary ms-2">
-                                  Semester {subject.semester}
-                                </span>
-                                <span className="badge bg-light text-dark ms-2">
-                                  {subject.type}
-                                </span>
-                                {subject.subjectTeacher === null && (
-                                  <span className="badge bg-warning ms-2">
-                                    <i className="fas fa-exclamation-triangle me-1"></i>
-                                    No Teacher Assigned
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-muted small">
-                                {subject.evaluationParameters.length > 0 && (
-                                  <span>
-                                    <i className="fas fa-sliders-h me-1"></i>
-                                    {subject.evaluationParameters.length}{" "}
-                                    Evaluation Parameters
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </Accordion.Header>
-                          <Accordion.Body className="bg-light">
-                            <Row className="g-4">
-                              {markFields.map((field) => (
-                                <Col md={6} lg={4} key={field.id}>
-                                  <Form.Group>
-                                    <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
-                                      <span>
-                                        {field.label}
-                                        {field.isEvaluationParam &&
-                                          field.paramCode && (
-                                            <span className="text-muted small ms-1">
-                                              ({field.paramCode})
-                                            </span>
-                                          )}
-                                      </span>
-                                      <span className="badge bg-info">
-                                        Max: {field.maxMarks}
-                                      </span>
-                                    </Form.Label>
-                                    <Form.Control
-                                      type="number"
-                                      placeholder="Enter marks"
-                                      value={subjectMarks[field.name] || ""}
-                                      onChange={(e) =>
-                                        handleMarkChange(
-                                          subject.id,
-                                          field.name,
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="bg-white"
-                                      min="0"
-                                      max={field.maxMarks}
-                                      step="0.01"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                              ))}
-                            </Row>
-
-                            <div className="d-flex justify-content-end mt-4">
-                              <Button
-                                variant="success"
-                                onClick={() =>
-                                  handleSaveSubject(subject.id, subject.name)
-                                }
-                                className="d-flex align-items-center gap-2"
-                                disabled={isAddingMarks}
-                              >
-                                {isAddingMarks ? (
-                                  <>
-                                    <span className="spinner-border spinner-border-sm me-2"></span>
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save size={18} />
-                                    Save Marks
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </Accordion.Body>
-                        </Accordion.Item>
-                      </Card>
-                    </Accordion>
-                  );
-                })}
-              </div>
-
-              {/* Save All Button - Only show when viewing all subjects */}
-              {(!selectedSubject || selectedSubject === "") && (
-                <div className="d-flex justify-content-end">
-                  <Button
-                    variant="primary"
-                    onClick={handleSaveAll}
-                    className="d-flex align-items-center gap-2"
-                    disabled={isAddingMarks}
+                return (
+                  <Accordion
+                    key={subject.id}
+                    className="mb-3"
+                    defaultActiveKey=""
                   >
-                    {isAddingMarks ? (
+                    <Card className="border-0 shadow-sm">
+                      <Accordion.Item
+                        eventKey={subject.id.toString()}
+                        className="border-0"
+                      >
+                        <Accordion.Header className="bg-white">
+                          <div className="w-100 d-flex justify-content-between align-items-center pe-3">
+                            <div>
+                              <span className="fw-semibold">
+                                {subject.name}
+                              </span>
+                              <span className="text-muted ms-2">
+                                {subject.code}
+                              </span>
+                              <span className="badge bg-secondary ms-2">
+                                Semester {subject.semester}
+                              </span>
+                              <span className="badge bg-light text-dark ms-2">
+                                {subject.type}
+                              </span>
+                              {subject.subjectTeacher === null && (
+                                <span className="badge bg-warning ms-2">
+                                  <i className="fas fa-exclamation-triangle me-1"></i>
+                                  No Teacher Assigned
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-muted small">
+                              {subject.evaluationParameters.length > 0 && (
+                                <span>
+                                  <i className="fas fa-sliders-h me-1"></i>
+                                  {subject.evaluationParameters.length}{" "}
+                                  Evaluation Parameters
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Accordion.Header>
+                        <Accordion.Body className="bg-light">
+                          <Row className="g-4">
+                            {markFields.map((field) => (
+                              <Col md={6} lg={4} key={field.id}>
+                                <Form.Group>
+                                  <Form.Label className="fw-semibold d-flex align-items-center justify-content-between">
+                                    <span>
+                                      {field.label}
+                                      {field.isEvaluationParam &&
+                                        field.paramCode && (
+                                          <span className="text-muted small ms-1">
+                                            ({field.paramCode})
+                                          </span>
+                                        )}
+                                    </span>
+                                    <span className="badge bg-info">
+                                      Max: {field.maxMarks}
+                                    </span>
+                                  </Form.Label>
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Enter marks"
+                                    value={subjectMarks[field.name] || ""}
+                                    onChange={(e) =>
+                                      handleMarkChange(
+                                        subject.id,
+                                        field.name,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="bg-white"
+                                    min="0"
+                                    max={field.maxMarks}
+                                    step="0.01"
+                                  />
+                                </Form.Group>
+                              </Col>
+                            ))}
+                          </Row>
+
+                          <div className="d-flex justify-content-end mt-3">
+                            <Button
+                              variant={isOlderSemester ? "warning" : "success"}
+                              onClick={() =>
+                                handleSaveSubject(subject.id, subject.name)
+                              }
+                              className="d-flex align-items-center gap-2"
+                              disabled={isAddingMarks}
+                            >
+                              {isAddingMarks ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2"></span>
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save size={18} />
+                                  {isOlderSemester
+                                    ? "Save (Old Semester)"
+                                    : "Save Marks"}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </Accordion.Body>
+                      </Accordion.Item>
+                    </Card>
+                  </Accordion>
+                );
+              })}
+            </div>
+            {(!selectedSubject || selectedSubject === "") && (
+              <div className="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                {isAdminOrSuperAdmin && (
+                  // ─── Publish Final Result — uses isPublishingFinal only ───
+                  <Button
+                    variant="success"
+                    onClick={() => handlePublish(true)}
+                    className="d-flex align-items-center gap-2"
+                    disabled={isPublishingFinal}
+                  >
+                    {isPublishingFinal ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2"></span>
-                        Saving All Marks...
+                        Publishing...
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-save"></i>
-                        Save All Marks
+                        <i className="fas fa-trophy"></i>
+                        Publish Final Result
                       </>
                     )}
                   </Button>
-                </div>
-              )}
-            </>
-          )}
-        </>
+                )}
+                {isAdminOrSuperAdmin && (
+                  // ─── Publish Terminal — uses isPublishingTerminal only ────
+                  <Button
+                    variant="success"
+                    onClick={() => handlePublish(false)}
+                    className="d-flex align-items-center gap-2"
+                    disabled={isPublishingTerminal}
+                  >
+                    {isPublishingTerminal ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-check-circle"></i>
+                        Publish{" "}
+                        {selectedTerminal === "F"
+                          ? "Terminal 1"
+                          : "Terminal 2"}{" "}
+                        Result
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Button
+                  variant={isOlderSemester ? "warning" : "primary"}
+                  onClick={handleSaveAll}
+                  className="d-flex align-items-center gap-2"
+                  disabled={isAddingMarks}
+                >
+                  {isAddingMarks ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Saving All Marks...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save"></i>
+                      {isOlderSemester
+                        ? "Save All (Old Semester)"
+                        : "Save All Marks"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </>
   );

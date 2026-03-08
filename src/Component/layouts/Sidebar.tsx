@@ -138,31 +138,25 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
 
           {
             id: 4,
-            label: "Result",
-            icon: <FaChartBar />,
-            path: "/teacher/result",
-          },
-          {
-            id: 5,
             label: "Notices",
             icon: <FaEnvelope />,
             path: "/notification",
           },
           {
-            id: 6,
+            id: 5,
             label: "Grading",
             icon: <FaFileAlt />,
             path: "/grades",
           },
 
           {
-            id: 7,
+            id: 6,
             label: "Profile Settings",
             icon: <FaCog />,
             path: "/profile",
           },
 
-          { id: 8, label: "Feedback", icon: <FaComment />, path: "/feedback" },
+          { id: 7, label: "Feedback", icon: <FaComment />, path: "/feedback" },
         ];
 
       case "student":

@@ -55,9 +55,14 @@ export const managementApi = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: (result) => (result?.success ? ["promotionLogs"] : []),
     }),
-
+    singlePublishResult: builder.mutation({
+      query: (data) => ({
+        url: ManagementApiEndpoints.SINGLE_PUBLISH_RESULT,
+        method: "POST",
+        body: data,
+      }),
+    }),
     bulkPublishMissingReport: builder.query<Blob, publishResultPayload>({
       query: (data) => ({
         url: ManagementApiEndpoints.BULK_PUBLISH_RESULT_REPORT,
@@ -93,7 +98,7 @@ export const managementApi = createApi({
         method: "GET",
         params: queryParams,
       }),
-      providesTags:["notification"]
+      providesTags: ["notification"],
     }),
 
     markAsReadNotice: builder.mutation({
@@ -118,4 +123,5 @@ export const {
   useGetBulkResultQuery,
   useGetNotificationQuery,
   useMarkAsReadNoticeMutation,
+  useSinglePublishResultMutation,
 } = managementApi;
