@@ -41,9 +41,9 @@ const ProgramFormModal: React.FC<ProgramFormModalProps> = ({
         }
     });
 
-    const { data: facultiesData, isLoading: isFacultiesLoading } = useGetFacultiesQuery();
+    const { data: facultiesData, isLoading: isFacultiesLoading } = useGetFacultiesQuery(undefined,{refetchOnMountOrArgChange:true});
 
-    const { data: teachersData, isLoading: isTeachersLoading } = useGetHodListQuery();
+    const { data: teachersData, isLoading: isTeachersLoading } = useGetHodListQuery(undefined,{refetchOnMountOrArgChange:true});
 
     const handleFormSubmit = (data: ProgramFormData) => {
         onSubmit(data);
