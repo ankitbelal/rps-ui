@@ -1,9 +1,15 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import "./css/auth.css";
 import { toast } from "react-toastify";
-import { useAppDispatch } from "../../app/hooks";
 import { useResetPasswordMutation } from "../../features/auth/authApi";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface ResetPasswordComponentProps {
   email: string;
   onResetPassword: (password: string) => void;
@@ -14,6 +20,32 @@ interface ResetPasswordFormData {
   confirmPassword: string;
 }
 
+// ---------------------------------------------------------------------------
+// Yup schema
+// ---------------------------------------------------------------------------
+
+const resetPasswordSchema = yup.object({
+  password: yup
+    .string()
+    .required("New password is required")
+    .min(8, "Password must be at least 8 characters")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    .matches(/[0-9]/, "Password must contain at least one number")
+    .matches(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character (@$!%*?&#)"
+    ),
+  confirmPassword: yup
+    .string()
+    .required("Please confirm your password")
+    .oneOf([yup.ref("password")], "Passwords do not match"),
+});
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 const ResetPasswordComponent: React.FC<ResetPasswordComponentProps> = ({
   email,
   onResetPassword,
@@ -21,26 +53,26 @@ const ResetPasswordComponent: React.FC<ResetPasswordComponentProps> = ({
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
-  } = useForm<ResetPasswordFormData>();
+  } = useForm<ResetPasswordFormData>({
+    resolver: yupResolver(resetPasswordSchema),
+  });
 
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-  const password = watch("password");
-  const [resetPassword,{isLoading:isReseting}]=useResetPasswordMutation();
+  const [resetPassword, { isLoading: isReseting }] = useResetPasswordMutation();
+
   const onSubmit: SubmitHandler<ResetPasswordFormData> = async (data) => {
-    try{
-      const formData={...data,email};
-      const res=await resetPassword(formData).unwrap();
-      if(res.statusCode==200||res.success){
-        toast.success(res?.message||"Password changed successfully.");
+    try {
+      const formData = { ...data, email };
+      const res = await resetPassword(formData).unwrap();
+      if (res.statusCode === 200 || res.success) {
+        toast.success(res?.message || "Password changed successfully.");
         onResetPassword(data.password);
       }
-    }catch(error:any){
-      const errorMessage=error?.data?.message||"Failed to change password.";
-      toast.error(errorMessage);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to change password.");
     }
   };
 
@@ -67,43 +99,34 @@ const ResetPasswordComponent: React.FC<ResetPasswordComponentProps> = ({
         Enter your new password
       </p>
 
-      <div className="input-field">
+      {/* New Password */}
+      <div className={`input-field${errors.password ? " input-field--error" : ""}`}>
         <i className="fas fa-lock"></i>
         <input
           type={showPassword ? "text" : "password"}
           placeholder="New Password"
-          {...register("password", {
-            required: "Password is required",
-            minLength: {
-              value: 8,
-              message: "Password must be at least 8 characters",
-            },
-          })}
+          {...register("password")}
         />
         <i
           className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
           onClick={() => setShowPassword(!showPassword)}
-          style={{ cursor: "pointer" }}
         ></i>
       </div>
       {errors.password && (
         <span className="error-text">{errors.password.message}</span>
       )}
 
-      <div className="input-field">
+      {/* Confirm Password */}
+      <div className={`input-field${errors.confirmPassword ? " input-field--error" : ""}`}>
         <i className="fas fa-lock"></i>
         <input
           type={showConfirmPassword ? "text" : "password"}
           placeholder="Confirm Password"
-          {...register("confirmPassword", {
-            required: "Please confirm your password",
-            validate: (value) => value === password || "Passwords do not match",
-          })}
+          {...register("confirmPassword")}
         />
         <i
           className={`fas ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}
           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          style={{ cursor: "pointer" }}
         ></i>
       </div>
       {errors.confirmPassword && (
