@@ -732,6 +732,7 @@ const MarksEntryPage: React.FC = () => {
                                         e.target.value,
                                       )
                                     }
+                                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                     className="bg-white"
                                     min="0"
                                     max={field.maxMarks}
