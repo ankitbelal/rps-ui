@@ -4,12 +4,14 @@ import { Row, Col, Card, Button, Table, Badge, Form } from "react-bootstrap";
 import { FaUserGraduate, FaTachometerAlt } from "react-icons/fa";
 import CommonBreadCrumb from "../../../../Component/common/BreadCrumb";
 import { useGetProgramsQuery } from "../../../../features/admin/students/studentApi";
-import { useGetBulkResultQuery } from "../../../../features/admin/management/mamagementApi";
+import { useGetBulkResultQuery,useLazyGetResultLedgerQuery } from "../../../../features/admin/management/mamagementApi";
 import PaginationComponent from "../../../../Component/common/Pagination";
 import { StudentData } from "../../../../features/admin/management/utils";
 import { ProgramList } from "../../../../features/admin/students/utils";
 import { useAppDispatch } from "../../../../app/hooks";
 import { setPageTitle } from "../../../../features/ui/uiSlice";
+import DownloadResultModal from "./partials/DownloadResultModal";
+import toast from "react-hot-toast";
 
 
 const getProgramCode = (programData: ProgramList[], programId: number) => {
@@ -219,6 +221,7 @@ const ResultListing: React.FC = () => {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showExport,setShowExport] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
@@ -247,6 +250,7 @@ const ResultListing: React.FC = () => {
     ],
   );
 
+  const [triggerDownload, { isLoading: isDownloading, isFetching:isRedownloading }] = useLazyGetResultLedgerQuery();
   const { data: programData, isLoading: isProgramsLoading } =
     useGetProgramsQuery(undefined, { refetchOnMountOrArgChange: true });
   const {
@@ -303,6 +307,52 @@ const ResultListing: React.FC = () => {
     });
   };
 
+  const handleHideExportModal = ()=>{
+    setShowExport(false);
+  }
+
+  const handleDownloadResult=async (
+    programId: string,
+    semester: number,
+    examTerm: string,
+    type: string
+  )=>{
+    try{
+      const params = {
+        examTerm:examTerm,
+        programId: Number(programId),
+        semester: semester,
+        type: type 
+      };
+      const response = await triggerDownload(params).unwrap();
+      
+      if (response instanceof Blob) {
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const fileExtension = type === "excel" ? 'xlsx' : 'pdf';
+        link.download = `result_${programId}_sem${semester}_${Date.now()}.${fileExtension}`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        
+        toast.success('Result downloaded successfully!');
+        setShowExport(false);
+      } else {
+        // Handle error response
+        toast.error('Failed to download result');
+      }
+    }catch(error:any){
+      const errorMessage = error?.status==404 ? "No published results found.":"Failed to download result.";
+      toast.error(errorMessage);
+    }
+  }
+
   return (
     <>
       <div className="mb-4">
@@ -320,6 +370,17 @@ const ResultListing: React.FC = () => {
               },
             ]}
           />
+          <div className="d-flex gap-2">
+            <Button
+            variant="success"
+            className="d-flex align-items-center gap-2 mb-4"
+            style={{ backgroundColor: "#198754", borderColor: "#198754" }}
+            onClick={()=>setShowExport(true)}
+            >
+              <i className="fas fa-file-export"></i>
+              Download Result Sheet
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters Section */}
@@ -583,6 +644,12 @@ const ResultListing: React.FC = () => {
           onClose={() => setSelectedStudent(null)}
         />
       )}
+      <DownloadResultModal
+        show={showExport}
+        onHide={handleHideExportModal}
+        onDownload={handleDownloadResult}
+        isLoading={isDownloading || isRedownloading}
+      />
     </>
   );
 };

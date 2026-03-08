@@ -14,4 +14,5 @@ export const ManagementApiEndpoints: EndPointType = {
   NOTICE_MAIN: "/notice",
   NOTICE_MARK_READ: "/notice/mark-as-read",
   GET_BULK_RESULT: "/result/bulk-result",
+  GET_RESULT_LEDGER:"/result/ledger"
 };

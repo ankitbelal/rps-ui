@@ -109,6 +109,14 @@ export const managementApi = createApi({
       }),
       invalidatesTags: (result) => (result?.success ? ["notification"] : []),
     }),
+    getResultLedger:builder.query({
+      query:(queryParams)=>({
+        url:ManagementApiEndpoints.GET_RESULT_LEDGER,
+        method:"GET",
+        params:queryParams,
+        responseHandler:(response) => response.blob()
+      })
+    })
   }),
 });
 
@@ -123,5 +131,6 @@ export const {
   useGetBulkResultQuery,
   useGetNotificationQuery,
   useMarkAsReadNoticeMutation,
+  useLazyGetResultLedgerQuery,
   useSinglePublishResultMutation,
 } = managementApi;
