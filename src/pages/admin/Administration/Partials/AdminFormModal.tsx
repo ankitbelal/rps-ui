@@ -4,6 +4,10 @@ import { useForm } from 'react-hook-form';
 import { AdminFormData } from '../../../../features/admin/admins/utils';
 import { adminSchema } from '../validation/adminSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface AdminFormModalProps {
     show: boolean;
@@ -21,7 +25,9 @@ const AdminFormModal: React.FC<AdminFormModalProps> = ({
     const {
         register,
         handleSubmit,
+        watch,
         reset,
+        setValue,
         formState: { errors },
     } = useForm<AdminFormData>({
         resolver:yupResolver(adminSchema),
@@ -36,9 +42,33 @@ const AdminFormModal: React.FC<AdminFormModalProps> = ({
         }
     });
 
+    const phoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.ctrlKey || e.metaKey) return;
+      const allowed = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "ArrowLeft",
+        "ArrowRight",
+        "Home",
+        "End",
+        "Enter",
+      ];
+      if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+        e.preventDefault();
+      }
+    };
+
+
     const handleFormSubmit = (data: AdminFormData) => {
         onSubmit(data);
     };
+
+  const phoneInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, "").slice(0, 10);
+  };
+
 
     // Reset form when modal opens
     React.useEffect(() => {
@@ -156,8 +186,10 @@ const AdminFormModal: React.FC<AdminFormModalProps> = ({
                                             type="tel"
                                             {...register('phone')}
                                             isInvalid={!!errors.phone}
-                                            placeholder="1234567890"
+                                            placeholder="Enter 10 digits phone number"
                                             className="py-2"
+                                            onKeyDown={phoneKeyDown}
+                                            onInput={phoneInput}
                                         />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.phone?.message}
@@ -191,16 +223,27 @@ const AdminFormModal: React.FC<AdminFormModalProps> = ({
                                     <Form.Label className="fw-semibold">
                                         Date of Birth <span className="text-danger">*</span>
                                     </Form.Label>
-                                    <Form.Control
-                                        type="date"
-                                        {...register('DOB')}
-                                        isInvalid={!!errors.DOB}
-                                        className="py-2"
-                                        max={new Date().toISOString().split("T")[0]}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.DOB?.message}
-                                    </Form.Control.Feedback>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                          <DatePicker
+                                            value={watch("DOB") ? dayjs(watch("DOB")) : null}
+                                            onChange={(newValue) =>
+                                              setValue(
+                                                "DOB",
+                                                newValue ? newValue.format("YYYY-MM-DD") : "",
+                                                { shouldValidate: true }
+                                              )
+                                            }
+                                            maxDate={dayjs()}
+                                            slotProps={{
+                                              textField: {
+                                                fullWidth: true,
+                                                error: !!errors.DOB,
+                                                helperText: errors.DOB?.message,
+                                                size: "small",
+                                              },
+                                            }}
+                                          />
+                                        </LocalizationProvider>
                                 </Form.Group>
                             </Col>
                         </Row>

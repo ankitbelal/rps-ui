@@ -11,6 +11,12 @@ import {
 import { useForm } from "react-hook-form";
 import { Admin } from "../../../../features/admin/admins/utils";
 import { AdminFormData } from "../../../../features/admin/admins/utils";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import { adminSchema } from "../validation/adminSchema";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 interface AdminEditModalProps {
   show: boolean;
@@ -33,8 +39,10 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isDirty },
-  } = useForm<AdminFormData>();
+  } = useForm<AdminFormData>({resolver:yupResolver(adminSchema)});
 
   // Reset form when modal opens/closes or adminData changes
   useEffect(() => {
@@ -57,6 +65,29 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
       });
     }
   }, [show, adminData, reset]);
+
+  const phoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey) return;
+    const allowed = [
+      "Backspace",
+      "Delete",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Home",
+      "End",
+      "Enter",
+    ];
+    if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const phoneInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, "").slice(0, 10);
+  };
+
 
   const handleFormSubmit = (data: AdminFormData) => {
     onSubmit(data);
@@ -109,7 +140,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
             <Row className="g-4">
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">First Name</Form.Label>
+                  <Form.Label className="fw-semibold">First Name <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     {...register("firstName")}
@@ -125,7 +156,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Last Name</Form.Label>
+                  <Form.Label className="fw-semibold">Last Name <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     {...register("lastName")}
@@ -141,7 +172,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Email</Form.Label>
+                  <Form.Label className="fw-semibold">Email <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="email"
                     {...register("email")}
@@ -157,7 +188,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Phone Number</Form.Label>
+                  <Form.Label className="fw-semibold">Phone Number <span className="text-danger">*</span></Form.Label>
                   <InputGroup>
                     <InputGroup.Text className="bg-light">
                       <i className="fas fa-phone"></i>
@@ -166,8 +197,10 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
                       type="tel"
                       {...register("phone")}
                       isInvalid={!!errors.phone}
-                      placeholder="+1234567890"
+                      placeholder="Enter 10 digits phone number"
                       className="py-2"
+                      onKeyDown={phoneKeyDown}
+                      onInput={phoneInput}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.phone?.message}
@@ -178,7 +211,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Gender</Form.Label>
+                  <Form.Label className="fw-semibold">Gender <span className="text-danger">*</span></Form.Label>
                   <Form.Select
                     {...register("gender")}
                     isInvalid={!!errors.gender}
@@ -196,17 +229,28 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Date of Birth</Form.Label>
-                  <Form.Control
-                    type="date"
-                    {...register("DOB")}
-                    isInvalid={!!errors.DOB}
-                    className="py-2"
-                    max={new Date().toISOString().split("T")[0]}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.DOB?.message}
-                  </Form.Control.Feedback>
+                  <Form.Label className="fw-semibold">Date of Birth <span className="text-danger">*</span></Form.Label>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DatePicker
+                        value={watch("DOB") ? dayjs(watch("DOB")) : null}
+                        onChange={(newValue) =>
+                          setValue(
+                            "DOB",
+                            newValue ? newValue.format("YYYY-MM-DD") : "",
+                            { shouldValidate: true }
+                          )
+                        }
+                        maxDate={dayjs()}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!errors.DOB,
+                            helperText: errors.DOB?.message,
+                            size: "small",
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
                 </Form.Group>
               </Col>
             </Row>
@@ -222,7 +266,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
             </div>
 
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold">Address Line 1</Form.Label>
+              <Form.Label className="fw-semibold">Address Line 1 <span className="text-danger">*</span></Form.Label>
               <Form.Control
                 type="text"
                 {...register("address1")}
@@ -250,7 +294,7 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({
           <Button
             variant="primary"
             type="submit"
-            disabled={isUpdating || !isDirty}
+            disabled={isUpdating }
             className="px-4"
           >
             {isUpdating ? (
