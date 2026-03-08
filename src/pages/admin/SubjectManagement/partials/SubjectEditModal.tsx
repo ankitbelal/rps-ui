@@ -282,7 +282,7 @@ const SubjectEditModal: React.FC<SubjectEditProps> = ({
               </>
             ) : (
               <>
-                <i className="fas fa-plus me-2"></i>
+                <i className="fas fa-save me-2"></i>
                 Update Subject
               </>
             )}

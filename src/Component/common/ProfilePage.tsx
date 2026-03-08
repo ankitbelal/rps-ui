@@ -200,6 +200,30 @@ const ProfilePage: React.FC = () => {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
+        if(adminProfileData?.data){
+            resetProfile({
+                firstName: adminProfileData.data[0].firstName,
+                lastName: adminProfileData.data[0].lastName,
+                email: adminProfileData.data[0].email,
+                phone: adminProfileData.data[0].phone,
+                gender: adminProfileData.data[0].gender,
+                DOB: adminProfileData.data[0].DOB,
+                address1: adminProfileData.data[0].address1,
+                address2: adminProfileData.data[0].address2 || '',
+            });
+            setProfileData(adminProfileData.data[0])
+        }if(teacherProfileData?.data){
+            resetProfile({
+                firstName: teacherProfileData.data[0].firstName,
+                lastName: teacherProfileData.data[0].lastName,
+                email: teacherProfileData.data[0].email,
+                phone: teacherProfileData.data[0].phone,
+                gender: teacherProfileData.data[0].gender,
+                DOB: teacherProfileData.data[0].DOB,
+                address1: teacherProfileData.data[0].address1,
+                address2: teacherProfileData.data[0].address2 || '',
+            });setProfileData(teacherProfileData.data[0])
+        }
     };
 
     const handleTabChange = (tab: 'profile' | 'password') => {
@@ -450,6 +474,7 @@ const ProfilePage: React.FC = () => {
                                                                       size: "small",
                                                                     },
                                                                   }}
+                                                                  disabled={isUpdatingAdmin || isUpdatingTeacher}
                                                                 />
                                                               </LocalizationProvider>
                                 
@@ -508,7 +533,7 @@ const ProfilePage: React.FC = () => {
                                     <Button
                                         variant="primary"
                                         type="submit"
-                                        disabled={isUpdatingAdmin || !isDirty || isUpdatingTeacher}
+                                        disabled={isUpdatingAdmin || isUpdatingTeacher}
                                         className="px-4"
                                     >
                                         {(isUpdatingAdmin || isUpdatingTeacher)? (

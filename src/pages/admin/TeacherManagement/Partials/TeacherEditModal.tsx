@@ -315,7 +315,7 @@ const TeacherEditModal: React.FC<TeacherEditModalProps> = ({
           <Button
             variant="warning"
             type="submit"
-            disabled={isUpdating || !isDirty}
+            disabled={isUpdating}
             className="px-4"
           >
             {isUpdating ? (

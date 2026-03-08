@@ -507,7 +507,7 @@ const StudentEditModal: React.FC<StudentEditModalProps> = ({
           <Button
             variant="warning"
             type="submit"
-            disabled={isLoading || !isDirty}
+            disabled={isLoading}
             className="px-4"
           >
             {isLoading ? (
