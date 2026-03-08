@@ -102,9 +102,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 10,
-            label: "Notices Board",
-            icon: <FaCalendarAlt />,
-            path: "/exams",
+            label: "Notifications",
+            icon: <FaEnvelope />,
+            path: "/notification",
           },
 
           {

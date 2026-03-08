@@ -26,6 +26,7 @@ import StudentResultTimeline from "../pages/admin/StudentManagement/partials/Stu
 import StudentSubjects from "../pages/student/MySubject";
 import NotificationsPage from "../pages/Notifications/Notification";
 import GradeRanges from "../pages/admin/Management/partials/GradeRanges";
+import SendFeedback from "../pages/Notifications/Feedback";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -317,6 +318,17 @@ const AppRouter = () => {
             >
               <DashboardLayout>
                 <GradeRanges />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute requiredRole={["teacher", "student"]}>
+              <DashboardLayout>
+                <SendFeedback />
               </DashboardLayout>
             </ProtectedRoute>
           }
