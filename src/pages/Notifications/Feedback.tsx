@@ -49,7 +49,7 @@ const SendFeedback: FC = () => {
       }).unwrap();
 
       if (result?.success) {
-        toast.success("Feedback sent successfully! 💜");
+        toast.success(result.message);
         setForm({ subject: "", description: "" });
       }
     } catch (err: any) {
@@ -161,7 +161,6 @@ const SendFeedback: FC = () => {
 
   return (
     <div style={styles.page}>
-      <Toaster position="top-right" />
       <div style={styles.card}>
         <div style={styles.noteBanner}>
           <span style={{ fontSize: "18px" }}>💬</span>

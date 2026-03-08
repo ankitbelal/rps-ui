@@ -100,7 +100,6 @@ const SkeletonCard = () => (
 );
 
 const NotificationsPage: React.FC = () => {
-  const userId = useAppSelector((state) => state.auth.user?.id ?? 0);
   const user = useAppSelector((state: RootState) => state.auth.user);
   const userRole = user?.UserType?.toLowerCase();
 
@@ -372,8 +371,8 @@ const NotificationsPage: React.FC = () => {
             })
             .filter((pill) => {
               if (getRoleByType(userRole) === "teacher") {
-                return pill.key !== "teacher" && pill.key !== "admin";
-              }else if(getRoleByType(userRole)==="admin"){
+                return pill.key !== "teacher" && pill.key !== "admin" && pill.key !=="student";
+              }else if(getRoleByType(userRole)==="admin" || getRoleByType(userRole) === "superadmin"){
                 return pill.key !== "admin";
               }else if(getRoleByType(userRole)==="student"){
                 return pill.key !=="student";

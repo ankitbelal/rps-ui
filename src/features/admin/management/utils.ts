@@ -165,7 +165,6 @@ export interface GetNoticesResponse {
 
 /* ── Query params sent to API ── */
 export interface NoticeQueryParams {
-  userId: number;
   page?: number;
   limit?: number;
   filter?: NoticeFilter;
