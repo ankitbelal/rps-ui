@@ -46,6 +46,7 @@ interface MarkField {
 interface SubmissionParameter {
   parameterId: number;
   mark: number;
+  fullMarks: number;
 }
 
 interface SubmissionSubject {
@@ -370,6 +371,7 @@ const MarksEntryPage: React.FC = () => {
         parameters.push({
           parameterId: param.id,
           mark: paramValue,
+          fullMarks: param.weight, // ✅ add this
         });
       }
     });
@@ -412,6 +414,7 @@ const MarksEntryPage: React.FC = () => {
             parameters.push({
               parameterId: param.id,
               mark: paramValue,
+              fullMarks: param.weight,
             });
           }
         });

@@ -3,10 +3,11 @@ import { Modal, Button, Form, Spinner, Row, Col, Badge } from "react-bootstrap";
 import toast from "react-hot-toast";
 import { useGetEvaluationParamtersQuery } from "../../../../features/admin/subjects/subjectApi";
 import { EvalParams } from "../../../../features/admin/subjects/utils";
-export interface params{
+
+export interface params {
   evaluationParameterId: number;
   weight: number;
-  assigned: number
+  assigned: number;
 }
 
 interface EvaluationParameterModalProps {
@@ -27,10 +28,12 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
   isSaving = false,
 }) => {
   const [paramWeights, setParamWeights] = useState<Record<number, number>>({});
-  const [selectedParams, setSelectedParams] = useState<number[]>();
+  const [selectedParams, setSelectedParams] = useState<number[]>([]);
+  const [hadInitialAssignments, setHadInitialAssignments] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "assigned", "unassigned"
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [weightErrors, setWeightErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -41,8 +44,10 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
 
   useEffect(() => {
     if (show) {
-      setSelectedParams(undefined);
+      setSelectedParams([]);
       setParamWeights({});
+      setWeightErrors({});
+      setHadInitialAssignments(false);
     }
   }, [show]);
 
@@ -55,16 +60,23 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
     [debouncedSearch, statusFilter, subjectId],
   );
 
-  const { data: evalParamsData, isLoading: isEvalParamaLoading, isFetching } = useGetEvaluationParamtersQuery(queryParams, { refetchOnMountOrArgChange: true, });
+  const {
+    data: evalParamsData,
+    isLoading: isEvalParamaLoading,
+    isFetching,
+  } = useGetEvaluationParamtersQuery(queryParams, {
+    refetchOnMountOrArgChange: true,
+  });
 
   useEffect(() => {
     if (evalParamsData?.data && show) {
       const assignedIds = evalParamsData.data
         .filter((param: EvalParams) => param.assigned === 1)
         .map((param: EvalParams) => param.id);
-      setSelectedParams(assignedIds);
 
-      // Set initial weights for assigned params
+      setSelectedParams(assignedIds);
+      setHadInitialAssignments(assignedIds.length > 0);
+
       const initialWeights: Record<number, number> = {};
       evalParamsData.data.forEach((param: EvalParams) => {
         if (param.assigned === 1) {
@@ -73,26 +85,33 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
       });
       setParamWeights(initialWeights);
     }
-  }, [evalParamsData,show]);
+  }, [evalParamsData, show]);
 
   const handleParameterToggle = (paramId: number) => {
     setSelectedParams((prev) => {
       const current = prev || [];
       if (current.includes(paramId)) {
-        // Remove weight when unchecked
-        const updatedWeights = { ...paramWeights };
-        delete updatedWeights[paramId];
-        setParamWeights(updatedWeights);
+        // Simply remove from array + clean up weight & error
+        setParamWeights((w) => {
+          const updated = { ...w };
+          delete updated[paramId];
+          return updated;
+        });
+        setWeightErrors((e) => {
+          const updated = { ...e };
+          delete updated[paramId];
+          return updated;
+        });
         return current.filter((id) => id !== paramId);
       } else {
-        // Add default weight (0 or from param)
+        // Add with default weight from param
         const param = evalParamsData?.data.find(
           (p: EvalParams) => p.id === paramId,
         );
-        setParamWeights({
-          ...paramWeights,
+        setParamWeights((w) => ({
+          ...w,
           [paramId]: param?.weight ?? 0,
-        });
+        }));
         return [...current, paramId];
       }
     });
@@ -102,26 +121,54 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
     if (!/^\d{0,3}$/.test(weight)) return;
     let value = Number(weight);
     if (weight === "") value = 0;
-    if (value < 0) value = 0;
     if (value > 100) value = 100;
-    setParamWeights((prev) => ({
-      ...prev,
-      [paramId]: value,
-    }));
+
+    if (value <= 0) {
+      setWeightErrors((prev) => ({
+        ...prev,
+        [paramId]: "Weight must be greater than 0",
+      }));
+    } else {
+      setWeightErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[paramId];
+        return updated;
+      });
+    }
+
+    setParamWeights((prev) => ({ ...prev, [paramId]: value }));
   };
 
   const handleSave = () => {
-    if (!selectedParams || selectedParams.length === 0) {
+    // Block only if nothing selected AND no prior assignments existed
+    // If user had prior assignments and unchecked all → allow (unassign all)
+    if (selectedParams.length === 0 && !hadInitialAssignments) {
       toast.error("Please select at least one parameter");
       return;
     }
+
+    // Block if any selected param has invalid weight
+    const invalidParams = selectedParams.filter(
+      (id) => !paramWeights[id] || paramWeights[id] <= 0,
+    );
+
+    if (invalidParams.length > 0) {
+      const newErrors: Record<number, string> = { ...weightErrors };
+      invalidParams.forEach((id) => {
+        newErrors[id] = "Weight must be greater than 0";
+      });
+      setWeightErrors(newErrors);
+      toast.error("Please fix weight errors before saving");
+      return;
+    }
+
     const parameters = selectedParams.map((id) => ({
       evaluationParameterId: id,
       weight: paramWeights[id] ?? 0,
       assigned: 1,
     }));
 
-    onSave(parameters)
+    onSave(parameters);
   };
 
   return (
@@ -172,7 +219,7 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
         </Row>
 
         {/* Parameters List */}
-        {(isEvalParamaLoading || isFetching) ? (
+        {isEvalParamaLoading || isFetching ? (
           <div className="text-center py-5">
             <Spinner animation="border" variant="primary" />
             <div className="mt-3">Loading evaluation parameters...</div>
@@ -196,14 +243,8 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
             className="parameter-list"
             style={{ maxHeight: "400px", overflowY: "auto" }}
           >
-            {evalParamsData?.data.map((param) => {
-              // if(param.assigned){
-              //   handleParameterToggle(param.id, param.weight);
-              // }
-              const isSelected = selectedParams?.includes(param.id)
-                ? true
-                : false;
-              // const weightValue = isSelected ? selectedParams[param.id] : param.weight;
+            {evalParamsData?.data.map((param: EvalParams) => {
+              const isSelected = selectedParams?.includes(param.id) ?? false;
 
               return (
                 <div
@@ -239,7 +280,9 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
-                            className="form-control"
+                            className={`form-control ${
+                              weightErrors[param.id] ? "is-invalid" : ""
+                            }`}
                             value={paramWeights[param.id] ?? param.weight}
                             onChange={(e) =>
                               handleWeightChange(param.id, e.target.value)
@@ -248,6 +291,12 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
                           />
                           <span className="input-group-text">%</span>
                         </div>
+                        {weightErrors[param.id] && (
+                          <div className="text-danger small mt-1">
+                            <i className="fas fa-exclamation-circle me-1"></i>
+                            {weightErrors[param.id]}
+                          </div>
+                        )}
                       </Col>
                     </Row>
                   </div>
@@ -262,7 +311,7 @@ const EvaluationParameterModal: React.FC<EvaluationParameterModalProps> = ({
         <Button variant="secondary" onClick={onHide} disabled={isSaving}>
           Cancel
         </Button>
-        <Button variant="primary" onClick={handleSave} disabled={false}>
+        <Button variant="primary" onClick={handleSave} disabled={isSaving}>
           {isSaving ? (
             <>
               <Spinner
