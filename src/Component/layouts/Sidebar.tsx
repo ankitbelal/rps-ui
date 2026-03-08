@@ -16,6 +16,10 @@ import {
   FaGraduationCap,
   FaSlidersH,
   FaFileAlt,
+  FaUserCog,
+  FaEnvelope,
+  FaComment,
+  FaCertificate,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -163,9 +167,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 2,
-            label: "My Courses",
+            label: "My Subjects",
             icon: <FaBookOpen />,
-            path: "/my-courses",
+            path: "/student/subjects",
           },
           {
             id: 3,
@@ -175,29 +179,19 @@ const Sidebar: React.FC<SidebarProps> = ({ role, isOpen = true, onClose }) => {
           },
           {
             id: 4,
-            label: "Schedule",
-            icon: <FaCalendarAlt />,
-            path: "/schedule",
+            label: "Notices",
+            icon: <FaEnvelope />,
+            path: "/notification",
           },
           {
             id: 5,
-            label: "Profile",
-            icon: <FaUserGraduate />,
+            label: "Security",
+            icon: <FaUserCog />,
             path: "/profile",
           },
-          {
-            id: 6,
-            label: "Attendance",
-            icon: <FaClipboardList />,
-            path: "/attendance",
-          },
-          {
-            id: 7,
-            label: "Assignments",
-            icon: <FaClipboardList />,
-            path: "/assignments",
-          },
-          { id: 8, label: "Grades", icon: <FaChartBar />, path: "/grades" },
+
+          { id: 6, label: "Grades", icon: <FaFileAlt />, path: "/grades" },
+          { id: 7, label: "Feedback", icon: <FaComment />, path: "/grades" },
         ];
 
       default:

@@ -23,6 +23,8 @@ import StudentResult from "../Component/Marks/ResultPage";
 import ResultListing from "../pages/admin/StudentManagement/ResultManagement/ResultListing";
 import StudentDashboard from "../pages/student/StudentDashboard";
 import StudentResultTimeline from "../pages/admin/StudentManagement/partials/StudentResultTimeline";
+import StudentSubjects from "../pages/student/MySubject";
+import NotificationsPage from "../pages/Notifications/Notification";
 const AppRouter = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
 
@@ -271,6 +273,16 @@ const AppRouter = () => {
         />
 
         <Route
+          path="/student/subjects"
+          element={
+            <ProtectedRoute requiredRole={["student"]}>
+              <DashboardLayout>
+                <StudentSubjects />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute
@@ -283,6 +295,18 @@ const AppRouter = () => {
           }
         />
 
+        <Route
+          path="/notification"
+          element={
+            <ProtectedRoute
+              requiredRole={["teacher", "admin", "student", "superadmin"]}
+            >
+              <DashboardLayout>
+                <NotificationsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
