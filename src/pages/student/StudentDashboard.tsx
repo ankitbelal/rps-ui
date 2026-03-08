@@ -205,6 +205,10 @@ const StudentDashboard: FC = () => {
                 label="Current Semester"
                 value={`Semester ${studentData?.currentSemester}`}
               />
+              <InfoField
+                label="Enrollment Date"
+                value={studentData?.enrollmentDate}
+              />
             </Col>
 
             {/* Address - Full Width */}

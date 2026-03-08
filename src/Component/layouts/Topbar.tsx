@@ -309,12 +309,14 @@ const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, onLogout, user }) => {
                 onClick={()=> navigate("/profile")}
                 className="d-flex align-items-center py-2 px-3">
                   <i
-                    className="fas fa-user me-3 text-primary"
+                    className={`fas ${user.role==="student"?"fa-user-cog":"fa-user"} me-3 text-primary`}
                     style={{ width: "20px" }}
                   ></i>
                   <div>
-                    <div className="fw-semibold">Profile</div>
+                    <div className="fw-semibold">{user.role==="student"?"Security":"Profile"}</div>
+                    {user.role !=="student" && (
                     <small className="text-muted">View your profile</small>
+                    )}
                   </div>
                 </Dropdown.Item>
 

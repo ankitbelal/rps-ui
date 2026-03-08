@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   NoticeFilter,
   SingleNotice,
@@ -10,10 +10,11 @@ import {
   useGetNotificationQuery,
   useMarkAsReadNoticeMutation,
 } from "../../features/admin/management/mamagementApi";
-import { useAppSelector } from "../../app/hooks";
+import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import toast from "react-hot-toast";
 import { getRoleByType } from "../../helper";
 import { RootState } from "../../app/store";
+import { setPageTitle } from "../../features/ui/uiSlice";
 
 type FilterPill = "all" | "unread" | "admin" | "teacher" | "student";
 
@@ -101,12 +102,22 @@ const SkeletonCard = () => (
 
 const NotificationsPage: React.FC = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);
+  const dispatch = useAppDispatch();
   const userRole = user?.UserType?.toLowerCase();
 
   const [activeFilter, setActiveFilter] = useState<FilterPill>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+
+  useEffect(() => {
+    dispatch(
+      setPageTitle({
+        title: "Notifications",
+        subtitle: "View notifications",
+      }),
+    );
+  }, [dispatch]);
 
   const { data, isLoading, isFetching, refetch } = useGetNotificationQuery({
     page,

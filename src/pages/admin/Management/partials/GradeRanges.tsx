@@ -3,11 +3,13 @@ import { Card, Button, Table, Badge } from "react-bootstrap";
 import { FaPlus, FaStar, FaArrowLeft } from "react-icons/fa";
 import { useGetGradeRangeQuery } from "../../../../features/admin/management/mamagementApi";
 import GradeRangeForm from "./GradeRangeForm";
-import { useAppSelector } from "../../../../app/hooks";
+import { useAppSelector, useAppDispatch } from "../../../../app/hooks";
 import { RootState } from "../../../../app/store";
 import { getRoleByType } from "../../../../helper";
+import { setPageTitle } from "../../../../features/ui/uiSlice";
 
 const GradeRanges: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [showForm, setShowForm] = useState(false);
   const {
     data: gradeData,
@@ -17,6 +19,19 @@ const GradeRanges: React.FC = () => {
   } = useGetGradeRangeQuery();
   const gradeRanges = gradeData?.data || [];
   const { user } = useAppSelector((state: RootState) => state.auth);
+
+  useEffect(()=>{
+    if(user?.UserType =="A") return;
+    if(user?.UserType == "SA") return;
+    dispatch(
+      setPageTitle({
+        title: "Grading System",
+        subtitle: "View grading system used",
+      }),
+    );
+
+  },[dispatch,user])
+
 
   const handleAddGradeRange = () => {
     setShowForm(true);
