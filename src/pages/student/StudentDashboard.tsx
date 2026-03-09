@@ -207,7 +207,7 @@ const StudentDashboard: FC = () => {
               />
               <InfoField
                 label="Enrollment Date"
-                value={studentData?.enrollmentDate}
+                value={studentData?.enrollmentDate??"N/A"}
               />
             </Col>
 
